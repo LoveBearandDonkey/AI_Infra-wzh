@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#111111"><title>从运行异常反向追踪编译证据 · 图解 05</title>
+<style>
+:root{color-scheme:dark;--bg:#111;--panel:#171717;--line:#353535;--text:#e8e8e8;--muted:#ababab;--i:#B1EF6B;--w:#BCA0F3;--a:#F2C45F;--g:#79D4F2}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,"PingFang SC",system-ui,sans-serif}button{font:inherit;color:inherit;background:transparent;border:1px solid #444;border-radius:5px;cursor:pointer;padding:8px 12px}button:hover{background:#292929}button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid #ddd;outline-offset:4px}button:disabled{opacity:.3;cursor:default}[hidden]{display:none!important}a{color:#b7cce0;text-underline-offset:4px}main{width:100%;max-width:none;margin:0;padding:28px clamp(20px,2vw,48px) 0;min-height:100svh;display:flex;flex-direction:column}.heading{display:flex;gap:20px;align-items:start;margin-bottom:22px}.eyebrow{font:12px ui-monospace,monospace;letter-spacing:2px;color:#aaa;margin-bottom:12px}h1{font-size:clamp(26px,2.6vw,40px);font-weight:450;line-height:1.35;margin:0}.subtitle{font-size:14px;color:var(--muted);margin:10px 0 0;line-height:1.7}.number{font:44px ui-monospace,monospace;color:#555;margin-left:auto}.workspace{display:grid;grid-template-columns:minmax(0,1fr) clamp(320px,28vw,440px);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-height:580px}.visual{background:#131313;position:relative;display:flex;flex-direction:column;min-width:0;min-height:0}.canvas{position:relative;height:520px;min-height:0;overflow:hidden;touch-action:none;flex:1}.canvas svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:hidden}.canvas.dragging{cursor:grabbing}.toolbar{display:flex;gap:7px;align-items:center;justify-content:center;padding:12px 14px;border-top:1px solid #292929;flex-wrap:wrap}.toolbar button{font-size:13px}.toolbar output{font:12px ui-monospace,monospace;min-width:45px;text-align:center}.toolbar .mode{margin-right:auto;display:flex;gap:4px}.mode button.active{background:#e0e0e0;color:#111;border-color:#e0e0e0}.info{position:absolute;top:14px;right:14px;z-index:4}.info>button{border-radius:50%;width:28px;height:28px;padding:0;font:italic 18px Georgia;background:#191919}.info-panel{position:absolute;right:0;top:39px;width:min(330px,75vw);padding:20px;background:#202020;border:1px solid #494949;border-radius:8px;box-shadow:0 14px 45px #0008;font-size:13px;line-height:1.85}.info-panel p{margin:10px 0}.explanation{border-left:1px solid var(--line);padding:28px;background:var(--panel);display:flex;flex-direction:column;min-width:0}.label{font:11px ui-monospace,monospace;letter-spacing:1.5px;color:#aaa;margin-bottom:15px}.explanation h2{font-size:23px;line-height:1.5;font-weight:500;margin:0 0 16px}.copy p{font-size:16px;line-height:1.85;color:#c7c7c7;margin:0 0 17px}.copy strong{color:#eee;font-weight:550}.formula{background:#202020;border-radius:5px;padding:13px 16px;white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.85 ui-monospace,monospace;margin:0 0 20px;color:#ddd}.inspector{margin-top:auto;border-top:1px solid var(--line);padding-top:17px}.inspector h3{font-size:16px;font-weight:500;margin:8px 0}.inspector p{font-size:14px;line-height:1.8;color:#aaa;margin:0}.sources{overflow-wrap:anywhere;font-size:12px;line-height:1.8;color:#999;margin-top:18px}.sources summary{cursor:pointer}.sources ul{padding-left:18px}.bottom{position:sticky;bottom:0;z-index:6;background:#111;display:flex;align-items:center;gap:18px;padding:18px 0;margin-top:auto}.steps{display:flex;overflow:auto;gap:8px;flex:1;scrollbar-width:thin}.steps button{min-width:70px;flex:1 0 70px;border:0;border-bottom:2px solid #333;border-radius:0;padding:8px 2px 12px;font-size:12px;line-height:1.7;color:#999;white-space:nowrap}.steps button[aria-current=step]{color:#eee;border-color:#ddd}.steps span{display:block;font:10px ui-monospace,monospace;color:#777;margin-bottom:5px}.bottom>button{white-space:nowrap;font-size:13px}.next{background:#e8e8e8;color:#111}.next:hover{background:#fff}.cover{display:grid;grid-template-columns:1fr 1.15fr;align-items:center;gap:55px;min-height:calc(100svh - 115px);padding:25px 3vw}.cover h1{font-size:clamp(34px,3.6vw,56px);letter-spacing:-1px;line-height:1.35}.cover p{font-size:17px;line-height:1.9;color:#bbb;max-width:490px}.cover .meta{font-size:12px;line-height:2;color:#999;margin-top:30px}.cover svg{width:100%;height:500px}.badge{display:inline-block;font:11px ui-monospace,monospace;border:1px solid #444;padding:6px 10px;margin-bottom:25px;letter-spacing:1px}.cover button{margin-top:20px}svg text{font-family:Inter,"PingFang SC",system-ui,sans-serif;fill:#e8e8e8;font-size:18px}svg .small{font-size:14px;fill:#ababab}svg .tiny{font-size:12px;fill:#ababab}svg .op-label{font-size:18px;font-weight:650;fill:#fff;dominant-baseline:middle}svg .hit{cursor:pointer}svg .hit .outline{transition:stroke .12s}svg .hit:hover .outline,svg .hit.selected .outline,svg .hit:focus .outline{stroke:#fff;stroke-width:2.5}svg .hit.selected text{fill:#fff}svg .hit:focus{outline:none}svg .data-label{paint-order:stroke;stroke:#131313;stroke-width:2.5px;stroke-linejoin:round}svg .grid-label{font-size:14px;fill:var(--tensor-color);font-weight:400}svg .grid-detail{font-size:12px;fill:var(--tensor-color);font-weight:400}svg .hit.selected .data-label text{fill:var(--tensor-color)}svg .edge-label{font-size:12px;fill:#ccc;paint-order:stroke;stroke:#131313;stroke-width:5px}svg .soft{opacity:.24}svg .hit.selected{opacity:1}.noscript{padding:35px;line-height:1.8}.sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0)}
+@media(min-width:1000px){body:not(.cover-mode) main{height:100svh;min-height:0}.heading,.bottom{flex-shrink:0}.workspace{flex:1;min-height:0}.canvas{height:0;min-height:320px}.explanation{overflow:auto;scrollbar-width:thin}.bottom{position:static}}
+@media(max-width:999px){main{padding:25px 20px 0}.workspace{grid-template-columns:1.3fr 1fr}.explanation{padding:22px}.canvas{height:570px}.cover{gap:25px;padding:20px 0}.cover h1{font-size:45px}}
+@media(max-width:760px){main{padding:22px 14px 0}.heading{margin-bottom:18px}.number{font-size:28px}.workspace{grid-template-columns:1fr}.canvas{height:440px;flex:none}.explanation{border-left:0;border-top:1px solid var(--line);padding:24px}.cover{grid-template-columns:1fr;gap:12px;min-height:0;padding:20px 10px}.cover h1{font-size:42px}.cover svg{height:340px}.cover .meta{margin-top:15px}.bottom{gap:8px;padding:12px 0}.bottom>button{font-size:12px;padding:8px}.toolbar{gap:4px}.toolbar .mode{width:100%;justify-content:center;margin:0 0 5px}.steps button{min-width:62px;flex-basis:62px}.subtitle{font-size:13px}}
+
+/* Auxiliary colors identify object families; tensor colors retain data semantics. */
+svg .hit[data-key="callable"]{--object-color:#8EAED0}
+svg .hit[data-key="task"]{--object-color:#685CF0}
+svg .hit[data-key="loop"]{--object-color:#685CF0}
+svg .hit[data-key="loop"]>path{stroke:#685CF0}
+svg .hit[data-key="loop"]>text{fill:#685CF0}
+svg .hit[data-key="buffer"],svg .hit[data-key="address"]{--object-color:#C7AD88}
+svg .hit[data-key="pass"],svg .hit[data-key="snapshot"]{--object-color:#aaa}
+svg .hit[data-key="callable"]>.outline,svg .hit[data-key="loop"]>.outline,svg .hit[data-key="task"]>.outline,svg .hit[data-key="buffer"]>.outline,svg .hit[data-key="address"]>.outline,svg .hit[data-key="pass"]>.outline,svg .hit[data-key="snapshot"]>.outline{stroke:var(--object-color);stroke-width:1.3}
+svg .hit[data-key="callable"]>text,svg .hit[data-key="loop"]>text,svg .hit[data-key="task"]>text,svg .hit[data-key="buffer"]>text,svg .hit[data-key="address"]>text,svg .hit[data-key="pass"]>text,svg .hit[data-key="snapshot"]>text{fill:var(--object-color)}
+svg .hit[data-key="task"]>.outline{fill:#211C3C}
+svg .hit[data-key="buffer"]>.outline{fill:#25221D}
+svg .hit[data-key="pass"]>.outline,svg .hit[data-key="snapshot"]>.outline{fill:#202020}
+svg .hit[data-key="callable"]>path{stroke:#8EAED0;stroke-opacity:.3}
+svg .hit[data-key="buffer"]>path{stroke:#C7AD88;stroke-opacity:.45}
+svg .hit[data-key="address"]>rect{fill:#C7AD88;fill-opacity:.17;stroke:#C7AD88;stroke-width:1.2}
+svg .hit:hover>.outline,svg .hit.selected>.outline,svg .hit:focus>.outline{stroke-width:2;stroke:var(--object-color,#fff)}
+svg .symbol .outline{stroke:#B9C2CD;stroke-width:1.5;fill:#1A1E23}
+svg .symbol.selected .outline,svg .symbol:hover .outline,svg .symbol:focus .outline{stroke:#fff;stroke-width:2}
+svg .hit[data-key="kernel"]{--object-color:#685CF0}svg .hit[data-key="kernel"]>text{fill:#CEC4F9}svg .hit[data-key="op"]{--object-color:#685CF0}
+svg .cell-title{font-size:16px;font-weight:600;fill:#eee}
+
+.mode{flex-wrap:wrap}svg .life{fill:#B1EF6B;fill-opacity:.16;stroke:#B1EF6B}svg .metric{font-size:32px;fill:#C7AD88}svg .warn{fill:#e8a896}svg .guide-line{stroke:#353535;stroke-width:1}pre{tab-size:2}.evidence-code{max-height:260px;overflow:auto;font:11px/1.8 ui-monospace,monospace;background:#202020;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere}.info-panel{max-height:65vh;overflow:auto}a:focus-visible{outline-offset:2px}
+.steps button{min-width:max-content;flex:1 0 84px;padding-inline:6px}
+</style></head><body class="cover-mode"><main>
+<section class="cover" id="cover"><div><div class="badge">AI INFRA · PYPTO / 05</div><h1>从运行异常<br>反向追踪编译证据</h1><p>从一次明确的任务执行出发，区分观察与原因，用关联产物建立机制假设，再用可复现实验检验。缺失的证据保持未知。</p><p class="meta">11 节图解 · 规则与证据分别说明<br>教学示例 · 2026-10-10</p><button id="start">开始阅读 →</button></div><div id="cover-art" aria-label="从运行异常反向追踪编译证据"></div></section>
+<header class="heading" id="heading" hidden><div><div class="eyebrow" id="eyebrow"></div><h1 id="title"></h1><p class="subtitle" id="subtitle"></p></div><span class="number" id="number" aria-hidden="true"></span></header>
+<div class="workspace" id="workspace" hidden><section class="visual" aria-label="交互图解"><div class="info"><button id="info-toggle" aria-label="图例与阅读说明" aria-expanded="false" aria-controls="info-panel">i</button><div class="info-panel" id="info-panel" hidden><strong>图例与阅读说明</strong><p><span style="color:var(--i)">■ 输入 / 中间值</span><br><span style="color:var(--w)">■ 权重</span><br>数据填色保持原义。紫色表示计算操作、循环与 Kernel，紫色也用于任务，蓝灰表示通用函数，暖沙色表示存储对象，中性灰表示编译过程；对象类型仍由形状和标签区分。</p><p id="scope-note"></p><p>点击图元查看定义。Tab / Enter 可操作；放大后拖动画布，使用“适应”回到完整图。← / → 翻页。</p><button id="legend-link">返回第一节</button></div></div><div class="canvas" id="canvas"></div><div class="toolbar"><div class="mode" id="modes"></div><button id="minus" aria-label="缩小">−</button><output id="zoom-label">100%</output><button id="plus" aria-label="放大">＋</button><button id="fit">适应</button></div></section><article class="explanation"><div class="label" id="section-label">原理与解释</div><h2 id="explain-title"></h2><div class="copy" id="copy"></div><pre class="formula" id="formula"></pre><div class="inspector" aria-live="polite"><div class="label">选中图元 · 身份与含义</div><h3 id="node-title"></h3><p id="node-copy"></p></div><details class="sources"><summary>来源与适用范围</summary><div id="sources"></div></details></article></div>
+<footer class="bottom"><button id="prev">← 上一页</button><nav class="steps" id="steps" aria-label="图解章节"></nav><button class="next" id="next">下一页 →</button></footer>
+<noscript><p>本报告需启用 JavaScript；内容提要与来源见同目录 README.md。</p></noscript>
+</main><script>
+/* Compiler diagram primitives. Inline this asset for standalone HTML. */
+const CompilerPrimitives = (() => {
+const C={i:'#B1EF6B',w:'#BCA0F3',a:'#F2C45F',g:'#79D4F2',neutral:'#b6b6b6'};
+const glossary={
+ x:['X · 输入 / 中间值','继承：绿色正方形网格。X 随本次输入变化；编译到 Tile 后仍保留绿色。网格格数与亮度为示意，准确 shape 由文字给出。'],
+ w:['W · 模型参数','继承：蓝紫色正方形网格。参数参与计算；编译改变它的访问和存储方式，不改变它作为模型参数的身份。'],
+ y:['Y · 输出值','继承：输出也是计算产生的数据，因此沿用绿色。这里以 Y = XW 为教学主线，不涉及真实模型的耗时测量。'],
+ aggregate:['聚合结果','继承并保留：黄色网格专用于均值、最大值、指数和等聚合结果。本篇 MatMul 主线未单独展开这类对象，不额外制造黄色节点。'],
+ gradient:['梯度','继承并保留：青色网格表达求导结果。本篇讲前向编译，不将青色改作 Pass 或缓冲的颜色。'],
+ instruction:['设备指令 · Kernel 内部执行','窄条表示设备指令的执行动作。本图使用搬运、计算、同步三类语义占位，不是具体 ISA 助记符，也不是实测指令序列。具体指令及顺序应由编译产物或指令 Trace 确认。OP 经过编译形成设备代码，不能与一条指令直接对应。'],
+ op:['IR 操作 · OP','胶囊表示当前 IR 中的操作，例如 tensor.matmul、tile.matmul、加载或存储。OP 描述操作语义；它可以经过拆分、融合等编译变换，不能与一条设备指令或一次 Kernel 调度直接对应。'],
+ add:['＋ · 逐元素相加','继承：圆形加号保留原语义。矩阵乘法使用 MatMul 胶囊；不会因为英文中出现 multiply 就改用圆形乘号。'],
+ multiply:['× · 逐元素乘法 / 广播乘法','继承：圆形乘号表达逐元素或标量广播相乘。矩阵乘法使用明确命名的 MatMul 操作。本篇图例保留它，主线无需使用。'],
+ tile:['Tile · 带类型与布局信息的局部数据','新增修饰：继续使用张量网格，沿用细边框底纹，叠加形状与内存空间标签。Tile 不是默认获得一块独立物理存储；存储由后续 MemRef 关系表达。'],
+ loop:['循环范围 · 结构包含','新增：左侧括线与范围标签圈定重复执行的语句。×4 表示教学示例中的迭代次数，不表示四个设备，也不表示四倍性能。'],
+ callable:['Callable · 可调用函数（图解统称）','本图将可调用函数统称为 Callable；对应源码中的 Function，不是新增的 IR 节点类型。范围框表示有参数、函数体与返回值的函数定义；函数体可以包含多个 OP 和循环。同一函数可以被调用多次。Kernel 是设备端执行实现的概念，不能仅凭 MatMul 名称就把一个 OP 等同于 kernel。'],
+ kernel:['Kernel · 设备端执行入口','本报告以带执行目标的函数范围框表示 kernel：标题标识入口，AIC / AIV 标记设备执行目标，内部展示操作与循环。它不是物理核心，也不是一次运行实例。PyPTO 的混合 InCore 可拆成 AIC 与 AIV kernel，由 Group 组织；单个 MatMul OP 不保证对应一个 kernel。Task 表示一次 Kernel 调度。'],
+ task:['Task · 一次 Kernel 调度','PyPTO 官方定义：A task is one kernel dispatch。Task 引用本次执行的 Kernel，并关联参数与依赖；同一个 Kernel 可被多次调度。运行时根据依赖调度就绪任务。此处为身份示意，卡片宽度不表示耗时；设备指令属于 Kernel 内部的执行细节。'],
+ buffer:['MemRef · 内存引用','MemRef 记录底层分配引用、字节偏移和分配大小。Tile 类型通过 MemRef 关联存储；满足复用约束的多个值可以共享 MemRef。图中矩形表示这种引用关系，不表示硬件内存模块。'],
+ address:['地址区间','新增：带单位刻度的轴与区间块。区间包含起点、不包含终点，即 [offset, offset + size)。相同 offset 在不同 memory space 中属于不同地址域。'],
+ pass:['Pass · 编译处理步骤','新增：紧凑的编号步骤标签，用在编译轴上。它可以分析或变换 IR；不作为计算操作或运行任务画进数据流。'],
+ snapshot:['阶段 IR · 程序结构','用节点与有向边呈现阶段 IR 的局部数据流：X、W 被操作消费，操作产生结果。此图是结构示意，不是从文件自动解析的真实图。PyPTO IR 还包含函数、循环、条件和类型，不能把整个 IR 等同于 DAG。IR dump 是该结构的文本导出载体。'],
+ opflow:['操作间数据依赖 →','灰色实线箭头表达函数体内操作之间的数据依赖；与双折角数据箭头含义一致，局部简图使用中性色减少视觉干扰。'],
+ data:['数据依赖 →','浅灰白连续实线与双折角箭头，连接数据与操作的输入输出。它表明消费关系，不表示实际搬运耗时。'],
+ mapping:['跨阶段 IR 对应 ⋯◇','新增：灰色点线与空心菱形终点。表达教学对应或已核对的对象映射；它不属于程序内部执行边。映射必须说明依据。'],
+ call:['调用 / 引用 ⇢','新增：灰色长虚线与空心箭头。从调用点或任务指向 Callable 定义；一条边不代表一次耗时区间。'],
+ dependency:['任务依赖 →','新增：实线空心箭头，直接标注“先完成”。它约束 Task 之间的顺序，和携带张量值的数据边分开。'],
+ binding:['存储绑定 ─○','新增：灰色实线、空心圆终点，显式标注“存于”。它连接逻辑值与存储对象，不表示数据流动。'],
+ incore:['InCore → AIC / AIV / Group','PyPTO 实现：混合 InCore 函数可以展开为 AIC、AIV 与 Group。纯 Cube 或纯 Vector 函数仅转换为对应类型。拆分取决于操作构成，不是所有 MatMul 都会一分为二。'],
+ load:['Load / Store · 显式读写','PyPTO 的 Tensor→Tile 转换会按操作语义插入或改写加载与存储。图中折叠了具体搬运指令和中间内存层，不以箭头长短表示搬运成本。'],
+ sequence:['编译阶段轴','从左到右表达编译先后，间隔没有耗时比例。本图省略中间 Pass；分组顺序参考当前本地 PassManager，而非将每个 run 都固定成相同序列。'],
+ evidence:['真实 IR 对照','以 l3_decode_csa 的相邻阶段 IR 文件为例，核对函数体中的 tensor.matmul 到 tile.matmul。只报告 IR 文件可直接支持的变换，不推出性能改善。']
+};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function t(x,y,s,cl='',anchor='start'){return `<text x="${x}" y="${y}" class="${cl}" text-anchor="${anchor}">${esc(s)}</text>`}
+function hit(key,html,layer=''){return `<g class="hit" tabindex="0" role="button" aria-label="${esc(glossary[key][0])}" data-key="${key}" data-layer="${layer}">${html}</g>`}
+// Tensor-node styling from the AI Infra training / inference reports.
+function grid(x,y,label,key='x',type='i',detail='',tile=false,w=120,h=60){
+ const color=C[type],cols=Math.floor((w-10)/14),rows=Math.floor((h-8)/14),left=x+(w-cols*14+3)/2,top=y+(h-rows*14+3)/2;
+ let q=`<rect class="outline" data-node-box="grid" x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="#131313" stroke="${color}" stroke-width="1.2"/>`;
+ for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)q+=`<rect data-cell="1" x="${left+c*14}" y="${top+r*14}" width="11" height="11" fill="${color}" opacity=".22"/>`;
+ q+=`<g class="data-label" style="--tensor-color:${color}">`+t(x+w/2,y+h/2+(detail?-4:5),label,'grid-label','middle')+(detail?t(x+w/2,y+h/2+15,detail,'grid-detail','middle'):'')+'</g>';
+ return hit(key,q,'data');
+}
+function op(x,y,label,key='op',w=140){return hit(key,`<rect class="op outline" x="${x}" y="${y}" width="${w}" height="48" rx="24" fill="#685CF0" stroke="#685CF0" stroke-width="1"/><circle cx="${x+25}" cy="${y+24}" r="12" fill="#211391"/><text x="${x+25}" y="${y+25}" text-anchor="middle" dominant-baseline="middle" style="font-size:15px;font-style:italic;fill:#A58BFF">ƒₓ</text>`+t(x+(w+28)/2,y+24,label,'op-label','middle'),'data')}
+
+function arithmetic(cx,cy,key){const d=key==='add'?`M${cx-8} ${cy} H${cx+8} M${cx} ${cy-8} V${cy+8}`:`M${cx-6} ${cy-6} L${cx+6} ${cy+6} M${cx+6} ${cy-6} L${cx-6} ${cy+6}`;return hit(key,`<circle class="outline" cx="${cx}" cy="${cy}" r="24"/><path class="symbol-mark" d="${d}" stroke="#E8EDF2" stroke-width="2.4" stroke-linecap="round" fill="none"/>`).replace('class="hit"','class="hit symbol"')}
+function boundary(x,y,w,h,label,key='callable'){return hit(key,`<rect class="outline" x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="none" stroke="#6b6b6b"/><path d="M${x} ${y+31} H${x+w}" stroke="#444"/>`+t(x+14,y+22,label,'small'),'program')}
+function loop(x,y,w,h,label){return hit('loop',`<path class="outline" d="M${x+14} ${y} H${x} V${y+h} H${x+14}" fill="none" stroke="#8EAED0" stroke-width="1.5"/><path d="M${x+14} ${y} H${x+w} V${y+h} H${x+14}" stroke="#8EAED0" stroke-width="1.5" stroke-dasharray="4 5" fill="none"/>`+t(x+25,y+20,label,'small'),'program')}
+function kernel(x,y,w,h,label,target){return hit('kernel',`<rect class="outline" x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="#171422" stroke="#685CF0" stroke-width="1.5"/><path d="M${x+1} ${y+35} H${x+w-1}" stroke="#685CF0"/><rect x="${x+w-54}" y="${y+9}" width="42" height="19" rx="4" fill="#392A7C"/>`+t(x+13,y+24,label,'small')+`<text x="${x+w-33}" y="${y+23}" text-anchor="middle" style="font-size:11px;fill:#DFD7FF">${esc(target)}</text>`,'program')}
+
+function instruction(x,y,label,w=200){return hit('instruction',`<rect class="outline" x="${x}" y="${y}" width="${w}" height="27" rx="1" fill="#211C3C" stroke="#685CF0"/><path d="M${x+7} ${y+5} V${y+22}" stroke="#685CF0"/>`+t(x+18,y+18,label,'tiny'),'program')}
+function task(x,y,label,w=170){return hit('task',`<rect class="outline" x="${x}" y="${y}" width="${w}" height="65" rx="8" fill="#242424" stroke="#999"/>`+t(x+12,y+19,'TASK','tiny')+t(x+12,y+45,label,'small'),'program')}
+function buffer(x,y,label,w=180){return hit('buffer',`<rect class="outline" x="${x}" y="${y}" width="${w}" height="53" fill="#242424" stroke="#999"/><path d="M${x+9} ${y+5} V${y+48} M${x+w-9} ${y+5} V${y+48}" stroke="#666"/>`+t(x+w/2,y+32,label,'small','middle'),'storage')}
+function doc(x,y,label){
+ const node=(nx,ny,w,text,kind='tensor')=>`<rect data-ir-kind="${kind}" x="${nx}" y="${ny}" width="${w}" height="20" rx="${kind==='op'?10:4}" fill="${kind==='op'?'#685CF0':'#242424'}" stroke="${kind==='op'?'#685CF0':'#aaa'}" stroke-width="1.1"/>`+t(nx+w/2,ny+14,text,'tiny','middle');
+ return hit('snapshot',`<path class="outline" d="M${x} ${y+3} V${y+65} M${x+162} ${y+3} V${y+65}" fill="none" stroke="#aaa"/>`+t(x+81,y-10,label,'small','middle')+`<path d="M${x+47} ${y+17} H${x+66} V${y+33} H${x+80} M${x+47} ${y+49} H${x+66} V${y+33} M${x+130} ${y+33} H${x+151}" fill="none" stroke="#aaa" stroke-width="1.3"/><path d="M${x+76} ${y+30} L${x+80} ${y+33} L${x+76} ${y+36} M${x+147} ${y+30} L${x+151} ${y+33} L${x+147} ${y+36}" fill="none" stroke="#aaa"/>`+node(x+10,y+7,37,'X')+node(x+10,y+39,37,'W')+node(x+80,y+23,50,'op','op'),'program');
+}
+function pass(x,y,label){return hit('pass',`<rect class="outline" x="${x}" y="${y}" width="260" height="36" rx="3" fill="#252525" stroke="#656565"/>`+t(x+130,y+23,label,'small','middle'),'program')}
+function route(points,kind='data',label='',pos=null){
+ const styles={opflow:['#aaa','','open'],data:['#E8E8E8','','arrow'],mapping:['#aaa','3 6','diamond'],call:['#ccc','10 6','open'],dependency:['#ccc','','open'],binding:['#aaa','','circle']};const[c,d,m]=styles[kind];
+ const path=points.map(([x,y],i)=>`${i?'L':'M'}${x} ${y}`).join(' ');
+ for(let i=1;i<points.length;i++)if(points[i][0]!==points[i-1][0]&&points[i][1]!==points[i-1][1])throw new Error('Non-orthogonal relationship');
+ const a=points[0],b=points[1];const lp=pos||[(a[0]+b[0])/2+(a[0]===b[0]?24:0),(a[1]+b[1])/2-10];
+ return hit(kind,`<path class="outline edge" d="${path}" fill="none" stroke="${c}" stroke-width="1.7" stroke-linejoin="round" ${d?`stroke-dasharray="${d}"`:''} marker-end="url(#${m})"/><path d="${path}" fill="none" stroke="transparent" stroke-width="12"/>`+(label?t(lp[0],lp[1],label,'edge-label','middle'):''));
+}
+function line(x1,y1,x2,y2,kind='data',label=''){return route(x1===x2||y1===y2?[[x1,y1],[x2,y2]]:[[x1,y1],[x1,(y1+y2)/2],[x2,(y1+y2)/2],[x2,y2]],kind,label)}
+function address(x,y,w,label,used=1){return hit('address',`<path class="outline" d="M${x} ${y} H${x+w} M${x} ${y-5} V${y+7} M${x+w} ${y-5} V${y+7}" stroke="#999" fill="none"/><rect x="${x}" y="${y+15}" width="${w*used}" height="32" fill="#555" stroke="#aaa"/>`+t(x,y+100,label,'small')+t(x,y+69,'0','tiny')+t(x+w,y+69,'8192 B','tiny','end'),'storage')}
+const defs=`<defs><linearGradient id="op-purple" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#4D3BC9"/><stop offset="1" stop-color="#3D2DC0"/></linearGradient><marker id="arrow" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="10" markerHeight="10" orient="auto"><path d="M8 7 H12" stroke="#131313" stroke-width="2.5"/><path d="M3 2 L8 7 L3 12 M7 2 L12 7 L7 12" stroke="#E8E8E8" stroke-width="1.4" stroke-linejoin="miter" fill="none"/></marker><marker id="open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1 L9 5 L1 9" stroke="#ccc" stroke-width="1.5" fill="none"/></marker><marker id="diamond" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto"><path d="M1 6 L6 1 L11 6 L6 11Z" fill="#131313" stroke="#aaa"/></marker><marker id="circle" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><circle cx="5" cy="5" r="3" fill="#131313" stroke="#aaa"/></marker></defs>`;
+
+const css="svg text{font-family:Inter,\"PingFang SC\",system-ui,sans-serif;fill:#e8e8e8;font-size:18px}\nsvg .small{font-size:14px;fill:#ababab}\nsvg .tiny{font-size:12px;fill:#ababab}\nsvg .op-label{font-size:18px;font-weight:650;fill:#fff;dominant-baseline:middle}\nsvg .hit{cursor:pointer}\nsvg .hit .outline{transition:stroke .12s}\nsvg .hit:hover .outline,svg .hit.selected .outline,svg .hit:focus .outline{stroke:#fff;stroke-width:2.5}\nsvg .hit.selected text{fill:#fff}\nsvg .hit:focus{outline:none}\nsvg .data-label{paint-order:stroke;stroke:#131313;stroke-width:2.5px;stroke-linejoin:round}\nsvg .grid-label{font-size:14px;fill:var(--tensor-color);font-weight:400}\nsvg .grid-detail{font-size:12px;fill:var(--tensor-color);font-weight:400}\nsvg .hit.selected .data-label text{fill:var(--tensor-color)}\nsvg .edge-label{font-size:12px;fill:#ccc;paint-order:stroke;stroke:#131313;stroke-width:5px}\nsvg .soft{opacity:.24}\nsvg .hit.selected{opacity:1}\nsvg .hit[data-key=\"task\"]{--object-color:#685CF0}\nsvg .hit[data-key=\"loop\"]{--object-color:#685CF0}\nsvg .hit[data-key=\"loop\"]>path{stroke:#685CF0}\nsvg .hit[data-key=\"loop\"]>text{fill:#685CF0}\nsvg .hit[data-key=\"buffer\"],svg .hit[data-key=\"address\"]{--object-color:#C7AD88}\nsvg .hit[data-key=\"pass\"],svg .hit[data-key=\"snapshot\"]{--object-color:#aaa}\nsvg .hit[data-key=\"callable\"]>.outline,svg .hit[data-key=\"loop\"]>.outline,svg .hit[data-key=\"task\"]>.outline,svg .hit[data-key=\"buffer\"]>.outline,svg .hit[data-key=\"address\"]>.outline,svg .hit[data-key=\"pass\"]>.outline,svg .hit[data-key=\"snapshot\"]>.outline{stroke:var(--object-color);stroke-width:1.3}\nsvg .hit[data-key=\"callable\"]>text,svg .hit[data-key=\"loop\"]>text,svg .hit[data-key=\"task\"]>text,svg .hit[data-key=\"buffer\"]>text,svg .hit[data-key=\"address\"]>text,svg .hit[data-key=\"pass\"]>text,svg .hit[data-key=\"snapshot\"]>text{fill:var(--object-color)}\nsvg .hit[data-key=\"task\"]>.outline{fill:#211C3C}\nsvg .hit[data-key=\"buffer\"]>.outline{fill:#25221D}\nsvg .hit[data-key=\"pass\"]>.outline,svg .hit[data-key=\"snapshot\"]>.outline{fill:#202020}\nsvg .hit[data-key=\"callable\"]>path{stroke:#8EAED0;stroke-opacity:.3}\nsvg .hit[data-key=\"buffer\"]>path{stroke:#C7AD88;stroke-opacity:.45}\nsvg .hit[data-key=\"address\"]>rect{fill:#C7AD88;fill-opacity:.17;stroke:#C7AD88;stroke-width:1.2}\nsvg .hit:hover>.outline,svg .hit.selected>.outline,svg .hit:focus>.outline{stroke-width:2;stroke:var(--object-color,#fff)}\nsvg .symbol .outline{stroke:#B9C2CD;stroke-width:1.5;fill:#1A1E23}\nsvg .symbol.selected .outline,svg .symbol:hover .outline,svg .symbol:focus .outline{stroke:#fff;stroke-width:2}\nsvg .hit[data-key=\"kernel\"]{--object-color:#685CF0}\nsvg .hit[data-key=\"kernel\"]>text{fill:#CEC4F9}\nsvg .hit[data-key=\"op\"]{--object-color:#685CF0}\nsvg .cell-title{font-size:16px;font-weight:600;fill:#eee}";
+return {css,defs,glossary,grid,op,arithmetic,boundary,loop,kernel,task,instruction,buffer,address,doc,pass,route,line};
+})();
+
+const P=CompilerPrimitives,defs=P.defs;
+document.head.insertAdjacentHTML("beforeend","<style>"+P.css+"</style>");
+const glossary={...P.glossary,...{"identity": ["调查对象", "所有观察需固定同一次运行与具体实例，不能仅依函数名串联。"], "contract": ["测量契约", "规定比较工作、输入、环境、计时范围及统计方法；采集运行和干净基线分别记录。"], "instance": ["执行实例", "Run、Rank、进程、任务和函数标识共同限定对象；跨 Run 对应需要独立证据。"], "wait": ["观测间隔", "时间字段之差描述现象；缺少 Ready 和资源事件时不能确定内部原因。"], "hypothesis": ["可检验假设", "写出机制、所需支持证据与可以推翻假设的结果；没有证据时保持待验证。"], "critical": ["依赖关键路径", "给定 DAG 和任务成本，在明确资源假设下计算最长路径；与实际资源约束下的执行路径区别处理。"], "link": ["产物关联", "把运行实例关联到同一构建的编译对象；文件名或相似函数名不是充分依据。"], "compile": ["编译机制证据", "相邻快照、地址和生成同步解释结构变化；还需要相关运行证据检验影响。"], "failure": ["检测点与引入点", "错误在某阶段被检测，不说明一定由该阶段引入；保留前置输入和更早快照。"], "experiment": ["成对实验", "单因素改变；验证实际编译变化、正确性与重复测量，记录资源和关键输入回归。"], "mapping": ["证据关联", "菱形点线表示核查关系，不表示设备数据传输或任务依赖。"]}};
+Object.assign(P.glossary,glossary); // Keep shared primitive accessibility labels aligned with this report.
+const refs={"method": ["PyPTO性能调优方法论_基于Toolkit与案例.md", "source-evidence.md#method"], "swim": ["PyPTO性能调优方法论_基于Toolkit与案例.md", "source-evidence.md#swim"], "cpm": ["PyPTO性能调优方法论_基于Toolkit与案例.md", "source-evidence.md#cpm"], "ir": ["PyPTO性能调优方法论_基于Toolkit与案例.md", "source-evidence.md#ir"], "ab": ["PyPTO性能调优方法论_基于Toolkit与案例.md", "source-evidence.md#ab"], "gap": ["README.md", "source-evidence.md#gap"], "console": ["README.md", "source-evidence.md#console"], "ux": ["pypto_开发者体验UX洞察报告_基于issues.md", "source-evidence.md#ux"]};
+const pages=[
+  {
+    "id": "cover",
+    "nav": "封面"
+  },
+  {
+    "id": "contract",
+    "nav": "测量契约",
+    "en": "01 / PYPTO 05",
+    "title": "先确认比较的是同一项工作",
+    "sub": "异常定义需要固定输入、环境与计时范围。",
+    "h": "先确认比较的是同一项工作",
+    "p": [
+      "记录 shape、dtype、版本、编译选项、平台、warm-up、重复次数与统计量。单核设备时延、包含 Host 的时延、端到端尾延迟是不同指标。",
+      "DFX 采集可能改变执行开销。用采集结果定位结构，用独立的干净 benchmark 比较最终性能；不要把不同范围的两个数字直接写成优化倍数。"
+    ],
+    "f": "A/B：工作量 / 输入 / 环境 / 计时 / 统计\n额外采集开销与正式基线分开",
+    "g": "contract",
+    "refs": [
+      "method"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。",
+    "modes": [
+      "范围一致",
+      "范围不一致"
+    ]
+  },
+  {
+    "id": "instance",
+    "nav": "具体实例",
+    "en": "02 / PYPTO 05",
+    "title": "从函数汇总定位到一次任务执行",
+    "sub": "一次调查由 Run、Rank、进程和任务身份共同限定。",
+    "h": "从函数汇总定位到一次任务执行",
+    "p": [
+      "同名函数可以有许多执行实例，同一逻辑任务还可能覆盖多种执行单元。先确定具体 Run、Rank、process、taskId 和 FuncId，再选择对应 AIC/AIV 实例。",
+      "Gap Investigator 当前按精确身份关联；缺少 FuncId 时仅回退到相同原始名称。跨 Run 的相似名称不能证明任务一一对应。此页构造 task A/B，仅演示身份选择。"
+    ],
+    "f": "Run × Rank × process × taskId × FuncId\n同名函数 ≠ 同一次执行",
+    "g": "instance",
+    "refs": [
+      "gap"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。",
+    "modes": [
+      "实例 A",
+      "实例 B"
+    ]
+  },
+  {
+    "id": "wait",
+    "nav": "等待区间",
+    "en": "03 / PYPTO 05",
+    "title": "dispatch 到 start 的间隔是观察结果",
+    "sub": "先读取时间字段，再讨论可能原因。",
+    "h": "dispatch 到 start 的间隔是观察结果",
+    "p": [
+      "构造例：任务在 t=2 被 dispatch，t=8 start，t=12 finish。dispatch→start 为 6 个归一化时间单位，执行区间为 4；这些数不是实测微秒。",
+      "这段间隔可能包含 pickup、调度或资源等待。仅有 dispatch/start/finish，无法确定任务何时 ready，也不能把整个区间都归为上游数据等待。缺失事件应保留为未知。"
+    ],
+    "f": "dispatch=2; start=8; finish=12\n观测间隔=6；执行区间=4",
+    "g": "wait",
+    "refs": [
+      "swim",
+      "gap"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。",
+    "modes": [
+      "已有时间字段",
+      "缺失 Ready"
+    ]
+  },
+  {
+    "id": "hypothesis",
+    "nav": "竞争假设",
+    "en": "04 / PYPTO 05",
+    "title": "同一段空闲可以有不同解释",
+    "sub": "为每个假设写出需要的支持和反证。",
+    "h": "同一段空闲可以有不同解释",
+    "p": [
+      "假设 H1：上游数据尚未到达；需要前驱完成和可见性证据。H2：任务已经 ready，但所需资源被占用；需要 Ready 及资源序列。H3：Host/编排提交较晚；需要提交和调度事件。",
+      "当前 Gap Investigator 材料说明 Ready/Enqueue/blocked reason 等尚未采集。因此这些分支不能在界面里自动确诊。调查应优先补齐能区分假设的证据，而不是直接修改流水或依赖参数。"
+    ],
+    "f": "观察 → 多个假设\n新增证据 → 支持 / 排除 / 仍未知",
+    "g": "hypothesis",
+    "refs": [
+      "gap",
+      "swim"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。",
+    "modes": [
+      "数据未就绪",
+      "资源或提交"
+    ]
+  },
+  {
+    "id": "critical",
+    "nav": "依赖与路径",
+    "en": "05 / PYPTO 05",
+    "title": "依赖下界和实际完成时间回答不同问题",
+    "sub": "构造 DAG：A→C、B→C；A=4，B=7，C=3。",
+    "h": "依赖下界和实际完成时间回答不同问题",
+    "p": [
+      "假设 A/B 可同时开始、资源无限且只受图中依赖约束，则最长依赖路径为 B→C，总时长 10。把 A 从 4 缩至 2，在这些假设下不会缩短该路径。",
+      "Observed 路径还受实际资源安排与等待影响。Static CPM 的下界依赖任务成本和完整图，不能把它当作已经可实现的设备时延，也不能把热点函数的总耗时直接当作可节省的端到端时间。"
+    ],
+    "f": "无限资源的构造模型：max(4,7)+3=10\nA→2 后：max(2,7)+3=10",
+    "g": "critical",
+    "refs": [
+      "cpm"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。",
+    "modes": [
+      "原始模型",
+      "只缩短 A"
+    ]
+  },
+  {
+    "id": "link",
+    "nav": "运行与编译",
+    "en": "06 / PYPTO 05",
+    "title": "建立 Task 到编译产物的可靠对应",
+    "sub": "先核实构建身份，再比较相关函数和局部 IR。",
+    "h": "建立 Task 到编译产物的可靠对应",
+    "p": [
+      "需要能追溯到同一构建的源码、配置、产物摘要、函数/核标识与运行记录。导入当前源码得到的摘要，并不证明该文件就是历史 baseline 使用的版本。",
+      "Gap Investigator 当前等待调查缺少 Task→编译子图映射，因此没有自动展示任意发生变化的 Pass。图中“已关联”是需要满足的证据条件，不是原型已具备的能力。"
+    ],
+    "f": "同一构建 → 函数或核标识 → Task 实例\n名称相似、文件存在均不足以替代关联",
+    "g": "link",
+    "refs": [
+      "gap",
+      "console"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。",
+    "modes": [
+      "缺少映射",
+      "关联条件"
+    ]
+  },
+  {
+    "id": "compile",
+    "nav": "编译证据",
+    "en": "07 / PYPTO 05",
+    "title": "相邻 IR 证明结构变化，不能单独证明性能原因",
+    "sub": "以共享存储引入顺序约束作为待验证假设。",
+    "h": "相邻 IR 证明结构变化，不能单独证明性能原因",
+    "p": [
+      "若怀疑存储复用限制重叠，应在前后 IR 检查相应 Tile/MemRef 的变化，并在最终地址布局核对空间、区间和别名。静态生命期坐标不是设备时间。",
+      "接着检查相关生成同步及核内 trace，确认变化怎样影响这一任务。MemoryReuse 降低占用本身不是错误；仅看到两个值共用地址，既不能证明竞态，也不能证明这次等待由复用引起。"
+    ],
+    "f": "结构变化 + 地址证据 + 同步/时序\n才足以逐步检验具体机制",
+    "g": "compile",
+    "refs": [
+      "ir"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。",
+    "modes": [
+      "只有地址",
+      "补充时序"
+    ]
+  },
+  {
+    "id": "failure",
+    "nav": "编译失败分支",
+    "en": "08 / PYPTO 05",
+    "title": "没有可运行产物时，转向编译诊断",
+    "sub": "失败阶段、输入快照与诊断规则构成最小调查起点。",
+    "h": "没有可运行产物时，转向编译诊断",
+    "p": [
+      "保存同一次编译的报错、Pass 或后端阶段、输入 IR、源码位置、版本和配置。报错所在阶段是检测位置，不自动等于最早引入问题的位置。第六篇进一步解释如何找首次可观测偏离。",
+      "编译失败、执行挂起、数值错误和性能下降应分别记录。一个 verifier 通过只覆盖其检查规则；仿真成功也不等于真机正确。最小复现必须保留触发条件和预期结果。"
+    ],
+    "f": "输入 / 阶段 / 诊断 / 期望\n可重现故障 ≠ 已确认根因",
+    "g": "failure",
+    "refs": [
+      "ux"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。",
+    "modes": [
+      "编译失败",
+      "运行异常"
+    ]
+  },
+  {
+    "id": "experiment",
+    "nav": "成对实验",
+    "en": "09 / PYPTO 05",
+    "title": "把假设变成一个可以被否定的实验",
+    "sub": "候选参数、编译变化与测量结果分别留证。",
+    "h": "把假设变成一个可以被否定的实验",
+    "p": [
+      "固定其他条件，只改变一个待验证因素，先检查候选是否编译成预期结构，再执行数值正确性验证与重复测量。若没有独立候选 Run，就不能声称存在优化后的真实 Trace。",
+      "实验结果应覆盖收益与回归：目标指标、关键 shape、资源占用和正确性。收益阈值是验收规则，不是性能预测。本图展示所需产物，不预填通过标志或收益。"
+    ],
+    "f": "假设 → 单因素候选 → 编译证据\n→ 正确性 → 干净重复测量 → 回归",
+    "g": "experiment",
+    "refs": [
+      "ab",
+      "gap"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。",
+    "modes": [
+      "证据缺口",
+      "完整实验要求"
+    ]
+  },
+  {
+    "id": "overview",
+    "nav": "证据结论",
+    "en": "10 / PYPTO 05",
+    "title": "将观察、推断与验证结论分开交付",
+    "sub": "调查可以以“尚不能区分原因”作为准确结论。",
+    "h": "将观察、推断与验证结论分开交付",
+    "p": [
+      "观察项记录实例和原始时间；假设项记录机制、支持证据和反证条件；验证项记录具体实验、结果及适用范围。证据缺口要落到缺哪一个字段或哪一份产物。",
+      "没有 Task→编译对应时继续补关联；没有 Ready 时不宣称资源等待；没有独立 A/B 时不宣称性能收益。报告完整性来自可复查的推理与边界，不来自把每个步骤都标成已完成。"
+    ],
+    "f": "观察事实 → 可检验假设 → 验证结论\n不足时：保留未知并指定下一份证据",
+    "g": "hypothesis",
+    "refs": [
+      "gap",
+      "method",
+      "ab"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。"
+  }
+];
+const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const t=(x,y,s,cl='',anchor='start')=>`<text x="${x}" y="${y}" class="${cl}" text-anchor="${anchor}">${esc(s)}</text>`;
+function hit(key,body){return `<g class="hit" tabindex="0" role="button" data-key="${key}" aria-label="${esc(glossary[key][0])}">${body}</g>`}
+
+function caption(y,s){return t(400,y,s,'small','middle')}
+function box(x,y,w,h,title,detail,key='identity') {return hit(key,`<rect class="outline" x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="#202020" stroke="#707070"/>`+t(x+w/2,y+28,title,'','middle')+t(x+w/2,y+54,detail,'small','middle'))}
+function operand(x,y,label,type,detail,key){return P.grid(x,y,label,'tile',type,detail,true,170,70).replaceAll('data-key="tile"',`data-key="${key}"`).replaceAll('aria-label="Tile · 带类型与布局信息的局部数据"',`aria-label="${esc(glossary[key][0])}"`)}
+function block(x,y,w,label,key='capacity',color='#C7AD88'){return hit(key,`<rect class="outline" x="${x}" y="${y}" width="${w}" height="45" rx="3" fill="${color}" fill-opacity=".13" stroke="${color}"/>`+t(x+w/2,y+28,label,'small','middle'))}
+function chain(nodes,y){let s='';nodes.forEach((n,i)=>{let x=45+i*255;if(i<2)s+=P.line(x+200,y+40,x+255,y+40,'mapping');s+=box(x,y,200,80,n[0],n[1],n[2])});return s}
+
+
+function bar(x,y,w,label,key='wait',color='#8EAED0'){return hit(key,`<rect class="outline" x="${x}" y="${y}" width="${w}" height="44" fill="${color}" fill-opacity=".15" stroke="${color}"/>`+t(x+w/2,y+28,label,'small','middle'))}
+function diagram(id){bounds={w:800,h:540};let s='';
+if(id==='contract'){s=box(65,110,290,160,'基线 A','相同输入和计时窗口','contract')+box(445,110,290,160,'候选 B',mode?'包含额外 Host 复制':'相同输入和计时窗口','contract')+caption(345,mode?'范围不一致：暂不能形成性能收益结论':'具备范围可比性：仍需正确性和重复测量')+caption(430,'图示仅表示比较条件，没有实测性能数值')}
+else if(id==='instance'){s=P.boundary(50,65,700,330,'Run R0 / Rank 0 / process P0')+P.task(95,155,'task A · f',240)+P.task(455,155,'task B · f',240)+box(mode?455:95,285,240,75,'当前选中实例',mode?'task B':'task A','instance')+caption(470,'相同函数 f，两个执行实例；不可混合统计当前选区')}
+else if(id==='wait'){s=caption(55,'构造时间轴 · 归一化单位')+bar(180,190,300,'dispatch → start', 'wait','#C7AD88')+bar(480,190,200,'执行','wait','#685CF0')+t(180,170,'2: dispatch','small')+t(480,170,'8: start','small')+t(680,170,'12: finish','small','end')+t(180,270,'观测间隔 6','small')+t(480,270,'执行 4','small');s+=box(155,355,490,80,mode?'Ready 时间：未采集':'已有三个时间字段',mode?'不能进一步分解这 6 个单位':'不能仅由区间宽度确定原因','wait')}
+else if(id==='hypothesis'){s=box(230,65,340,85,'观察：任务启动较晚','同一现象，多种机制','hypothesis')+box(40,275,230,110,'H1 数据未就绪','需生产者到达证据','hypothesis')+box(285,275,230,110,'H2 资源不可用','需 Ready 与资源事件','hypothesis')+box(530,275,230,110,'H3 提交较晚','需 Host / 调度事件','hypothesis');for(let x of [155,400,645])s+=P.route([[400,150],[400,210],[x,210],[x,275]],'mapping');s+=caption(465,mode?'优先补齐 Ready、资源和提交事件':'优先核实前驱完成与数据可见性')}
+else if(id==='critical'){s=P.task(80,100,mode?'A: 2':'A: 4',190)+P.task(80,325,'B: 7',190)+P.task(510,215,'C: 3',190)+P.route([[270,132],[380,132],[380,247],[510,247]],'dependency')+P.route([[270,357],[400,357],[400,247],[510,247]],'dependency')+caption(455,'构造下界：max(A,7)+3 = 10；依赖边不编码时间长度')}
+else if(id==='link'){s=box(55,125,280,100,'Task 实例','已知 Run / Rank / ID','instance')+box(465,125,280,100,'编译对象','构建 / 函数 / 局部 IR','compile');if(mode)s+=P.line(335,175,465,175,'mapping','核实关联');s+=box(145,330,510,85,mode?'需要构建身份与映射记录':'当前示例：关联缺失',mode?'这是验收条件，不是原型已接通能力':'不自动选择任意发生变化的 Pass','link')}
+else if(id==='compile'){s=P.buffer(55,155,'共享 MemRef',230)+box(460,120,275,110,mode?'对应同步与核内 trace':'未提供执行时序',mode?'检查等待是否与该变化相关':'不能确定运行影响','compile');if(mode)s+=P.line(285,180,460,180,'mapping');s+=box(145,330,510,85,'前后 IR + 最终地址',mode?'再通过单因素实验验证机制':'只支持结构与布局结论','compile')}
+else if(id==='failure'){s=chain(mode?[['执行挂起','收集任务与同步记录','failure'],['数值错误','固定 golden 与容差','failure'],['性能下降','固定基线与计时','contract']]:[['编译输入','保存触发条件','failure'],['检测阶段','诊断与局部 IR','failure'],['更早快照','定位引入范围','compile']],150)+caption(375,'故障类型决定下一份证据；不是相同的“失败”状态')}
+else if(id==='experiment'){s=chain([['候选变更','单因素且可复现','experiment'],['编译与正确性',mode?'需要实际验证记录':'尚未执行','experiment'],['性能与回归',mode?'需要独立重复测量':'没有候选 Run','experiment']],135)+box(145,340,510,90,mode?'完整实验的证据要求':'当前仍为待验证假设',mode?'没有预填结果；不推定通过或收益':'缺失项不能由模拟或原型数值补齐','experiment')}
+else if(id==='overview'){s=chain([['观察','实例与原始字段','instance'],['假设','支持证据和反证','hypothesis'],['验证','实验和适用范围','experiment']],105)+box(130,340,540,90,'不足时继续补证','把缺口写成具体字段或产物','hypothesis')+P.route([[655,185],[655,285],[400,285],[400,340]],'mapping')}
+return s;}
+function coverDiagram(){return box(60,90,270,120,'运行异常','等待 / 错值 / 性能下降','wait')+box(460,90,280,120,'编译证据','输入 / IR / 地址 / 代码','compile')+P.line(330,150,460,150,'mapping','核实关联')+box(170,330,460,95,'可检验的机制假设','成对实验决定结论','hypothesis')+P.route([[600,210],[600,270],[400,270],[400,330]],'mapping')}
+
+function updateFormula(){}
+let page=0,mode=0,selected='',bounds={w:800,h:540},zoom=1,view={x:0,y:0,w:800,h:540},drag=null,moved=false;
+function draw(){const body=diagram(pages[page].id);$('canvas').innerHTML=`<svg role="group" aria-label="${esc(pages[page].title)}" viewBox="0 0 ${bounds.w} ${bounds.h}">${defs}<g id="scene">${body}</g></svg>`;fit();select(pages[page].g);updateFormula();}
+
+function select(key){selected=key;document.querySelectorAll('#scene .hit').forEach(el=>el.classList.toggle('selected',el.dataset.key===key));$('node-title').textContent=glossary[key][0];$('node-copy').textContent=glossary[key][1]}
+function updateView(){let svg=$('canvas').querySelector('svg');if(svg)svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`);$('zoom-label').textContent=Math.round(zoom*100)+'%';$('minus').disabled=zoom<=1;$('plus').disabled=zoom>=4}
+function fit(){zoom=1;view={x:0,y:0,w:bounds.w,h:bounds.h};updateView()}
+function scale(f){const z=Math.max(1,Math.min(4,zoom*f));const w=bounds.w/z,h=bounds.h/z;view={x:view.x+(view.w-w)/2,y:view.y+(view.h-h)/2,w,h};zoom=z;clamp();updateView()}
+function clamp(){view.x=Math.max(-bounds.w*.12,Math.min(bounds.w-view.w+bounds.w*.12,view.x));view.y=Math.max(-bounds.h*.12,Math.min(bounds.h-view.h+bounds.h*.12,view.y))}
+function info(open){$('info-panel').hidden=!open;$('info-toggle').setAttribute('aria-expanded',String(open))}
+
+function render(n){page=Math.max(0,Math.min(pages.length-1,n));mode=0;drag=null;info(false);document.body.classList.toggle('cover-mode',!page);$('cover').hidden=!!page;$('heading').hidden=!page;$('workspace').hidden=!page;$('prev').disabled=page===0;$('next').disabled=page===pages.length-1;document.querySelectorAll('#steps button').forEach((b,i)=>{if(i===page)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current')});const p=pages[page];history.replaceState(null,'','#'+p.id);if(!page){$('canvas').innerHTML='';return;}$('eyebrow').textContent=p.en;$('title').textContent=p.title;$('subtitle').textContent=p.sub;$('number').textContent=String(page).padStart(2,'0');$('explain-title').textContent=p.h;$('copy').innerHTML=p.p.map(x=>'<p>'+x+'</p>').join('');$('formula').textContent=p.f;$('scope-note').textContent=p.note;$('sources').innerHTML='<p>'+esc(p.note)+'</p><ul>'+p.refs.map(k=>`<li><a href="${refs[k][1]}" target="_blank" rel="noopener">${esc(refs[k][0])}</a></li>`).join('')+'</ul><p>核对日期：2026-10-10。依据为当前本地材料，所读文件哈希及摘录见来源说明；历史研究与原型不代表实现保证。教学数值与图形为构造示例，未执行编译或性能实验。</p>';
+ $('modes').innerHTML=(p.modes||[]).map((s,i)=>`<button data-mode="${i}" class="${i===0?'active':''}" aria-pressed="${i===0}">${esc(s)}</button>`).join('');document.querySelector('.explanation').scrollTop=0;draw();let active=document.querySelector('#steps [aria-current]');$('steps').scrollTo({left:active.offsetLeft-$('steps').offsetLeft-70,behavior:'instant'});if(innerWidth<761)window.scrollTo(0,0)}
+$('steps').innerHTML=pages.map((p,i)=>`<button data-page="${i}"><span>${String(i).padStart(2,'0')}</span>${p.nav}</button>`).join('');$('steps').onclick=e=>{let b=e.target.closest('[data-page]');if(b)render(+b.dataset.page)};$('prev').onclick=()=>render(page-1);$('next').onclick=()=>render(page+1);$('start').onclick=()=>render(1);$('legend-link').onclick=()=>render(1);$('info-toggle').onclick=()=>info($('info-panel').hidden);document.addEventListener('click',e=>{if(!e.target.closest('.info'))info(false)});$('fit').onclick=fit;$('plus').onclick=()=>scale(1.3);$('minus').onclick=()=>scale(1/1.3);$('modes').onclick=e=>{let b=e.target.closest('[data-mode]');if(!b)return;mode=+b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>{x.classList.toggle('active',+x.dataset.mode===mode);x.setAttribute('aria-pressed',String(+x.dataset.mode===mode))});draw()};
+$('canvas').onclick=e=>{if(moved){moved=false;return}let h=e.target.closest('[data-key]');if(h)select(h.dataset.key)};$('canvas').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.dataset.key){e.preventDefault();select(e.target.dataset.key)}});document.addEventListener('keydown',e=>{if(e.key==='Escape')info(false);if(e.target.matches('input,textarea')||e.altKey||e.metaKey||e.ctrlKey)return;if(e.key==='ArrowRight'){e.preventDefault();render(page+1)}if(e.key==='ArrowLeft'){e.preventDefault();render(page-1)}});
+$('canvas').addEventListener('pointerdown',e=>{moved=false;if(zoom<=1)return;const svg=$('canvas').querySelector('svg');const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(svg.getScreenCTM().inverse());drag={px:e.clientX,py:e.clientY,x:p.x,y:p.y,vx:view.x,vy:view.y,matrix:svg.getScreenCTM().inverse()}});$('canvas').addEventListener('pointermove',e=>{if(!drag)return;if(Math.hypot(e.clientX-drag.px,e.clientY-drag.py)>5){moved=true;$('canvas').setPointerCapture(e.pointerId);$('canvas').classList.add('dragging')}if(moved){let p=new DOMPoint(e.clientX,e.clientY).matrixTransform(drag.matrix);view.x=drag.vx+drag.x-p.x;view.y=drag.vy+drag.y-p.y;clamp();updateView()}});function stop(){drag=null;$('canvas').classList.remove('dragging')}$('canvas').addEventListener('pointerup',stop);$('canvas').addEventListener('pointercancel',stop);window.addEventListener('resize',()=>{if(page)updateView()});
+
+$('cover-art').innerHTML=`<svg viewBox="0 0 800 540" role="img" aria-label="从运行异常反向追踪编译证据">${defs}${coverDiagram()}</svg>`;
+$('cover-art').querySelectorAll('[tabindex]').forEach(el=>{el.removeAttribute('tabindex');el.removeAttribute('role')});
+$('cover-art').innerHTML=$('cover-art').innerHTML.replace(/id="(arrow|open|diamond|circle)"/g,'id="cover-$1"').replace(/url\(#(arrow|open|diamond|circle)\)/g,'url(#cover-$1)');
+window.addEventListener('hashchange',()=>render(Math.max(0,pages.findIndex(p=>p.id===location.hash.slice(1)))));
+render(Math.max(0,pages.findIndex(p=>p.id===location.hash.slice(1))));
+
+</script></body></html>

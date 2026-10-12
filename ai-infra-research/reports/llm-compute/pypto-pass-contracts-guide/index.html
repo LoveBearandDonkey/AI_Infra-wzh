@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#111111"><title>Pass 之间的契约与首次偏离定位 · 图解 06</title>
+<style>
+:root{color-scheme:dark;--bg:#111;--panel:#171717;--line:#353535;--text:#e8e8e8;--muted:#ababab;--i:#B1EF6B;--w:#BCA0F3;--a:#F2C45F;--g:#79D4F2}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,"PingFang SC",system-ui,sans-serif}button{font:inherit;color:inherit;background:transparent;border:1px solid #444;border-radius:5px;cursor:pointer;padding:8px 12px}button:hover{background:#292929}button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid #ddd;outline-offset:4px}button:disabled{opacity:.3;cursor:default}[hidden]{display:none!important}a{color:#b7cce0;text-underline-offset:4px}main{width:100%;max-width:none;margin:0;padding:28px clamp(20px,2vw,48px) 0;min-height:100svh;display:flex;flex-direction:column}.heading{display:flex;gap:20px;align-items:start;margin-bottom:22px}.eyebrow{font:12px ui-monospace,monospace;letter-spacing:2px;color:#aaa;margin-bottom:12px}h1{font-size:clamp(26px,2.6vw,40px);font-weight:450;line-height:1.35;margin:0}.subtitle{font-size:14px;color:var(--muted);margin:10px 0 0;line-height:1.7}.number{font:44px ui-monospace,monospace;color:#555;margin-left:auto}.workspace{display:grid;grid-template-columns:minmax(0,1fr) clamp(320px,28vw,440px);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-height:580px}.visual{background:#131313;position:relative;display:flex;flex-direction:column;min-width:0;min-height:0}.canvas{position:relative;height:520px;min-height:0;overflow:hidden;touch-action:none;flex:1}.canvas svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:hidden}.canvas.dragging{cursor:grabbing}.toolbar{display:flex;gap:7px;align-items:center;justify-content:center;padding:12px 14px;border-top:1px solid #292929;flex-wrap:wrap}.toolbar button{font-size:13px}.toolbar output{font:12px ui-monospace,monospace;min-width:45px;text-align:center}.toolbar .mode{margin-right:auto;display:flex;gap:4px}.mode button.active{background:#e0e0e0;color:#111;border-color:#e0e0e0}.info{position:absolute;top:14px;right:14px;z-index:4}.info>button{border-radius:50%;width:28px;height:28px;padding:0;font:italic 18px Georgia;background:#191919}.info-panel{position:absolute;right:0;top:39px;width:min(330px,75vw);padding:20px;background:#202020;border:1px solid #494949;border-radius:8px;box-shadow:0 14px 45px #0008;font-size:13px;line-height:1.85}.info-panel p{margin:10px 0}.explanation{border-left:1px solid var(--line);padding:28px;background:var(--panel);display:flex;flex-direction:column;min-width:0}.label{font:11px ui-monospace,monospace;letter-spacing:1.5px;color:#aaa;margin-bottom:15px}.explanation h2{font-size:23px;line-height:1.5;font-weight:500;margin:0 0 16px}.copy p{font-size:16px;line-height:1.85;color:#c7c7c7;margin:0 0 17px}.copy strong{color:#eee;font-weight:550}.formula{background:#202020;border-radius:5px;padding:13px 16px;white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.85 ui-monospace,monospace;margin:0 0 20px;color:#ddd}.inspector{margin-top:auto;border-top:1px solid var(--line);padding-top:17px}.inspector h3{font-size:16px;font-weight:500;margin:8px 0}.inspector p{font-size:14px;line-height:1.8;color:#aaa;margin:0}.sources{overflow-wrap:anywhere;font-size:12px;line-height:1.8;color:#999;margin-top:18px}.sources summary{cursor:pointer}.sources ul{padding-left:18px}.bottom{position:sticky;bottom:0;z-index:6;background:#111;display:flex;align-items:center;gap:18px;padding:18px 0;margin-top:auto}.steps{display:flex;overflow:auto;gap:8px;flex:1;scrollbar-width:thin}.steps button{min-width:70px;flex:1 0 70px;border:0;border-bottom:2px solid #333;border-radius:0;padding:8px 2px 12px;font-size:12px;line-height:1.7;color:#999;white-space:nowrap}.steps button[aria-current=step]{color:#eee;border-color:#ddd}.steps span{display:block;font:10px ui-monospace,monospace;color:#777;margin-bottom:5px}.bottom>button{white-space:nowrap;font-size:13px}.next{background:#e8e8e8;color:#111}.next:hover{background:#fff}.cover{display:grid;grid-template-columns:1fr 1.15fr;align-items:center;gap:55px;min-height:calc(100svh - 115px);padding:25px 3vw}.cover h1{font-size:clamp(34px,3.6vw,56px);letter-spacing:-1px;line-height:1.35}.cover p{font-size:17px;line-height:1.9;color:#bbb;max-width:490px}.cover .meta{font-size:12px;line-height:2;color:#999;margin-top:30px}.cover svg{width:100%;height:500px}.badge{display:inline-block;font:11px ui-monospace,monospace;border:1px solid #444;padding:6px 10px;margin-bottom:25px;letter-spacing:1px}.cover button{margin-top:20px}svg text{font-family:Inter,"PingFang SC",system-ui,sans-serif;fill:#e8e8e8;font-size:18px}svg .small{font-size:14px;fill:#ababab}svg .tiny{font-size:12px;fill:#ababab}svg .op-label{font-size:18px;font-weight:650;fill:#fff;dominant-baseline:middle}svg .hit{cursor:pointer}svg .hit .outline{transition:stroke .12s}svg .hit:hover .outline,svg .hit.selected .outline,svg .hit:focus .outline{stroke:#fff;stroke-width:2.5}svg .hit.selected text{fill:#fff}svg .hit:focus{outline:none}svg .data-label{paint-order:stroke;stroke:#131313;stroke-width:2.5px;stroke-linejoin:round}svg .grid-label{font-size:14px;fill:var(--tensor-color);font-weight:400}svg .grid-detail{font-size:12px;fill:var(--tensor-color);font-weight:400}svg .hit.selected .data-label text{fill:var(--tensor-color)}svg .edge-label{font-size:12px;fill:#ccc;paint-order:stroke;stroke:#131313;stroke-width:5px}svg .soft{opacity:.24}svg .hit.selected{opacity:1}.noscript{padding:35px;line-height:1.8}.sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0)}
+@media(min-width:1000px){body:not(.cover-mode) main{height:100svh;min-height:0}.heading,.bottom{flex-shrink:0}.workspace{flex:1;min-height:0}.canvas{height:0;min-height:320px}.explanation{overflow:auto;scrollbar-width:thin}.bottom{position:static}}
+@media(max-width:999px){main{padding:25px 20px 0}.workspace{grid-template-columns:1.3fr 1fr}.explanation{padding:22px}.canvas{height:570px}.cover{gap:25px;padding:20px 0}.cover h1{font-size:45px}}
+@media(max-width:760px){main{padding:22px 14px 0}.heading{margin-bottom:18px}.number{font-size:28px}.workspace{grid-template-columns:1fr}.canvas{height:440px;flex:none}.explanation{border-left:0;border-top:1px solid var(--line);padding:24px}.cover{grid-template-columns:1fr;gap:12px;min-height:0;padding:20px 10px}.cover h1{font-size:42px}.cover svg{height:340px}.cover .meta{margin-top:15px}.bottom{gap:8px;padding:12px 0}.bottom>button{font-size:12px;padding:8px}.toolbar{gap:4px}.toolbar .mode{width:100%;justify-content:center;margin:0 0 5px}.steps button{min-width:62px;flex-basis:62px}.subtitle{font-size:13px}}
+
+/* Auxiliary colors identify object families; tensor colors retain data semantics. */
+svg .hit[data-key="callable"]{--object-color:#8EAED0}
+svg .hit[data-key="task"]{--object-color:#685CF0}
+svg .hit[data-key="loop"]{--object-color:#685CF0}
+svg .hit[data-key="loop"]>path{stroke:#685CF0}
+svg .hit[data-key="loop"]>text{fill:#685CF0}
+svg .hit[data-key="buffer"],svg .hit[data-key="address"]{--object-color:#C7AD88}
+svg .hit[data-key="pass"],svg .hit[data-key="snapshot"]{--object-color:#aaa}
+svg .hit[data-key="callable"]>.outline,svg .hit[data-key="loop"]>.outline,svg .hit[data-key="task"]>.outline,svg .hit[data-key="buffer"]>.outline,svg .hit[data-key="address"]>.outline,svg .hit[data-key="pass"]>.outline,svg .hit[data-key="snapshot"]>.outline{stroke:var(--object-color);stroke-width:1.3}
+svg .hit[data-key="callable"]>text,svg .hit[data-key="loop"]>text,svg .hit[data-key="task"]>text,svg .hit[data-key="buffer"]>text,svg .hit[data-key="address"]>text,svg .hit[data-key="pass"]>text,svg .hit[data-key="snapshot"]>text{fill:var(--object-color)}
+svg .hit[data-key="task"]>.outline{fill:#211C3C}
+svg .hit[data-key="buffer"]>.outline{fill:#25221D}
+svg .hit[data-key="pass"]>.outline,svg .hit[data-key="snapshot"]>.outline{fill:#202020}
+svg .hit[data-key="callable"]>path{stroke:#8EAED0;stroke-opacity:.3}
+svg .hit[data-key="buffer"]>path{stroke:#C7AD88;stroke-opacity:.45}
+svg .hit[data-key="address"]>rect{fill:#C7AD88;fill-opacity:.17;stroke:#C7AD88;stroke-width:1.2}
+svg .hit:hover>.outline,svg .hit.selected>.outline,svg .hit:focus>.outline{stroke-width:2;stroke:var(--object-color,#fff)}
+svg .symbol .outline{stroke:#B9C2CD;stroke-width:1.5;fill:#1A1E23}
+svg .symbol.selected .outline,svg .symbol:hover .outline,svg .symbol:focus .outline{stroke:#fff;stroke-width:2}
+svg .hit[data-key="kernel"]{--object-color:#685CF0}svg .hit[data-key="kernel"]>text{fill:#CEC4F9}svg .hit[data-key="op"]{--object-color:#685CF0}
+svg .cell-title{font-size:16px;font-weight:600;fill:#eee}
+
+.mode{flex-wrap:wrap}svg .life{fill:#B1EF6B;fill-opacity:.16;stroke:#B1EF6B}svg .metric{font-size:32px;fill:#C7AD88}svg .warn{fill:#e8a896}svg .guide-line{stroke:#353535;stroke-width:1}pre{tab-size:2}.evidence-code{max-height:260px;overflow:auto;font:11px/1.8 ui-monospace,monospace;background:#202020;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere}.info-panel{max-height:65vh;overflow:auto}a:focus-visible{outline-offset:2px}
+.steps button{min-width:max-content;flex:1 0 84px;padding-inline:6px}
+</style></head><body class="cover-mode"><main>
+<section class="cover" id="cover"><div><div class="badge">AI INFRA · PYPTO / 06</div><h1>Pass 之间的契约<br>与首次偏离定位</h1><p>读取前置要求、产出性质与失效声明，核实验证器实际覆盖，再用相邻快照缩小问题范围。检测位置和根因分别记录。</p><p class="meta">11 节图解 · 规则与证据分别说明<br>教学示例 · 2026-10-10</p><button id="start">开始阅读 →</button></div><div id="cover-art" aria-label="Pass 之间的契约与首次偏离定位"></div></section>
+<header class="heading" id="heading" hidden><div><div class="eyebrow" id="eyebrow"></div><h1 id="title"></h1><p class="subtitle" id="subtitle"></p></div><span class="number" id="number" aria-hidden="true"></span></header>
+<div class="workspace" id="workspace" hidden><section class="visual" aria-label="交互图解"><div class="info"><button id="info-toggle" aria-label="图例与阅读说明" aria-expanded="false" aria-controls="info-panel">i</button><div class="info-panel" id="info-panel" hidden><strong>图例与阅读说明</strong><p><span style="color:var(--i)">■ 输入 / 中间值</span><br><span style="color:var(--w)">■ 权重</span><br>数据填色保持原义。紫色表示计算操作、循环与 Kernel，紫色也用于任务，蓝灰表示通用函数，暖沙色表示存储对象，中性灰表示编译过程；对象类型仍由形状和标签区分。</p><p id="scope-note"></p><p>点击图元查看定义。Tab / Enter 可操作；放大后拖动画布，使用“适应”回到完整图。← / → 翻页。</p><button id="legend-link">返回第一节</button></div></div><div class="canvas" id="canvas"></div><div class="toolbar"><div class="mode" id="modes"></div><button id="minus" aria-label="缩小">−</button><output id="zoom-label">100%</output><button id="plus" aria-label="放大">＋</button><button id="fit">适应</button></div></section><article class="explanation"><div class="label" id="section-label">原理与解释</div><h2 id="explain-title"></h2><div class="copy" id="copy"></div><pre class="formula" id="formula"></pre><div class="inspector" aria-live="polite"><div class="label">选中图元 · 身份与含义</div><h3 id="node-title"></h3><p id="node-copy"></p></div><details class="sources"><summary>来源与适用范围</summary><div id="sources"></div></details></article></div>
+<footer class="bottom"><button id="prev">← 上一页</button><nav class="steps" id="steps" aria-label="图解章节"></nav><button class="next" id="next">下一页 →</button></footer>
+<noscript><p>本报告需启用 JavaScript；内容提要与来源见同目录 README.md。</p></noscript>
+</main><script>
+/* Compiler diagram primitives. Inline this asset for standalone HTML. */
+const CompilerPrimitives = (() => {
+const C={i:'#B1EF6B',w:'#BCA0F3',a:'#F2C45F',g:'#79D4F2',neutral:'#b6b6b6'};
+const glossary={
+ x:['X · 输入 / 中间值','继承：绿色正方形网格。X 随本次输入变化；编译到 Tile 后仍保留绿色。网格格数与亮度为示意，准确 shape 由文字给出。'],
+ w:['W · 模型参数','继承：蓝紫色正方形网格。参数参与计算；编译改变它的访问和存储方式，不改变它作为模型参数的身份。'],
+ y:['Y · 输出值','继承：输出也是计算产生的数据，因此沿用绿色。这里以 Y = XW 为教学主线，不涉及真实模型的耗时测量。'],
+ aggregate:['聚合结果','继承并保留：黄色网格专用于均值、最大值、指数和等聚合结果。本篇 MatMul 主线未单独展开这类对象，不额外制造黄色节点。'],
+ gradient:['梯度','继承并保留：青色网格表达求导结果。本篇讲前向编译，不将青色改作 Pass 或缓冲的颜色。'],
+ instruction:['设备指令 · Kernel 内部执行','窄条表示设备指令的执行动作。本图使用搬运、计算、同步三类语义占位，不是具体 ISA 助记符，也不是实测指令序列。具体指令及顺序应由编译产物或指令 Trace 确认。OP 经过编译形成设备代码，不能与一条指令直接对应。'],
+ op:['IR 操作 · OP','胶囊表示当前 IR 中的操作，例如 tensor.matmul、tile.matmul、加载或存储。OP 描述操作语义；它可以经过拆分、融合等编译变换，不能与一条设备指令或一次 Kernel 调度直接对应。'],
+ add:['＋ · 逐元素相加','继承：圆形加号保留原语义。矩阵乘法使用 MatMul 胶囊；不会因为英文中出现 multiply 就改用圆形乘号。'],
+ multiply:['× · 逐元素乘法 / 广播乘法','继承：圆形乘号表达逐元素或标量广播相乘。矩阵乘法使用明确命名的 MatMul 操作。本篇图例保留它，主线无需使用。'],
+ tile:['Tile · 带类型与布局信息的局部数据','新增修饰：继续使用张量网格，沿用细边框底纹，叠加形状与内存空间标签。Tile 不是默认获得一块独立物理存储；存储由后续 MemRef 关系表达。'],
+ loop:['循环范围 · 结构包含','新增：左侧括线与范围标签圈定重复执行的语句。×4 表示教学示例中的迭代次数，不表示四个设备，也不表示四倍性能。'],
+ callable:['Callable · 可调用函数（图解统称）','本图将可调用函数统称为 Callable；对应源码中的 Function，不是新增的 IR 节点类型。范围框表示有参数、函数体与返回值的函数定义；函数体可以包含多个 OP 和循环。同一函数可以被调用多次。Kernel 是设备端执行实现的概念，不能仅凭 MatMul 名称就把一个 OP 等同于 kernel。'],
+ kernel:['Kernel · 设备端执行入口','本报告以带执行目标的函数范围框表示 kernel：标题标识入口，AIC / AIV 标记设备执行目标，内部展示操作与循环。它不是物理核心，也不是一次运行实例。PyPTO 的混合 InCore 可拆成 AIC 与 AIV kernel，由 Group 组织；单个 MatMul OP 不保证对应一个 kernel。Task 表示一次 Kernel 调度。'],
+ task:['Task · 一次 Kernel 调度','PyPTO 官方定义：A task is one kernel dispatch。Task 引用本次执行的 Kernel，并关联参数与依赖；同一个 Kernel 可被多次调度。运行时根据依赖调度就绪任务。此处为身份示意，卡片宽度不表示耗时；设备指令属于 Kernel 内部的执行细节。'],
+ buffer:['MemRef · 内存引用','MemRef 记录底层分配引用、字节偏移和分配大小。Tile 类型通过 MemRef 关联存储；满足复用约束的多个值可以共享 MemRef。图中矩形表示这种引用关系，不表示硬件内存模块。'],
+ address:['地址区间','新增：带单位刻度的轴与区间块。区间包含起点、不包含终点，即 [offset, offset + size)。相同 offset 在不同 memory space 中属于不同地址域。'],
+ pass:['Pass · 编译处理步骤','新增：紧凑的编号步骤标签，用在编译轴上。它可以分析或变换 IR；不作为计算操作或运行任务画进数据流。'],
+ snapshot:['阶段 IR · 程序结构','用节点与有向边呈现阶段 IR 的局部数据流：X、W 被操作消费，操作产生结果。此图是结构示意，不是从文件自动解析的真实图。PyPTO IR 还包含函数、循环、条件和类型，不能把整个 IR 等同于 DAG。IR dump 是该结构的文本导出载体。'],
+ opflow:['操作间数据依赖 →','灰色实线箭头表达函数体内操作之间的数据依赖；与双折角数据箭头含义一致，局部简图使用中性色减少视觉干扰。'],
+ data:['数据依赖 →','浅灰白连续实线与双折角箭头，连接数据与操作的输入输出。它表明消费关系，不表示实际搬运耗时。'],
+ mapping:['跨阶段 IR 对应 ⋯◇','新增：灰色点线与空心菱形终点。表达教学对应或已核对的对象映射；它不属于程序内部执行边。映射必须说明依据。'],
+ call:['调用 / 引用 ⇢','新增：灰色长虚线与空心箭头。从调用点或任务指向 Callable 定义；一条边不代表一次耗时区间。'],
+ dependency:['任务依赖 →','新增：实线空心箭头，直接标注“先完成”。它约束 Task 之间的顺序，和携带张量值的数据边分开。'],
+ binding:['存储绑定 ─○','新增：灰色实线、空心圆终点，显式标注“存于”。它连接逻辑值与存储对象，不表示数据流动。'],
+ incore:['InCore → AIC / AIV / Group','PyPTO 实现：混合 InCore 函数可以展开为 AIC、AIV 与 Group。纯 Cube 或纯 Vector 函数仅转换为对应类型。拆分取决于操作构成，不是所有 MatMul 都会一分为二。'],
+ load:['Load / Store · 显式读写','PyPTO 的 Tensor→Tile 转换会按操作语义插入或改写加载与存储。图中折叠了具体搬运指令和中间内存层，不以箭头长短表示搬运成本。'],
+ sequence:['编译阶段轴','从左到右表达编译先后，间隔没有耗时比例。本图省略中间 Pass；分组顺序参考当前本地 PassManager，而非将每个 run 都固定成相同序列。'],
+ evidence:['真实 IR 对照','以 l3_decode_csa 的相邻阶段 IR 文件为例，核对函数体中的 tensor.matmul 到 tile.matmul。只报告 IR 文件可直接支持的变换，不推出性能改善。']
+};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function t(x,y,s,cl='',anchor='start'){return `<text x="${x}" y="${y}" class="${cl}" text-anchor="${anchor}">${esc(s)}</text>`}
+function hit(key,html,layer=''){return `<g class="hit" tabindex="0" role="button" aria-label="${esc(glossary[key][0])}" data-key="${key}" data-layer="${layer}">${html}</g>`}
+// Tensor-node styling from the AI Infra training / inference reports.
+function grid(x,y,label,key='x',type='i',detail='',tile=false,w=120,h=60){
+ const color=C[type],cols=Math.floor((w-10)/14),rows=Math.floor((h-8)/14),left=x+(w-cols*14+3)/2,top=y+(h-rows*14+3)/2;
+ let q=`<rect class="outline" data-node-box="grid" x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="#131313" stroke="${color}" stroke-width="1.2"/>`;
+ for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)q+=`<rect data-cell="1" x="${left+c*14}" y="${top+r*14}" width="11" height="11" fill="${color}" opacity=".22"/>`;
+ q+=`<g class="data-label" style="--tensor-color:${color}">`+t(x+w/2,y+h/2+(detail?-4:5),label,'grid-label','middle')+(detail?t(x+w/2,y+h/2+15,detail,'grid-detail','middle'):'')+'</g>';
+ return hit(key,q,'data');
+}
+function op(x,y,label,key='op',w=140){return hit(key,`<rect class="op outline" x="${x}" y="${y}" width="${w}" height="48" rx="24" fill="#685CF0" stroke="#685CF0" stroke-width="1"/><circle cx="${x+25}" cy="${y+24}" r="12" fill="#211391"/><text x="${x+25}" y="${y+25}" text-anchor="middle" dominant-baseline="middle" style="font-size:15px;font-style:italic;fill:#A58BFF">ƒₓ</text>`+t(x+(w+28)/2,y+24,label,'op-label','middle'),'data')}
+
+function arithmetic(cx,cy,key){const d=key==='add'?`M${cx-8} ${cy} H${cx+8} M${cx} ${cy-8} V${cy+8}`:`M${cx-6} ${cy-6} L${cx+6} ${cy+6} M${cx+6} ${cy-6} L${cx-6} ${cy+6}`;return hit(key,`<circle class="outline" cx="${cx}" cy="${cy}" r="24"/><path class="symbol-mark" d="${d}" stroke="#E8EDF2" stroke-width="2.4" stroke-linecap="round" fill="none"/>`).replace('class="hit"','class="hit symbol"')}
+function boundary(x,y,w,h,label,key='callable'){return hit(key,`<rect class="outline" x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="none" stroke="#6b6b6b"/><path d="M${x} ${y+31} H${x+w}" stroke="#444"/>`+t(x+14,y+22,label,'small'),'program')}
+function loop(x,y,w,h,label){return hit('loop',`<path class="outline" d="M${x+14} ${y} H${x} V${y+h} H${x+14}" fill="none" stroke="#8EAED0" stroke-width="1.5"/><path d="M${x+14} ${y} H${x+w} V${y+h} H${x+14}" stroke="#8EAED0" stroke-width="1.5" stroke-dasharray="4 5" fill="none"/>`+t(x+25,y+20,label,'small'),'program')}
+function kernel(x,y,w,h,label,target){return hit('kernel',`<rect class="outline" x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="#171422" stroke="#685CF0" stroke-width="1.5"/><path d="M${x+1} ${y+35} H${x+w-1}" stroke="#685CF0"/><rect x="${x+w-54}" y="${y+9}" width="42" height="19" rx="4" fill="#392A7C"/>`+t(x+13,y+24,label,'small')+`<text x="${x+w-33}" y="${y+23}" text-anchor="middle" style="font-size:11px;fill:#DFD7FF">${esc(target)}</text>`,'program')}
+
+function instruction(x,y,label,w=200){return hit('instruction',`<rect class="outline" x="${x}" y="${y}" width="${w}" height="27" rx="1" fill="#211C3C" stroke="#685CF0"/><path d="M${x+7} ${y+5} V${y+22}" stroke="#685CF0"/>`+t(x+18,y+18,label,'tiny'),'program')}
+function task(x,y,label,w=170){return hit('task',`<rect class="outline" x="${x}" y="${y}" width="${w}" height="65" rx="8" fill="#242424" stroke="#999"/>`+t(x+12,y+19,'TASK','tiny')+t(x+12,y+45,label,'small'),'program')}
+function buffer(x,y,label,w=180){return hit('buffer',`<rect class="outline" x="${x}" y="${y}" width="${w}" height="53" fill="#242424" stroke="#999"/><path d="M${x+9} ${y+5} V${y+48} M${x+w-9} ${y+5} V${y+48}" stroke="#666"/>`+t(x+w/2,y+32,label,'small','middle'),'storage')}
+function doc(x,y,label){
+ const node=(nx,ny,w,text,kind='tensor')=>`<rect data-ir-kind="${kind}" x="${nx}" y="${ny}" width="${w}" height="20" rx="${kind==='op'?10:4}" fill="${kind==='op'?'#685CF0':'#242424'}" stroke="${kind==='op'?'#685CF0':'#aaa'}" stroke-width="1.1"/>`+t(nx+w/2,ny+14,text,'tiny','middle');
+ return hit('snapshot',`<path class="outline" d="M${x} ${y+3} V${y+65} M${x+162} ${y+3} V${y+65}" fill="none" stroke="#aaa"/>`+t(x+81,y-10,label,'small','middle')+`<path d="M${x+47} ${y+17} H${x+66} V${y+33} H${x+80} M${x+47} ${y+49} H${x+66} V${y+33} M${x+130} ${y+33} H${x+151}" fill="none" stroke="#aaa" stroke-width="1.3"/><path d="M${x+76} ${y+30} L${x+80} ${y+33} L${x+76} ${y+36} M${x+147} ${y+30} L${x+151} ${y+33} L${x+147} ${y+36}" fill="none" stroke="#aaa"/>`+node(x+10,y+7,37,'X')+node(x+10,y+39,37,'W')+node(x+80,y+23,50,'op','op'),'program');
+}
+function pass(x,y,label){return hit('pass',`<rect class="outline" x="${x}" y="${y}" width="260" height="36" rx="3" fill="#252525" stroke="#656565"/>`+t(x+130,y+23,label,'small','middle'),'program')}
+function route(points,kind='data',label='',pos=null){
+ const styles={opflow:['#aaa','','open'],data:['#E8E8E8','','arrow'],mapping:['#aaa','3 6','diamond'],call:['#ccc','10 6','open'],dependency:['#ccc','','open'],binding:['#aaa','','circle']};const[c,d,m]=styles[kind];
+ const path=points.map(([x,y],i)=>`${i?'L':'M'}${x} ${y}`).join(' ');
+ for(let i=1;i<points.length;i++)if(points[i][0]!==points[i-1][0]&&points[i][1]!==points[i-1][1])throw new Error('Non-orthogonal relationship');
+ const a=points[0],b=points[1];const lp=pos||[(a[0]+b[0])/2+(a[0]===b[0]?24:0),(a[1]+b[1])/2-10];
+ return hit(kind,`<path class="outline edge" d="${path}" fill="none" stroke="${c}" stroke-width="1.7" stroke-linejoin="round" ${d?`stroke-dasharray="${d}"`:''} marker-end="url(#${m})"/><path d="${path}" fill="none" stroke="transparent" stroke-width="12"/>`+(label?t(lp[0],lp[1],label,'edge-label','middle'):''));
+}
+function line(x1,y1,x2,y2,kind='data',label=''){return route(x1===x2||y1===y2?[[x1,y1],[x2,y2]]:[[x1,y1],[x1,(y1+y2)/2],[x2,(y1+y2)/2],[x2,y2]],kind,label)}
+function address(x,y,w,label,used=1){return hit('address',`<path class="outline" d="M${x} ${y} H${x+w} M${x} ${y-5} V${y+7} M${x+w} ${y-5} V${y+7}" stroke="#999" fill="none"/><rect x="${x}" y="${y+15}" width="${w*used}" height="32" fill="#555" stroke="#aaa"/>`+t(x,y+100,label,'small')+t(x,y+69,'0','tiny')+t(x+w,y+69,'8192 B','tiny','end'),'storage')}
+const defs=`<defs><linearGradient id="op-purple" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#4D3BC9"/><stop offset="1" stop-color="#3D2DC0"/></linearGradient><marker id="arrow" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="10" markerHeight="10" orient="auto"><path d="M8 7 H12" stroke="#131313" stroke-width="2.5"/><path d="M3 2 L8 7 L3 12 M7 2 L12 7 L7 12" stroke="#E8E8E8" stroke-width="1.4" stroke-linejoin="miter" fill="none"/></marker><marker id="open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1 L9 5 L1 9" stroke="#ccc" stroke-width="1.5" fill="none"/></marker><marker id="diamond" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto"><path d="M1 6 L6 1 L11 6 L6 11Z" fill="#131313" stroke="#aaa"/></marker><marker id="circle" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><circle cx="5" cy="5" r="3" fill="#131313" stroke="#aaa"/></marker></defs>`;
+
+const css="svg text{font-family:Inter,\"PingFang SC\",system-ui,sans-serif;fill:#e8e8e8;font-size:18px}\nsvg .small{font-size:14px;fill:#ababab}\nsvg .tiny{font-size:12px;fill:#ababab}\nsvg .op-label{font-size:18px;font-weight:650;fill:#fff;dominant-baseline:middle}\nsvg .hit{cursor:pointer}\nsvg .hit .outline{transition:stroke .12s}\nsvg .hit:hover .outline,svg .hit.selected .outline,svg .hit:focus .outline{stroke:#fff;stroke-width:2.5}\nsvg .hit.selected text{fill:#fff}\nsvg .hit:focus{outline:none}\nsvg .data-label{paint-order:stroke;stroke:#131313;stroke-width:2.5px;stroke-linejoin:round}\nsvg .grid-label{font-size:14px;fill:var(--tensor-color);font-weight:400}\nsvg .grid-detail{font-size:12px;fill:var(--tensor-color);font-weight:400}\nsvg .hit.selected .data-label text{fill:var(--tensor-color)}\nsvg .edge-label{font-size:12px;fill:#ccc;paint-order:stroke;stroke:#131313;stroke-width:5px}\nsvg .soft{opacity:.24}\nsvg .hit.selected{opacity:1}\nsvg .hit[data-key=\"task\"]{--object-color:#685CF0}\nsvg .hit[data-key=\"loop\"]{--object-color:#685CF0}\nsvg .hit[data-key=\"loop\"]>path{stroke:#685CF0}\nsvg .hit[data-key=\"loop\"]>text{fill:#685CF0}\nsvg .hit[data-key=\"buffer\"],svg .hit[data-key=\"address\"]{--object-color:#C7AD88}\nsvg .hit[data-key=\"pass\"],svg .hit[data-key=\"snapshot\"]{--object-color:#aaa}\nsvg .hit[data-key=\"callable\"]>.outline,svg .hit[data-key=\"loop\"]>.outline,svg .hit[data-key=\"task\"]>.outline,svg .hit[data-key=\"buffer\"]>.outline,svg .hit[data-key=\"address\"]>.outline,svg .hit[data-key=\"pass\"]>.outline,svg .hit[data-key=\"snapshot\"]>.outline{stroke:var(--object-color);stroke-width:1.3}\nsvg .hit[data-key=\"callable\"]>text,svg .hit[data-key=\"loop\"]>text,svg .hit[data-key=\"task\"]>text,svg .hit[data-key=\"buffer\"]>text,svg .hit[data-key=\"address\"]>text,svg .hit[data-key=\"pass\"]>text,svg .hit[data-key=\"snapshot\"]>text{fill:var(--object-color)}\nsvg .hit[data-key=\"task\"]>.outline{fill:#211C3C}\nsvg .hit[data-key=\"buffer\"]>.outline{fill:#25221D}\nsvg .hit[data-key=\"pass\"]>.outline,svg .hit[data-key=\"snapshot\"]>.outline{fill:#202020}\nsvg .hit[data-key=\"callable\"]>path{stroke:#8EAED0;stroke-opacity:.3}\nsvg .hit[data-key=\"buffer\"]>path{stroke:#C7AD88;stroke-opacity:.45}\nsvg .hit[data-key=\"address\"]>rect{fill:#C7AD88;fill-opacity:.17;stroke:#C7AD88;stroke-width:1.2}\nsvg .hit:hover>.outline,svg .hit.selected>.outline,svg .hit:focus>.outline{stroke-width:2;stroke:var(--object-color,#fff)}\nsvg .symbol .outline{stroke:#B9C2CD;stroke-width:1.5;fill:#1A1E23}\nsvg .symbol.selected .outline,svg .symbol:hover .outline,svg .symbol:focus .outline{stroke:#fff;stroke-width:2}\nsvg .hit[data-key=\"kernel\"]{--object-color:#685CF0}\nsvg .hit[data-key=\"kernel\"]>text{fill:#CEC4F9}\nsvg .hit[data-key=\"op\"]{--object-color:#685CF0}\nsvg .cell-title{font-size:16px;font-weight:600;fill:#eee}";
+return {css,defs,glossary,grid,op,arithmetic,boundary,loop,kernel,task,instruction,buffer,address,doc,pass,route,line};
+})();
+
+const P=CompilerPrimitives,defs=P.defs;
+document.head.insertAdjacentHTML("beforeend","<style>"+P.css+"</style>");
+const glossary={...P.glossary,...{"identity": ["性质身份", "同一性质在不同表示阶段可能不适用，检查前先固定源码版本、谓词与上下文。"], "contract": ["Pass 性质契约", "required 为前置需求，produced 为产出声明，invalidated 撤销保证。声明与实际检查结果分开记录。"], "property": ["IRProperty", "程序表示应满足的性质。属性依赖图说明前置关系，不能替代真实 Pass 序列或运行日志。"], "declaration": ["声明与执行", "只有启用、适用并实际运行规则后才有检查结果；源码中存在规则不证明本次已执行。"], "coverage": ["验证覆盖", "自动集合和 VerificationInstrument 的模式共同决定检查时机与范围。"], "window": ["性质有效范围", "失效表示原保证不再沿用，不等于出错；再次产生后需要按规则重新验证。"], "first": ["首次可观测偏离", "在适用且可比的相邻快照中，同一谓词首次由通过转为失败的边界，不直接等同根因。"], "nonmonotone": ["非单调检测结果", "后继快照可能重新通过或不适用，未证明单调性时不能使用二分排除前半区间。"], "blindspots": ["规则检查边界", "每条规则有特定对象、条件及跳过分支；通过结果不覆盖未检查的语义或运行行为。"], "repro": ["最小复现", "保留同一故障触发条件与判断标准，缩小无关因素，并重新验证故障确实保留。"], "mapping": ["编译性质关系", "菱形点线表示性质传递或证据检查关系，不是运行时任务依赖。"]}};
+Object.assign(P.glossary,glossary); // Keep shared primitive accessibility labels aligned with this report.
+const refs={"props": ["pass_properties.h", "source-evidence.md#props"], "memory": ["pass_properties.h", "source-evidence.md#memory"], "registry": ["99-verifier.md", "source-evidence.md#registry"], "sets": ["ir_property.cpp", "source-evidence.md#sets"], "pipeline": ["passes.cpp", "source-evidence.md#pipeline"], "instrument": ["pass_context.cpp", "source-evidence.md#instrument"], "ux": ["UX_Insight_Report（pypto仓）.md", "source-evidence.md#ux"], "roundtrip": ["00-pass_manager.md", "source-evidence.md#roundtrip"]};
+const pages=[
+  {
+    "id": "cover",
+    "nav": "封面"
+  },
+  {
+    "id": "contract",
+    "nav": "性质契约",
+    "en": "01 / PYPTO 06",
+    "title": "Pass 的契约描述输入要求与输出保证",
+    "sub": "required、produced、invalidated 是性质集合，不是耗时指标。",
+    "h": "Pass 的契约描述输入要求与输出保证",
+    "p": [
+      "required 表示 Pass 依赖的前置性质；produced 声明变换后建立或保持的性质；invalidated 表示该性质不再能沿用此前的保证。性质声明与验证器实际执行必须分别检查。",
+      "性质失效不是自动判定编译错误。一些变换会合法地进入另一种表示形式；后续 Pass 必须按新的性质要求处理。所有具体列表应对应当前源码版本。"
+    ],
+    "f": "required → Pass → produced\ninvalidated：撤销原有保证",
+    "g": "contract",
+    "refs": [
+      "props"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。",
+    "modes": [
+      "正常产出",
+      "性质失效"
+    ]
+  },
+  {
+    "id": "chain",
+    "nav": "性质依赖",
+    "en": "02 / PYPTO 06",
+    "title": "后续 Pass 需要的性质应有明确来源",
+    "sub": "这里选取当前内存规划链的局部契约。",
+    "h": "后续 Pass 需要的性质应有明确来源",
+    "p": [
+      "InitMemRef 要求 SSAForm 等性质，产生 HasMemRefs 和 NormalizedStmtStructure，并声明 SSAForm 失效。MemoryReuse 要求 HasMemRefs 等性质；AllocateMemoryAddr 产生 AllocatedMemoryAddr。",
+      "这是局部属性依赖，不是完整流水线。不能由共享 MemRef 推导所有 SSA 变量被重新赋值；也不能仅看两个 Pass 在图中相邻，就认为它们的全部前置性质已经满足。"
+    ],
+    "f": "InitMemRef → HasMemRefs\nAllocateMemoryAddr → AllocatedMemoryAddr",
+    "g": "property",
+    "refs": [
+      "memory"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。"
+  },
+  {
+    "id": "declaration",
+    "nav": "声明与检查",
+    "en": "03 / PYPTO 06",
+    "title": "声明产生性质，不等于已经运行检查",
+    "sub": "还需确认 verifier、选择集合、开关与执行日志。",
+    "h": "声明产生性质，不等于已经运行检查",
+    "p": [
+      "PassProperties 是契约声明；PropertyVerifier 才实现具体检查。存在某个性质枚举或 produced 声明，不能直接写成“本次编译已验证”。",
+      "需要记录当前验证模式、注册规则、该性质是否进入实际检查集合，以及本次通过、失败或跳过的结果。缺少日志时应说明只完成源码规则核对。"
+    ],
+    "f": "声明 → 规则实现 → 启用与适用 → 实际结果",
+    "g": "declaration",
+    "refs": [
+      "registry",
+      "sets"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。",
+    "modes": [
+      "只有声明",
+      "实际检查要求"
+    ]
+  },
+  {
+    "id": "coverage",
+    "nav": "验证范围",
+    "en": "04 / PYPTO 06",
+    "title": "自动验证与逐 Pass 验证覆盖范围不同",
+    "sub": "本地源码中的集合与运行模式决定实际覆盖。",
+    "h": "自动验证与逐 Pass 验证覆盖范围不同",
+    "p": [
+      "PassPipeline 的自动检查先验证结构性质与 GetVerifiedProperties 的交集，再检查本步 produced 中属于自动集合且尚未验证的性质。invalidated 会撤销对应验证记录，使其再次产生时可重新检查。",
+      "VerificationInstrument 在 BEFORE 模式检查 required 与结构性质，在 AFTER 模式检查 produced 与结构性质。使用 BEFORE_AND_AFTER 才同时覆盖两侧；不能把 Basic 自动检查描述成对所有性质逐步重验。"
+    ],
+    "f": "自动：produced ∩ 自动集合 − 已验证\nInstrument：按模式检查入口 / 出口",
+    "g": "coverage",
+    "refs": [
+      "pipeline",
+      "instrument",
+      "sets"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。",
+    "modes": [
+      "自动集合",
+      "前后检查"
+    ]
+  },
+  {
+    "id": "window",
+    "nav": "验证窗口",
+    "en": "05 / PYPTO 06",
+    "title": "性质可以被建立、失效并重新建立",
+    "sub": "同一性质在不同 IR 阶段的适用性需要单独确认。",
+    "h": "性质可以被建立、失效并重新建立",
+    "p": [
+      "构造例：P 在阶段 A 被建立和验证，阶段 B 声明使 P 失效，阶段 C 重新产生 P。自动验证集合若包含 P，失效会移除已验证记录，重新产生后应再次检查。",
+      "不能把 B 之后的“未保证”渲染成失败，也不能沿用 A 的绿色通过状态覆盖 C。三种状态分别是已验证、当前无保证、重新验证后的结果；P 为教学占位符。"
+    ],
+    "f": "A：P 已验证\nB：P 失效\nC：P 重新产生 → 再检查",
+    "g": "window",
+    "refs": [
+      "pipeline"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。",
+    "modes": [
+      "重新验证通过",
+      "重新验证失败"
+    ]
+  },
+  {
+    "id": "first",
+    "nav": "首次偏离",
+    "en": "06 / PYPTO 06",
+    "title": "对同一谓词比较相邻快照",
+    "sub": "先定义何种性质偏离，再定位最早可观测边界。",
+    "h": "对同一谓词比较相邻快照",
+    "p": [
+      "构造例：在连续快照 S0、S1、S2、S3 上检查同一谓词 Q，结果为通过、通过、失败、失败。若 Q 在这些阶段均适用，首次可观测偏离位于 S1→S2。",
+      "这把调查缩小到该变换边界，但还需区分输入隐藏问题、Pass 实现、检查器缺陷与条件变化。最早发现失败不等于根因已经被证明；缺失快照时只能给出更宽区间。"
+    ],
+    "f": "相同输入身份 + 相同谓词 + 可比阶段\nS1 通过，S2 失败 → 检查边界 S1→S2",
+    "g": "first",
+    "refs": [
+      "instrument",
+      "ux"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。",
+    "modes": [
+      "连续快照",
+      "中间缺失"
+    ]
+  },
+  {
+    "id": "nonmonotone",
+    "nav": "非单调边界",
+    "en": "07 / PYPTO 06",
+    "title": "失败可能在后续变换中暂时消失",
+    "sub": "没有单调性保证时不能直接二分定位。",
+    "h": "失败可能在后续变换中暂时消失",
+    "p": [
+      "构造结果为通过、失败、通过、失败：检查中点得到通过，仍不能排除更早阶段已经出现失败。某个表示性质可能暂时不适用，后续变换也可能改变检查器能观察到的形态。",
+      "逐步重放可比边界，或先证明检测谓词在目标区间内具有单调性，再使用二分。将“不适用”“未采集”“失败”区分开，避免把缺失误判为通过。"
+    ],
+    "f": "通过 → 失败 → 通过 → 失败\n中点通过不排除更早偏离",
+    "g": "nonmonotone",
+    "refs": [
+      "pipeline"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。"
+  },
+  {
+    "id": "blindspots",
+    "nav": "规则边界",
+    "en": "08 / PYPTO 06",
+    "title": "验证器通过只覆盖其实际检查的规则",
+    "sub": "操作数量、结构相等和数值正确性不能互相替代。",
+    "h": "验证器通过只覆盖其实际检查的规则",
+    "p": [
+      "合法内联、融合、降级和死代码消除都可能改变操作数量，因此“op 数量守恒”不是全流水线通用不变量。应按变换定义具体语义义务，例如替换后的使用关系、控制范围与输出对应。",
+      "Print→parse roundtrip 检查表示能否往返，不证明生成程序与数学参考数值相等；还要记录跳过情况。数值验证、并发行为和性能实验仍需各自证据。历史 UX 建议是问题线索，不能直接当作现行编译契约。"
+    ],
+    "f": "结构合法 / 表示往返 / 数值正确 / 性能达标\n四类不同的验证问题",
+    "g": "blindspots",
+    "refs": [
+      "ux",
+      "roundtrip"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。",
+    "modes": [
+      "数量变化",
+      "不同验证问题"
+    ]
+  },
+  {
+    "id": "repro",
+    "nav": "最小复现",
+    "en": "09 / PYPTO 06",
+    "title": "保留触发条件，缩小无关程序范围",
+    "sub": "每次删减后，都用同一失败判据重新验证。",
+    "h": "保留触发条件，缩小无关程序范围",
+    "p": [
+      "保存编译输入、版本、目标、选项、前后快照、性质名和诊断位置。逐步缩小函数、控制范围或 shape 时，要确认故障仍可重现，不能仅保留一条看起来相似的报错。",
+      "若候选修复使检查通过，还需要合法变换的正例以及边界回归，必要时验证数值与设备行为。报告中把已重现、已定位、已修复和已回归四种进度分别记录。"
+    ],
+    "f": "原始复现 → 等价触发的最小用例\n修复 → 规则回归 → 必要的运行验证",
+    "g": "repro",
+    "refs": [
+      "ux",
+      "registry"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。",
+    "modes": [
+      "复现材料",
+      "修复验证"
+    ]
+  },
+  {
+    "id": "overview",
+    "nav": "完整检查",
+    "en": "10 / PYPTO 06",
+    "title": "用明确性质连接诊断与变换边界",
+    "sub": "契约说明应当成立什么，证据说明实际检查了什么。",
+    "h": "用明确性质连接诊断与变换边界",
+    "p": [
+      "从当前源码读取 required / produced / invalidated，再核实验证器与开关；使用同一输入的相邻快照定位性质变化，保留不适用与缺失状态。",
+      "交付应包含最小复现、首个可观测偏离区间、诊断规则、当前假设及验证结果。不要把通过一个检查写成全程序正确，也不要将检测点自动归责为引入点。"
+    ],
+    "f": "契约 → 覆盖 → 快照 → 偏离区间\n→ 复现 → 修复与回归",
+    "g": "contract",
+    "refs": [
+      "props",
+      "pipeline",
+      "instrument"
+    ],
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。"
+  }
+];
+const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const t=(x,y,s,cl='',anchor='start')=>`<text x="${x}" y="${y}" class="${cl}" text-anchor="${anchor}">${esc(s)}</text>`;
+function hit(key,body){return `<g class="hit" tabindex="0" role="button" data-key="${key}" aria-label="${esc(glossary[key][0])}">${body}</g>`}
+
+function caption(y,s){return t(400,y,s,'small','middle')}
+function box(x,y,w,h,title,detail,key='identity') {return hit(key,`<rect class="outline" x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="#202020" stroke="#707070"/>`+t(x+w/2,y+28,title,'','middle')+t(x+w/2,y+54,detail,'small','middle'))}
+function operand(x,y,label,type,detail,key){return P.grid(x,y,label,'tile',type,detail,true,170,70).replaceAll('data-key="tile"',`data-key="${key}"`).replaceAll('aria-label="Tile · 带类型与布局信息的局部数据"',`aria-label="${esc(glossary[key][0])}"`)}
+function block(x,y,w,label,key='capacity',color='#C7AD88'){return hit(key,`<rect class="outline" x="${x}" y="${y}" width="${w}" height="45" rx="3" fill="${color}" fill-opacity=".13" stroke="${color}"/>`+t(x+w/2,y+28,label,'small','middle'))}
+function chain(nodes,y){let s='';nodes.forEach((n,i)=>{let x=45+i*255;if(i<2)s+=P.line(x+200,y+40,x+255,y+40,'mapping');s+=box(x,y,200,80,n[0],n[1],n[2])});return s}
+
+
+function state(x,y,label,value,key='first'){return box(x,y,160,100,label,value,key)}
+function diagram(id){bounds={w:800,h:540};let s='';
+if(id==='contract'){s=chain([['required','入口前置性质','contract'],['Pass','执行程序变换','contract'],['produced','出口性质声明','contract']],125)+box(210,340,380,90,mode?'invalidated：保证撤销':'验证规则与执行记录',mode?'不自动表示编译错误':'声明不等于实际已检查','contract')}
+else if(id==='chain'){s=P.pass(45,95,'InitMemRef')+P.pass(450,95,'MemoryReuse')+box(80,205,200,90,'HasMemRefs','由前者产生','property')+box(485,205,200,90,'HasMemRefs','后者的部分前置条件','property')+P.line(280,250,485,250,'mapping')+P.pass(255,360,'AllocateMemoryAddr')+caption(445,'产生 AllocatedMemoryAddr；图中省略其他前置性质')}
+else if(id==='declaration'){s=chain([['produced 声明','源码可见','declaration'],['verifier 实现',mode?'规则及适用条件':'仍需核实','declaration'],['执行记录',mode?'启用且实际运行':'没有运行证据','declaration']],150)+caption(365,mode?'完整条件；本报告并未实际执行编译器':'只能说明“有声明”，不能标记“本次已验证”')}
+else if(id==='coverage'){s=box(75,115,650,105,mode?'VerificationInstrument':'PassPipeline 自动检查',mode?'BEFORE / AFTER / BEFORE_AND_AFTER':'受 GetVerifiedProperties 集合约束','coverage')+box(75,315,290,95,mode?'入口 required + 结构性质':'移除 invalidated',mode?'仅在 BEFORE 启用时':'撤销旧的验证记录','coverage')+box(435,315,290,95,mode?'出口 produced + 结构性质':'验证新产生的选定性质',mode?'仅在 AFTER 启用时':'已验证且未失效则跳过','coverage')}
+else if(id==='window'){s=chain([['阶段 A','P 已验证','window'],['阶段 B','P 失效：无保证','window'],['阶段 C',mode?'P 再检查：失败':'P 再检查：通过','window']],145)+caption(380,'P 为构造性质；三个状态不能合并为单个通过标志')}
+else if(id==='first'){for(let i=0;i<4;i++){s+=state(35+i*190,175,'S'+i,mode&&i===1?'未采集':i<2?'Q 通过':'Q 失败');if(i<3)s+=P.line(195+i*190,225,225+i*190,225,'mapping')}s+=caption(395,mode?'仅能定位 S0→S2；S1 缺失，不能缩小到最后一步':'首次可观测边界 S1→S2；Q 在各阶段都适用')}
+else if(id==='nonmonotone'){['通过','失败','通过','失败'].forEach((v,i)=>{s+=state(35+i*190,175,'S'+i,v,'nonmonotone');if(i<3)s+=P.line(195+i*190,225,225+i*190,225,'mapping')});s+=caption(395,'只检查 S2 得到通过，会遗漏 S1 已出现的失败')}
+else if(id==='blindspots'){if(!mode){s=P.boundary(65,100,280,225,'变换前')+P.op(105,175,'composite','op',200)+P.boundary(455,100,280,225,'变换后')+P.op(515,150,'op 1','op',150)+P.op(515,235,'op 2','op',150)+P.line(345,215,455,215,'mapping')+caption(435,'合法降级可能改变 op 数量；数量守恒不是通用契约')}
+else{s=box(55,90,300,105,'结构规则','定义 / 类型 / 作用域','blindspots')+box(445,90,300,105,'表示往返','打印后能否重新解析','blindspots')+box(55,300,300,105,'数值验证','golden / 容差 / 输入','blindspots')+box(445,300,300,105,'性能验证','测量契约 / 重复样本','blindspots')}}
+else if(id==='repro'){s=chain(mode?[['候选修复','故障判据不再触发','repro'],['规则回归','正例与反例','repro'],['运行验证','按风险补足数值与设备','repro']]:[['固定输入','版本 / 目标 / 配置','repro'],['相邻快照','同一性质与诊断','first'],['最小用例','删减后仍复现','repro']],150)+caption(385,mode?'本图列出验证要求，没有预填实际通过结果':'必须保留同一故障，不能只保留相似报错文本')}
+else if(id==='overview'){s=chain([['当前契约','要求与产出','contract'],['实际覆盖','规则与启用模式','coverage'],['相邻快照','首次可观测偏离','first']],90)+chain([['保留缺口','不适用 / 未采集','window'],['最小复现','触发条件稳定','repro'],['修复验证','规则与运行回归','repro']],335)+P.route([[655,170],[750,170],[750,275],[145,275],[145,335]],'mapping')}
+return s;}
+function coverDiagram(){return P.doc(80,175,'Pass 前 IR')+P.pass(310,180,'受契约约束的变换')+P.doc(610,175,'Pass 后 IR')+P.line(242,210,310,210,'mapping')+P.line(570,210,610,210,'mapping')+box(145,345,510,100,'同一性质的入口与出口检查','缩小首次可观测偏离范围','contract')}
+
+function updateFormula(){}
+let page=0,mode=0,selected='',bounds={w:800,h:540},zoom=1,view={x:0,y:0,w:800,h:540},drag=null,moved=false;
+function draw(){const body=diagram(pages[page].id);$('canvas').innerHTML=`<svg role="group" aria-label="${esc(pages[page].title)}" viewBox="0 0 ${bounds.w} ${bounds.h}">${defs}<g id="scene">${body}</g></svg>`;fit();select(pages[page].g);updateFormula();}
+
+function select(key){selected=key;document.querySelectorAll('#scene .hit').forEach(el=>el.classList.toggle('selected',el.dataset.key===key));$('node-title').textContent=glossary[key][0];$('node-copy').textContent=glossary[key][1]}
+function updateView(){let svg=$('canvas').querySelector('svg');if(svg)svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`);$('zoom-label').textContent=Math.round(zoom*100)+'%';$('minus').disabled=zoom<=1;$('plus').disabled=zoom>=4}
+function fit(){zoom=1;view={x:0,y:0,w:bounds.w,h:bounds.h};updateView()}
+function scale(f){const z=Math.max(1,Math.min(4,zoom*f));const w=bounds.w/z,h=bounds.h/z;view={x:view.x+(view.w-w)/2,y:view.y+(view.h-h)/2,w,h};zoom=z;clamp();updateView()}
+function clamp(){view.x=Math.max(-bounds.w*.12,Math.min(bounds.w-view.w+bounds.w*.12,view.x));view.y=Math.max(-bounds.h*.12,Math.min(bounds.h-view.h+bounds.h*.12,view.y))}
+function info(open){$('info-panel').hidden=!open;$('info-toggle').setAttribute('aria-expanded',String(open))}
+
+function render(n){page=Math.max(0,Math.min(pages.length-1,n));mode=0;drag=null;info(false);document.body.classList.toggle('cover-mode',!page);$('cover').hidden=!!page;$('heading').hidden=!page;$('workspace').hidden=!page;$('prev').disabled=page===0;$('next').disabled=page===pages.length-1;document.querySelectorAll('#steps button').forEach((b,i)=>{if(i===page)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current')});const p=pages[page];history.replaceState(null,'','#'+p.id);if(!page){$('canvas').innerHTML='';return;}$('eyebrow').textContent=p.en;$('title').textContent=p.title;$('subtitle').textContent=p.sub;$('number').textContent=String(page).padStart(2,'0');$('explain-title').textContent=p.h;$('copy').innerHTML=p.p.map(x=>'<p>'+x+'</p>').join('');$('formula').textContent=p.f;$('scope-note').textContent=p.note;$('sources').innerHTML='<p>'+esc(p.note)+'</p><ul>'+p.refs.map(k=>`<li><a href="${refs[k][1]}" target="_blank" rel="noopener">${esc(refs[k][0])}</a></li>`).join('')+'</ul><p>核对日期：2026-10-10。依据为当前本地材料，所读文件哈希及摘录见来源说明；历史研究与原型不代表实现保证。教学数值与图形为构造示例，未执行编译或性能实验。</p>';
+ $('modes').innerHTML=(p.modes||[]).map((s,i)=>`<button data-mode="${i}" class="${i===0?'active':''}" aria-pressed="${i===0}">${esc(s)}</button>`).join('');document.querySelector('.explanation').scrollTop=0;draw();let active=document.querySelector('#steps [aria-current]');$('steps').scrollTo({left:active.offsetLeft-$('steps').offsetLeft-70,behavior:'instant'});if(innerWidth<761)window.scrollTo(0,0)}
+$('steps').innerHTML=pages.map((p,i)=>`<button data-page="${i}"><span>${String(i).padStart(2,'0')}</span>${p.nav}</button>`).join('');$('steps').onclick=e=>{let b=e.target.closest('[data-page]');if(b)render(+b.dataset.page)};$('prev').onclick=()=>render(page-1);$('next').onclick=()=>render(page+1);$('start').onclick=()=>render(1);$('legend-link').onclick=()=>render(1);$('info-toggle').onclick=()=>info($('info-panel').hidden);document.addEventListener('click',e=>{if(!e.target.closest('.info'))info(false)});$('fit').onclick=fit;$('plus').onclick=()=>scale(1.3);$('minus').onclick=()=>scale(1/1.3);$('modes').onclick=e=>{let b=e.target.closest('[data-mode]');if(!b)return;mode=+b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>{x.classList.toggle('active',+x.dataset.mode===mode);x.setAttribute('aria-pressed',String(+x.dataset.mode===mode))});draw()};
+$('canvas').onclick=e=>{if(moved){moved=false;return}let h=e.target.closest('[data-key]');if(h)select(h.dataset.key)};$('canvas').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.dataset.key){e.preventDefault();select(e.target.dataset.key)}});document.addEventListener('keydown',e=>{if(e.key==='Escape')info(false);if(e.target.matches('input,textarea')||e.altKey||e.metaKey||e.ctrlKey)return;if(e.key==='ArrowRight'){e.preventDefault();render(page+1)}if(e.key==='ArrowLeft'){e.preventDefault();render(page-1)}});
+$('canvas').addEventListener('pointerdown',e=>{moved=false;if(zoom<=1)return;const svg=$('canvas').querySelector('svg');const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(svg.getScreenCTM().inverse());drag={px:e.clientX,py:e.clientY,x:p.x,y:p.y,vx:view.x,vy:view.y,matrix:svg.getScreenCTM().inverse()}});$('canvas').addEventListener('pointermove',e=>{if(!drag)return;if(Math.hypot(e.clientX-drag.px,e.clientY-drag.py)>5){moved=true;$('canvas').setPointerCapture(e.pointerId);$('canvas').classList.add('dragging')}if(moved){let p=new DOMPoint(e.clientX,e.clientY).matrixTransform(drag.matrix);view.x=drag.vx+drag.x-p.x;view.y=drag.vy+drag.y-p.y;clamp();updateView()}});function stop(){drag=null;$('canvas').classList.remove('dragging')}$('canvas').addEventListener('pointerup',stop);$('canvas').addEventListener('pointercancel',stop);window.addEventListener('resize',()=>{if(page)updateView()});
+
+$('cover-art').innerHTML=`<svg viewBox="0 0 800 540" role="img" aria-label="Pass 之间的契约与首次偏离定位">${defs}${coverDiagram()}</svg>`;
+$('cover-art').querySelectorAll('[tabindex]').forEach(el=>{el.removeAttribute('tabindex');el.removeAttribute('role')});
+$('cover-art').innerHTML=$('cover-art').innerHTML.replace(/id="(arrow|open|diamond|circle)"/g,'id="cover-$1"').replace(/url\(#(arrow|open|diamond|circle)\)/g,'url(#cover-$1)');
+window.addEventListener('hashchange',()=>render(Math.max(0,pages.findIndex(p=>p.id===location.hash.slice(1)))));
+render(Math.max(0,pages.findIndex(p=>p.id===location.hash.slice(1))));
+
+</script></body></html>

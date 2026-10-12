@@ -1,0 +1,332 @@
+# 来源与证据
+核对日期：2026-10-10。摘录来自当前本地文件；原型与历史研究不等同于当前编译器保证。
+
+<a id="method"></a>
+## method
+`Insight/PyPTO性能调优方法论_基于Toolkit与案例.md:32–116`; SHA256 `bd252bd1839daeedf4257ec2ad4fe56e361efac6102ad504abac6c818cacc7c5`
+```text
+## 2. 证据层与工具分工
+
+PyPTO3 Toolkit 是一个**读取、关联和可视化已有产物**的工具，不负责采集运行记录；`CPM_static*.json` / `CPM_observed*.json` 也需由关键路径工具预先生成。
+
+| 证据层 | 主要输入 | 回答的问题 | 不能单独证明什么 |
+| --- | --- | --- | --- |
+| 服务层 | `serving-strace-swimlane.json`、端到端 benchmark | 哪个 WorkerProcess 负载或尾耗时异常？ | AICore 内某个 Kernel 为什么慢 |
+| Host / Device | `BenchmarkStats`、独立 benchmark | 延迟是 Host、Device，还是两者共同贡献？ | Device 内的依赖和 pipe 根因 |
+| 函数汇总 | `name_map*.json` + Swimlane | 慢来自单次慢、次数多，还是波动？ | 是否影响 wall-clock |
+| 运行时执行 | `chip_swimlane_records.json` | Task 何时 dispatch、start、finish；Core 是否空转？ | 图的最短延迟下界 |
+| 关键路径 | `CPM_static*.json`、`CPM_observed*.json` | 哪些 Task 决定 makespan，等待来自哪里？ | 内核内部哪条硬件 pipe 受限 |
+| 依赖图 | `deps.json`、`name_map*.json` | 哪些边造成串行、哪些边可审计为冗余？ | 去边后一定有可见收益 |
+| 编译过程 | `passes_dump*`、Pass 日志 | 哪个 Pass 改了 IR、产生了 warning？ | 该变化一定是性能根因 |
+| 片上内存 | `*after_AllocateMemoryAddr.py` | Tile 的地址、生命周期、复用和容量约束 | MemoryReuse 本身就是错误 |
+| 核内执行 | InCore simulator trace、instruction metrics | MTE / Vector / Cube / Scalar 哪条 pipe 受限？ | 该单核合成结果必然等于端到端收益 |
+
+### 2.1 推荐的产物目录
+
+关联文件应放在同一轮、同一配置的输出目录中：
+
+```text
+<case>/
+├── dfx_outputs/
+│   ├── chip_swimlane_records.json
+│   ├── deps.json
+│   ├── name_map_<timestamp>.json
+│   ├── CPM_static.json              # 可选，关键路径工具生成
+│   └── CPM_observed.json            # 可选，关键路径工具生成
+├── serving-strace-swimlane.json     # 若分析 Serving
+└── passes_dump_<timestamp>/
+    ├── 00_frontend.py
+    ├── NN_<PassName>.py
+    ├── NN_<PassName>.log            # 可选
+    └── *_after_AllocateMemoryAddr.py
+```
+
+缺少 `deps.json` 时泳道不能恢复依赖连线；缺少 `name_map*.json` 时函数名会降级为 ID；缺少 CPM 文件时不能用关键路径高亮。不要把不同运行、不同 shape 或不同版本的文件混放后一起解读。
+
+---
+
+## 3. 标准调优流程
+
+### 步骤 0：冻结目标与测量契约
+
+**需要看到**
+
+- 业务目标：TTFT、TPOT、单算子时延、吞吐、P99 或成本中的哪一个；
+- case manifest：shape、dtype、batch、序列长度、并行配置、输入分布；
+- 环境指纹：设备/平台、Runtime、CANN、PyPTO、编译选项、代码版本；
+- 正确性门槛：golden、`rtol` / `atol`、容许的确定性变化；
+- 计时定义、warm-up、重复次数、统计量和基线样本。
+
+**为什么看**
+
+不同范围的数字不能比较。例如“attention 对 attention”与“attention 对整层”、含 Host 复制与只测 device、不同 tiling 或不同 warm-up，都可能制造虚假的倍数差。
+
+**如何分析**
+
+逐项比对 A/B：被测工作是否相同、参考是否相同、计时窗口是否相同、输入是否固定、统计规则是否一致。若任一项不同，结果只能是探索性观察，不能写为性能收益。
+
+**下一步**
+
+冻结 manifest 和 baseline。调优过程中若必须增加 shape 或改计时范围，应新建版本而非覆盖原基线。
+
+### 步骤 1：先把问题定界到 Serving、Host 或 Device
+
+**需要看到**
+
+- Serving Strace 中各 `WorkerProcess` 的任务数、平均、最大和最小耗时；
+- 独立 benchmark 中的 `host_wall_us`、`device_wall_us` 与端到端时间；
+- 是否存在每轮重复 bind/H2D、编译/注册、结果拷回或不均衡 worker。
+
+**为什么看**
+
+Device 侧调优不能解决 Host 的重复上传或服务调度失衡。反之，端到端指标中 Host 很小，优先优化服务只会分散注意力。
+
+**如何分析与下一步**
+
+| 看到的信号 | 判断 | 下一步 |
+| --- | --- | --- |
+| `host_wall_us` 主导 | 数据搬运、注册、Host 编排是主要成本 | 常驻 weights/KV cache/workspace，register-once、dispatch-many，再测 Host/Device 是否按预期分离 |
+| 个别 WorkerProcess 的 Count 或 Max 明显异常 | Serving 工作分配或尾部阻塞 | 排查请求分配、队列和对应 worker 的下游依赖 |
+| `device_wall_us` 主导 | 问题在设备执行路径 | 采集 Chip Swimlane 与依赖图 |
+
+> 不要用开启 Swimlane 的 DFX 运行作为正式 wall-clock 基线。Runtime 文档说明该采集会引入额外过程与观测扰动；正式 A/B 应来自独立的干净 benchmark。
+```
+
+<a id="swim"></a>
+## swim
+`Insight/PyPTO性能调优方法论_基于Toolkit与案例.md:139–164`; SHA256 `bd252bd1839daeedf4257ec2ad4fe56e361efac6102ad504abac6c818cacc7c5`
+```text
+### 步骤 3：在 Chip Swimlane 中还原“实际发生了什么”
+
+**需要看到**
+
+- Worker View：AIC/AIV 任务的 `start/end`、条宽、Core 空闲、Setup、SPMD 边界、fan-in/fan-out；
+- Scheduler View：`dispatch→finish`，尤其是 `dispatch→start` 间隔；
+- AICPU Scheduler：`dispatch`、`early_dispatch`、`resolve`、`release`、`drain` 等阶段；
+- AICPU Orchestrator：提交 envelope 与 Scheduler 的衔接；
+- 性能面板：Kernel 统计、连续单依赖链、关键路径、Gap/Blocker、Early Dispatch。
+
+**为什么看**
+
+编译期 `perf_hint` 说明的是编译器怀疑什么；泳道说明该轮运行中真正执行、等待和空转了什么。
+
+**如何分析与下一步**
+
+| 看到的信号 | 解释 | 下一步 |
+| --- | --- | --- |
+| 一个宽任务、前后几乎无空隙 | 可能是核内瓶颈 | 进入 InCore / roofline / 访存分析 |
+| 许多短任务串成台阶 | 图或粒度限制并行度 | 看连续单依赖和 `deps.json` |
+| Core 空闲，仍有 ready 任务未启动 | Scheduler 未及时派发 | 看 Scheduler phase、任务数量和可合并链 |
+| `dispatch→start` 大 | pickup、调度或资源等待 | 结合 CPM 区分 core-wait / front-gap |
+| Setup 区域占比高 | 本地 receive-to-start 准备成本高 | 优先检查任务粒度、局部准备和重复初始化 |
+| 同名 SPMD 整体边界很长且 Core 不均衡 | SPMD 规模或工作分配不均 | 按 SPMD 组检查 block 数和尾部 Core |
+
+用搜索、依赖高亮和时间参考线把“某个统计条目”变成“某次具体执行”。没有回到具体实例的函数级结论，仍然只是候选假设。
+```
+
+<a id="cpm"></a>
+## cpm
+`Insight/PyPTO性能调优方法论_基于Toolkit与案例.md:166–190`; SHA256 `bd252bd1839daeedf4257ec2ad4fe56e361efac6102ad504abac6c818cacc7c5`
+```text
+### 步骤 4：以关键路径决定优化优先级
+
+**需要看到**
+
+- Static CPM：假设 Core 无限时，由依赖本身决定的最长路径；
+- Observed CPM：从最后完成任务反向追溯的实际执行路径；
+- makespan、compute/stall 占比、`data-wait`、`core-wait`、`front-gap`；
+- 验证信息：采集完整性、`tiling check: exact`、函数名解析、rank 覆盖、独立 wall 对照。
+
+**为什么看**
+
+只有路径上的缩短才直接缩短该 rank 的 makespan。函数很热但完全在路径之外时，可能提升吞吐或 Core 利用率，却不改变当前 wall。
+
+**如何分析与下一步**
+
+| 关键路径信号 | 结论 | 处置 |
+| --- | --- | --- |
+| Static CPM 接近 makespan | 依赖受限，图就是时延下界 | 缩短链、拆长任务、减少 fan-in 串行 |
+| Static CPM 明显低于 makespan 且 stall 高 | 运行时执行损失超过依赖下界 | 按 stall 类型继续归因 |
+| `data-wait` 主导 | 当前任务在等上游生产者 | 优化命名出的上游任务，而非等待者 |
+| `core-wait` 主导 | 资源序列化或 Core 分配不均 | 扩宽工作、重平衡、降低竞争 |
+| `front-gap` 大 | 首任务发射/Host/编排延迟 | 排查 Host、注册、提交与 orchestration |
+| compute 高、stall 低 | 真正 compute-bound | 优化路径上 compute share 高的 Kernel family |
+
+Static 与 Observed 路径服务于不同问题：前者说明如何降低理论依赖下界，后者说明当前运行被什么实际阻塞。报告必须标明改动作用于哪一条路径。
+```
+
+<a id="ir"></a>
+## ir
+`Insight/PyPTO性能调优方法论_基于Toolkit与案例.md:243–262`; SHA256 `bd252bd1839daeedf4257ec2ad4fe56e361efac6102ad504abac6c818cacc7c5`
+```text
+### 步骤 7：用 IR Pass Trace 与 Memory Map 验证“意图是否生效”
+
+**需要看到**
+
+- IR Pass Trace 中 Changed / No-op Pass、warning、前后快照的函数级 diff；
+- `*after_AllocateMemoryAddr.py` 的 Memory Map：地址横轴、生命周期纵轴、Tile 创建/使用位置；
+- Swimlane 中对应等待、任务和时间区间。
+
+**为什么看**
+
+源码写法到 Runtime 行为之间会经过多个 Pass。一个优化意图可能被忽略、被重写，或被内存复用和同步插入抵消。
+
+**如何分析与下一步**
+
+1. 在 IR Trace 先过滤 Changed，定位可疑函数和有 warning 的 Pass；
+2. 将 Swimlane 中的等待/任务锚定到函数或源码位置，比较异常前后 Pass；
+3. 在 Memory Map 看相关 Tile 是否地址复用、生命周期是否过长、增加 pipeline stage 是否有容量；
+4. 若首个异常出现在编译 Pass、后端或 ISA，停止在上层猜测，整理最小复现、环境指纹、pass diff、泳道和已排除项交接。
+
+MemoryReuse 不是天然错误：它可能降低空间占用，也可能引入 WAR/同步并切断流水。结论必须同时包含时序证据与地址/生命周期证据。
+```
+
+<a id="ab"></a>
+## ab
+`Insight/PyPTO性能调优方法论_基于Toolkit与案例.md:285–307`; SHA256 `bd252bd1839daeedf4257ec2ad4fe56e361efac6102ad504abac6c818cacc7c5`
+```text
+### 步骤 9：以成对实验完成验证与交付
+
+**需要看到**
+
+- 同环境、同 manifest、同计时规则的 baseline / candidate 多次样本；
+- 目标指标、Host/Device 拆分、关键路径变化、核心 busy 或 pipe cycle；
+- 全量正确性和至少关键相邻 shape 的回归；
+- 不受改动影响的大 scope 或指标作为噪声锚点。
+
+**为什么看**
+
+单次 DFX/benchmark 是单样本。只看最好的 wall，容易把随机波动、PMU 干扰或统计范围变化写成收益。
+
+**验收规则**
+
+1. 同 session 或等价环境成对运行 A/B，采用预先约定的中位数或稳健统计；
+2. 目标指标改善，同时机制指标与假设一致，例如 MTE2 cycle 降低、关键路径缩短或 Host wall 降低；
+3. 正确性通过，且没有未声明的 shape、精度、内存或吞吐回归；
+4. 结果写清“对什么有效、对什么无效”，小 shape 无收益或回归不是失败数据，应保留；
+5. 无稳定收益时，明确结论为“当前配置下未证实”，不要把候选手段写成 Recipe。
+
+---
+
+```
+
+<a id="gap"></a>
+## gap
+`Design/deepseek-gap-investigator/README.md:19–65`; SHA256 `db94a842b864ef90f76733d168fac72b7cfc98f0d8e669216d5d28482bace10d`
+```text
+## 已实现
+
+- 单行工具栏；“诊断模式”默认开启并以黑底白字表示。关闭后恢复语义配色，开启后全部 Task 去色。黄色矩形同时编码时间与受影响 Core：具名调查只覆盖其 wait Task 所在 AIV，规则候选只覆盖参与共同空闲计算的 24 条 Worker AIC；前者实线、后者虚线。共同空闲候选以同窗 AIV 任务或 Run 边界补充位置名称，名称只表达时间上下文，不推断空闲根因。点击黄色空白打开调查，真实 Task 命中仍优先打开 Inspector；标签支持 Tab / Enter。
+- 框选后先显示就地“调查此选区”；创建才打开表单。调查抽屉左侧列表常驻，收起后直接从黄色异常区间重新进入。
+- 六步：确认异常 → 定位任务 → 排查原因 → 追溯编译变化 → 制定调优方案 → 运行实验与对比。
+- 删除抽屉内独立泳道及其 Rank、对齐、核明细状态。保留两侧指标、相关任务表、生命周期、资源、上游、局部关系与七问。
+- 统一 `revealTask`：切换目标 Rank、解除过滤、时间定位、纵向滚动、高亮和独立 Inspector。逻辑执行范围使用 Run / Rank / process / taskId / shortId / FuncId / 执行单元聚合；同一 r2t53 同时有 24 AIC + 48 AIV，选中 AIC 函数时不能混算为 72。FuncId 缺失时仅按相同原始名称回退，不做相似名称映射。支持全部 Worker 与精确实例选择，目标位于抽屉上方。
+- Inspector 每次从关闭状态打开时恢复为 360px 最小宽度，随后仍可手动拉宽；未选中事件时显示当前 Rank 与当前筛选后的可见泳道、事件数、Run 时长、平均占用率和最活跃泳道，选中真实或模拟事件后切换为对象详情。
+- Case 范围、Rank 和步骤不因浏览变化而改变。支持返回调查范围及定位前视口。
+- 主工作区按上下文提供 Trace、跨 Rank 对照与实验对比。Step 04 移除默认 49→50 `InsertCommFence` 和全量 Pass 选择器；当前两个等待调查缺少生产者到达时序与 Task→编译子图映射，正文显示本次等待任务、已记录的直接前驱及返回上游排查的操作。点击任务继续联动主 Trace；进入步骤本身不移动视口。旧版保存的 Pass 编号不会恢复无关对照。
+- Task 关联源码、候选参数源码和证据源码均使用原位折叠代码块，不再打开二级面板。
+- 保留 52 份 Python IR 静态 AST 索引、104 个局部图与图渲染组件（Fit / hover）；当前诊断没有可追溯关联，不加载这些图。后续接入必须明确具体任务、编译节点及变化如何影响该任务，不按函数名或“有变化”自动选图。未执行任何被解析的 Python。
+- 模型源码、IR 文本、Pass 实现区分命名；没有 Pass 实现映射时不冒充存在。
+- 当前 DeepSeek 工程一键只读导入；读取并验证 49 个 Python 文件摘要，识别 decode_csa.py 的编译、golden 调用与 DFX CLI。另支持用户选择源码目录。识别信息自动填入实验定义，核验修改符号与当前值。
+- 两份实际载入的独立 Trace 可在主工作区并排浏览、缩放和平移联动；按进程 / 泳道名称对照，缺失 lane 为空并标为未匹配。支持 Run 相对起点与用户选中事件锚点对齐。同一 Run 两个 Rank 明确叫“跨 Rank 对照”，不是优化 Diff。
+
+## 未接通与证据边界
+
+- **执行服务未连接**：PyPTO / 工具链版本、golden 辅助模块、输入和 Ascend 设备未验证。没有应用修改、候选编译、正确性实跑或重复采集；界面保留预检查阻塞，不伪造进度。
+- 源码内容摘要只标识所导入文件，不证明它就是历史 baseline 的构建 revision；实验命令是静态识别或用户填写，未经执行验证。
+- 当前数据没有第二次优化后的真实 Run，默认不展示合成候选。自动回收工程产物仍依赖 runner。
+- 显式模拟模式的结果仅留在独立内存会话；不写入真实 Case／实验／测量字段，不持久化到 localStorage，不修改主 Trace。模拟以等待开始为零点，不与真实 Rank 1 事件拼接；只演示局部场景，正确性与真实端到端收益未验证。
+- Runtime Ready / Enqueue / blocked reason、资源快照、Pass 决策理由仍缺失；界面统一使用“未采集／暂无法判断”，不向用户暴露内部证据状态枚举。
+- IR 图只解析精确名称的函数 / scope，显示局部词法引用、控制嵌套和源码顺序。未分析循环携带依赖、别名、内存副作用或完整跨函数语义；源码顺序不代表运行时调度或耗时因果。解析不到的范围显示缺口，不把节点文本文法差异称为稳定结构匹配或首次变化 Pass。
+- Pass IR 复用原工具的布局引擎及 PTO 节点 Pattern，新增 AST 格式适配；**没有接入原 Pass IR 的全部交互和编译器语义分析**。
+- 跨 Run 暂无稳定逻辑 Task 对应和一对多编译映射，不生成确定性的任务新增／删除或 Copy 字节变化结论。仅有指标 JSON 时叫“指标对照”。
+- 当前工程导入不写磁盘，内容仅留本页内存；刷新后需重新导入。Case 和实验定义仍保存至独立 localStorage。候选 Trace 刷新后需重选，不能只凭保存的文件名声称已加载。
+
+## 候选产物与离线路径
+
+设备端到端执行的预检查尚不通过，手工导入仅是降级路径。实验 ID 由页面创建。候选 Chrome Trace 顶层保留原 `traceEvents`，额外提供：
+
+```json
+{
+  "run_manifest": {
+    "run_id": "独立候选 Run ID",
+    "rank": 0,
+    "experiment_id": "当前实验定义的 ID",
+    "case_id": "当前调查 ID"
+  },
+  "traceEvents": []
+}
+```
+
+空数组不通过校验；必须载入有效原始事件。候选 ID 与基线相同、Case / 实验 ID 不符、Rank 不符均拒绝。页面为文件记录 SHA-256；身份来自导入者，不构成真实设备执行的独立证明。
+
+指标结果继续用页面下载的 schema v2 模板。验证实验 / Case / Run / 修改对象、正确性声明与来源、相同运行条件、至少三次测量及跨 Run 匹配来源。3% 为门槛，不是收益预测；所有结果注明依据用户导入记录。
+```
+
+<a id="console"></a>
+## console
+`Design/operator-tuning-console-v5/README.md:1–25`; SHA256 `24b4365db58d1c2ac88d9f5bb5974fdb0433c9dc3097c7b6d996d6fa09da8374`
+```text
+# 算子调优控制台 · Tuning Console
+
+把「端到端 → L2 调度 → L1/L0 单核流水 → 编译降级 → ISA / 布局」这套调优闭环，做成一个可操作的产品界面，
+而不是一篇讲解或一个向导。对象是**真实上板执行**：
+
+```
+Data/DeepseekV4/_jit_l3_decode_csa_20260903_010617/   decode_csa
+Data/pypto_qwen3_profiles/                            qwen3_14b_fwd（由 Data/pypto_qwen3_profiles.zip 解压）
+Data/_jit_decode_fwd_layers_20260625_184941/          qwen3_14b_fwd 的编译产物（旧构建，见「编译产物来自另一次构建」）
+```
+
+打开入口：`Design/operator-tuning-console/index.html`，也在 `launch.html` 的「内存与性能」分类里。
+
+Case 菜单另有一个 **「模拟 PH-MR-001 · MemoryReuse」** 教学案例。它复用 `decode_csa` 的真实 L2 轨迹与 `decode_compressor_ratio4.py:110` 的真实 PH-MR-001（Right、depth 2→1、5 组、32 KB/stage、64 KB free），把它们关联到 `MemoryReuse`。L1 PMU 桥接是构造数据；提示与 L2 的因果关系仍是待验证假设，不代表已确认的编译器缺陷。案例集中在 `mock-pass-case.js`，真实数据生成器不会读取或覆盖它。
+
+生成器有两支，都只读 dump、不造数：
+
+```bash
+node build-data.cjs            # -> data.js               任务级泳道 / 关键路径 / 编译器 / ISA
+node build-qwen3-profiles.cjs  # -> qwen3-profiles-data.js torch 归因 / PMU / 40 层 / 头开销 / TP 对照
+```
+
+---
+
+## 这个 Demo 是什么形态
+```
+
+<a id="ux"></a>
+## ux
+`Insight/pypto_开发者体验UX洞察报告_基于issues.md:48–78`; SHA256 `151fcf858c2fe6394838025e50a37e111974fb61deb48b5564638688a221f106`
+```text
+### 3.3 编译与生成：开发者难以建立“源代码—IR—生成代码”的因果关系
+
+`PTOAS#4` 把 parser 错误描述为 nonsensical；`pypto-lib#32` 中 K-chunked matmul 生成了 PTOAS 无法解析的 `tpush_to_aiv/tpop_from_aic` IR；`PTOAS#1052` 反映 traceback 行号不准确；`pypto#440` 提出 parser 出错时打印已解析对象状态。与此同时，自动插入同步在 `PTOAS#10`、`#112`、`#226`、`#233` 中分别表现为缺少同步、死锁或性能下降。
+
+体验问题：错误往往只告诉开发者“哪一步失败”，不告诉他哪个源语句触发了哪条 IR、为什么生成这个同步、是 frontend、IR verifier、PTOAS 还是硬件后端不接受。
+
+UX 可解决的部分：建立 source span、IR value、生成 C++/ISA 指令之间的可点击映射；提供“解释这条 verifier/同步”的报告；把错误分为用户代码、工具链契约、平台能力和已知限制四类，并给出可执行修复建议。
+
+### 3.4 仿真与真机验证：结果可信度不足
+
+`pto-isa#7` 是代表性证据：CPU simulation 下 `TASSIGN` 为 no-op，导致 paged_attention 结果与真机不同，256 个元素中有 190 个不匹配。`pto-isa#24-26` 进一步反映 a5sim 缺少硬件 API 或产生错误结果；`pto-isa#88`、`#170`、`#173` 分别表现为仿真/硬件数值不一致、UB 实际可用容量低于文档值、真机错误或 hang。`simpler#180`、`#266` 也说明 simulation 与依赖版本、内存原子性之间存在体验断裂。
+
+体验问题：开发者会把仿真通过当作“功能正确”，但仿真覆盖边界、硬件限制和内存别名语义没有显式呈现。
+
+UX 可解决的部分：提供仿真覆盖矩阵和差异标签；测试结果同时显示平台、backend、ISA、CANN、关键内存/同步假设；对“仿真不具备证明力”的场景主动警告；输出最小真机复现建议。模拟器语义补齐仍属于工程问题。
+
+### 3.5 运行时调试：错误码和卡死状态不可理解
+
+`simpler#84`、`pto-isa#119`、`pypto#1789`、`pypto-serving#41/#91` 等 issue 反复出现 `507018`、deadlock、stall、timeout、任务环阻塞。`simpler#731` 明确指出卡住任务的诊断中大量出现 `kernel_id=-1`；`simpler#412` 则是 fan-in 截断和 tensor 参数溢出造成的静默风险。对开发者来说，同一个错误码可能来自同步、调度、硬件限制或输入规模。
+
+体验问题：诊断工具本身可能引入 backpressure；日志只有 fatal code，没有任务图、等待对象、设备状态和最近一次有效进展。
+
+UX 可解决的部分：提供轻量级 runtime timeline、等待原因和依赖图；将错误码映射为“现象—可能原因—证据—下一步”；支持一键生成脱敏 repro bundle，并明确诊断采集的性能开销。
+
+### 3.6 性能优化：开发者看到结果，却看不到成本结构
+
+`PTOAS#226/#233` 显示自动同步比手写同步慢约 10%；`pto-isa#242` 显示 TPREFETCH_ASYNC 可能比 TLOAD 慢 12.8 倍；`pypto#2040` 报告 native fa_fused 相比 CANN FAI 约 2.3 倍性能差距；`pypto-serving#28` 提出需要区分 TTFT、TPOT 和吞吐，而不是只看混合 e2e tok/s。
+
+体验问题：开发者知道“慢”，但不知道时间花在 sync、layout conversion、GM round-trip、调度等待还是 kernel 本身。
+
+UX 可解决的部分：建立性能解释视图，而不仅是 benchmark 数字；把 source/IR/runtime timeline 与指标联动，标出回退原因、自动决策和可尝试的改写方式；把模型级指标与 kernel 级指标分层呈现。
+```

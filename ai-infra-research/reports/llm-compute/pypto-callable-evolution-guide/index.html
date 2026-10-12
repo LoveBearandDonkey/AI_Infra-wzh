@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#111111"><title>沿一个 Callable 追踪计算结构的演变 · 图解 04</title>
+<style>
+:root{color-scheme:dark;--bg:#111;--panel:#171717;--line:#353535;--text:#e8e8e8;--muted:#ababab;--i:#B1EF6B;--w:#BCA0F3;--a:#F2C45F;--g:#79D4F2}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,"PingFang SC",system-ui,sans-serif}button{font:inherit;color:inherit;background:transparent;border:1px solid #444;border-radius:5px;cursor:pointer;padding:8px 12px}button:hover{background:#292929}button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid #ddd;outline-offset:4px}button:disabled{opacity:.3;cursor:default}[hidden]{display:none!important}a{color:#b7cce0;text-underline-offset:4px}main{width:100%;max-width:none;margin:0;padding:28px clamp(20px,2vw,48px) 0;min-height:100svh;display:flex;flex-direction:column}.heading{display:flex;gap:20px;align-items:start;margin-bottom:22px}.eyebrow{font:12px ui-monospace,monospace;letter-spacing:2px;color:#aaa;margin-bottom:12px}h1{font-size:clamp(26px,2.6vw,40px);font-weight:450;line-height:1.35;margin:0}.subtitle{font-size:14px;color:var(--muted);margin:10px 0 0;line-height:1.7}.number{font:44px ui-monospace,monospace;color:#555;margin-left:auto}.workspace{display:grid;grid-template-columns:minmax(0,1fr) clamp(320px,28vw,440px);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-height:580px}.visual{background:#131313;position:relative;display:flex;flex-direction:column;min-width:0;min-height:0}.canvas{position:relative;height:520px;min-height:0;overflow:hidden;touch-action:none;flex:1}.canvas svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:hidden}.canvas.dragging{cursor:grabbing}.toolbar{display:flex;gap:7px;align-items:center;justify-content:center;padding:12px 14px;border-top:1px solid #292929;flex-wrap:wrap}.toolbar button{font-size:13px}.toolbar output{font:12px ui-monospace,monospace;min-width:45px;text-align:center}.toolbar .mode{margin-right:auto;display:flex;gap:4px}.mode button.active{background:#e0e0e0;color:#111;border-color:#e0e0e0}.info{position:absolute;top:14px;right:14px;z-index:4}.info>button{border-radius:50%;width:28px;height:28px;padding:0;font:italic 18px Georgia;background:#191919}.info-panel{position:absolute;right:0;top:39px;width:min(330px,75vw);padding:20px;background:#202020;border:1px solid #494949;border-radius:8px;box-shadow:0 14px 45px #0008;font-size:13px;line-height:1.85}.info-panel p{margin:10px 0}.explanation{border-left:1px solid var(--line);padding:28px;background:var(--panel);display:flex;flex-direction:column;min-width:0}.label{font:11px ui-monospace,monospace;letter-spacing:1.5px;color:#aaa;margin-bottom:15px}.explanation h2{font-size:23px;line-height:1.5;font-weight:500;margin:0 0 16px}.copy p{font-size:16px;line-height:1.85;color:#c7c7c7;margin:0 0 17px}.copy strong{color:#eee;font-weight:550}.formula{background:#202020;border-radius:5px;padding:13px 16px;white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.85 ui-monospace,monospace;margin:0 0 20px;color:#ddd}.inspector{margin-top:auto;border-top:1px solid var(--line);padding-top:17px}.inspector h3{font-size:16px;font-weight:500;margin:8px 0}.inspector p{font-size:14px;line-height:1.8;color:#aaa;margin:0}.sources{overflow-wrap:anywhere;font-size:12px;line-height:1.8;color:#999;margin-top:18px}.sources summary{cursor:pointer}.sources ul{padding-left:18px}.bottom{position:sticky;bottom:0;z-index:6;background:#111;display:flex;align-items:center;gap:18px;padding:18px 0;margin-top:auto}.steps{display:flex;overflow:auto;gap:8px;flex:1;scrollbar-width:thin}.steps button{min-width:70px;flex:1 0 70px;border:0;border-bottom:2px solid #333;border-radius:0;padding:8px 2px 12px;font-size:12px;line-height:1.7;color:#999;white-space:nowrap}.steps button[aria-current=step]{color:#eee;border-color:#ddd}.steps span{display:block;font:10px ui-monospace,monospace;color:#777;margin-bottom:5px}.bottom>button{white-space:nowrap;font-size:13px}.next{background:#e8e8e8;color:#111}.next:hover{background:#fff}.cover{display:grid;grid-template-columns:1fr 1.15fr;align-items:center;gap:55px;min-height:calc(100svh - 115px);padding:25px 3vw}.cover h1{font-size:clamp(34px,3.6vw,56px);letter-spacing:-1px;line-height:1.35}.cover p{font-size:17px;line-height:1.9;color:#bbb;max-width:490px}.cover .meta{font-size:12px;line-height:2;color:#999;margin-top:30px}.cover svg{width:100%;height:500px}.badge{display:inline-block;font:11px ui-monospace,monospace;border:1px solid #444;padding:6px 10px;margin-bottom:25px;letter-spacing:1px}.cover button{margin-top:20px}svg text{font-family:Inter,"PingFang SC",system-ui,sans-serif;fill:#e8e8e8;font-size:18px}svg .small{font-size:14px;fill:#ababab}svg .tiny{font-size:12px;fill:#ababab}svg .op-label{font-size:18px;font-weight:650;fill:#fff;dominant-baseline:middle}svg .hit{cursor:pointer}svg .hit .outline{transition:stroke .12s}svg .hit:hover .outline,svg .hit.selected .outline,svg .hit:focus .outline{stroke:#fff;stroke-width:2.5}svg .hit.selected text{fill:#fff}svg .hit:focus{outline:none}svg .data-label{paint-order:stroke;stroke:#131313;stroke-width:2.5px;stroke-linejoin:round}svg .grid-label{font-size:14px;fill:var(--tensor-color);font-weight:400}svg .grid-detail{font-size:12px;fill:var(--tensor-color);font-weight:400}svg .hit.selected .data-label text{fill:var(--tensor-color)}svg .edge-label{font-size:12px;fill:#ccc;paint-order:stroke;stroke:#131313;stroke-width:5px}svg .soft{opacity:.24}svg .hit.selected{opacity:1}.noscript{padding:35px;line-height:1.8}.sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0)}
+@media(min-width:1000px){body:not(.cover-mode) main{height:100svh;min-height:0}.heading,.bottom{flex-shrink:0}.workspace{flex:1;min-height:0}.canvas{height:0;min-height:320px}.explanation{overflow:auto;scrollbar-width:thin}.bottom{position:static}}
+@media(max-width:999px){main{padding:25px 20px 0}.workspace{grid-template-columns:1.3fr 1fr}.explanation{padding:22px}.canvas{height:570px}.cover{gap:25px;padding:20px 0}.cover h1{font-size:45px}}
+@media(max-width:760px){main{padding:22px 14px 0}.heading{margin-bottom:18px}.number{font-size:28px}.workspace{grid-template-columns:1fr}.canvas{height:440px;flex:none}.explanation{border-left:0;border-top:1px solid var(--line);padding:24px}.cover{grid-template-columns:1fr;gap:12px;min-height:0;padding:20px 10px}.cover h1{font-size:42px}.cover svg{height:340px}.cover .meta{margin-top:15px}.bottom{gap:8px;padding:12px 0}.bottom>button{font-size:12px;padding:8px}.toolbar{gap:4px}.toolbar .mode{width:100%;justify-content:center;margin:0 0 5px}.steps button{min-width:62px;flex-basis:62px}.subtitle{font-size:13px}}
+
+/* Auxiliary colors identify object families; tensor colors retain data semantics. */
+svg .hit[data-key="callable"]{--object-color:#8EAED0}
+svg .hit[data-key="task"]{--object-color:#685CF0}
+svg .hit[data-key="loop"]{--object-color:#685CF0}
+svg .hit[data-key="loop"]>path{stroke:#685CF0}
+svg .hit[data-key="loop"]>text{fill:#685CF0}
+svg .hit[data-key="buffer"],svg .hit[data-key="address"]{--object-color:#C7AD88}
+svg .hit[data-key="pass"],svg .hit[data-key="snapshot"]{--object-color:#aaa}
+svg .hit[data-key="callable"]>.outline,svg .hit[data-key="loop"]>.outline,svg .hit[data-key="task"]>.outline,svg .hit[data-key="buffer"]>.outline,svg .hit[data-key="address"]>.outline,svg .hit[data-key="pass"]>.outline,svg .hit[data-key="snapshot"]>.outline{stroke:var(--object-color);stroke-width:1.3}
+svg .hit[data-key="callable"]>text,svg .hit[data-key="loop"]>text,svg .hit[data-key="task"]>text,svg .hit[data-key="buffer"]>text,svg .hit[data-key="address"]>text,svg .hit[data-key="pass"]>text,svg .hit[data-key="snapshot"]>text{fill:var(--object-color)}
+svg .hit[data-key="task"]>.outline{fill:#211C3C}
+svg .hit[data-key="buffer"]>.outline{fill:#25221D}
+svg .hit[data-key="pass"]>.outline,svg .hit[data-key="snapshot"]>.outline{fill:#202020}
+svg .hit[data-key="callable"]>path{stroke:#8EAED0;stroke-opacity:.3}
+svg .hit[data-key="buffer"]>path{stroke:#C7AD88;stroke-opacity:.45}
+svg .hit[data-key="address"]>rect{fill:#C7AD88;fill-opacity:.17;stroke:#C7AD88;stroke-width:1.2}
+svg .hit:hover>.outline,svg .hit.selected>.outline,svg .hit:focus>.outline{stroke-width:2;stroke:var(--object-color,#fff)}
+svg .symbol .outline{stroke:#B9C2CD;stroke-width:1.5;fill:#1A1E23}
+svg .symbol.selected .outline,svg .symbol:hover .outline,svg .symbol:focus .outline{stroke:#fff;stroke-width:2}
+svg .hit[data-key="kernel"]{--object-color:#685CF0}svg .hit[data-key="kernel"]>text{fill:#CEC4F9}svg .hit[data-key="op"]{--object-color:#685CF0}
+svg .cell-title{font-size:16px;font-weight:600;fill:#eee}
+
+.mode{flex-wrap:wrap}svg .life{fill:#B1EF6B;fill-opacity:.16;stroke:#B1EF6B}svg .metric{font-size:32px;fill:#C7AD88}svg .warn{fill:#e8a896}svg .guide-line{stroke:#353535;stroke-width:1}pre{tab-size:2}.evidence-code{max-height:260px;overflow:auto;font:11px/1.8 ui-monospace,monospace;background:#202020;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere}.info-panel{max-height:65vh;overflow:auto}a:focus-visible{outline-offset:2px}
+.steps button{min-width:max-content;flex:1 0 84px;padding-inline:6px}
+</style></head><body class="cover-mode"><main>
+<section class="cover" id="cover"><div><div class="badge">AI INFRA · CALLABLE / 04</div><h1>沿一个 Callable<br>追踪计算结构的演变</h1><p>从函数定义与调用点出发，理解内联、区域提取、接口更新和混合拆核怎样改变计算结构，并检查跨阶段对应的证据。</p><p class="meta">函数、调用、区域与核函数。<br>11 节图解 · 结构变换 + 对应核查<br>实现版本与教学示例分别标注 · 2026-10-10</p><button id="start">开始阅读 →</button></div><div id="cover-art" aria-label="计算结构演变预览"></div></section>
+<header class="heading" id="heading" hidden><div><div class="eyebrow" id="eyebrow"></div><h1 id="title"></h1><p class="subtitle" id="subtitle"></p></div><span class="number" id="number" aria-hidden="true"></span></header>
+<div class="workspace" id="workspace" hidden><section class="visual" aria-label="交互图解"><div class="info"><button id="info-toggle" aria-label="图例与阅读说明" aria-expanded="false" aria-controls="info-panel">i</button><div class="info-panel" id="info-panel" hidden><strong>图例与阅读说明</strong><p><span style="color:var(--i)">■ 输入 / 中间值</span><br><span style="color:var(--w)">■ 权重</span><br>数据填色保持原义。紫色表示计算操作、循环与 Kernel，紫色也用于任务，蓝灰表示通用函数，暖沙色表示存储对象，中性灰表示编译过程；对象类型仍由形状和标签区分。</p><p id="scope-note"></p><p>点击图元查看定义。Tab / Enter 可操作；放大后拖动画布，使用“适应”回到完整图。← / → 翻页。</p><button id="legend-link">返回对象层级</button></div></div><div class="canvas" id="canvas"></div><div class="toolbar"><div class="mode" id="modes"></div><button id="minus" aria-label="缩小">−</button><output id="zoom-label">100%</output><button id="plus" aria-label="放大">＋</button><button id="fit">适应</button></div></section><article class="explanation"><div class="label" id="section-label">原理与解释</div><h2 id="explain-title"></h2><div class="copy" id="copy"></div><pre class="formula" id="formula"></pre><div class="inspector" aria-live="polite"><div class="label">选中图元 · 身份与含义</div><h3 id="node-title"></h3><p id="node-copy"></p></div><details class="sources"><summary>来源与适用范围</summary><div id="sources"></div></details></article></div>
+<footer class="bottom"><button id="prev">← 上一页</button><nav class="steps" id="steps" aria-label="图解章节"></nav><button class="next" id="next">下一页 →</button></footer>
+<noscript><p>本报告需启用 JavaScript；内容提要与来源见同目录 README.md。</p></noscript>
+</main><script>
+/* Compiler diagram primitives. Inline this asset for standalone HTML. */
+const CompilerPrimitives = (() => {
+const C={i:'#B1EF6B',w:'#BCA0F3',a:'#F2C45F',g:'#79D4F2',neutral:'#b6b6b6'};
+const glossary={
+ x:['X · 输入 / 中间值','继承：绿色正方形网格。X 随本次输入变化；编译到 Tile 后仍保留绿色。网格格数与亮度为示意，准确 shape 由文字给出。'],
+ w:['W · 模型参数','继承：蓝紫色正方形网格。参数参与计算；编译改变它的访问和存储方式，不改变它作为模型参数的身份。'],
+ y:['Y · 输出值','继承：输出也是计算产生的数据，因此沿用绿色。这里以 Y = XW 为教学主线，不涉及真实模型的耗时测量。'],
+ aggregate:['聚合结果','继承并保留：黄色网格专用于均值、最大值、指数和等聚合结果。本篇 MatMul 主线未单独展开这类对象，不额外制造黄色节点。'],
+ gradient:['梯度','继承并保留：青色网格表达求导结果。本篇讲前向编译，不将青色改作 Pass 或缓冲的颜色。'],
+ instruction:['设备指令 · Kernel 内部执行','窄条表示设备指令的执行动作。本图使用搬运、计算、同步三类语义占位，不是具体 ISA 助记符，也不是实测指令序列。具体指令及顺序应由编译产物或指令 Trace 确认。OP 经过编译形成设备代码，不能与一条指令直接对应。'],
+ op:['IR 操作 · OP','胶囊表示当前 IR 中的操作，例如 tensor.matmul、tile.matmul、加载或存储。OP 描述操作语义；它可以经过拆分、融合等编译变换，不能与一条设备指令或一次 Kernel 调度直接对应。'],
+ add:['＋ · 逐元素相加','继承：圆形加号保留原语义。矩阵乘法使用 MatMul 胶囊；不会因为英文中出现 multiply 就改用圆形乘号。'],
+ multiply:['× · 逐元素乘法 / 广播乘法','继承：圆形乘号表达逐元素或标量广播相乘。矩阵乘法使用明确命名的 MatMul 操作。本篇图例保留它，主线无需使用。'],
+ tile:['Tile · 带类型与布局信息的局部数据','新增修饰：继续使用张量网格，沿用细边框底纹，叠加形状与内存空间标签。Tile 不是默认获得一块独立物理存储；存储由后续 MemRef 关系表达。'],
+ loop:['循环范围 · 结构包含','新增：左侧括线与范围标签圈定重复执行的语句。×4 表示教学示例中的迭代次数，不表示四个设备，也不表示四倍性能。'],
+ callable:['Callable · 可调用函数（图解统称）','本图将可调用函数统称为 Callable；对应源码中的 Function，不是新增的 IR 节点类型。范围框表示有参数、函数体与返回值的函数定义；函数体可以包含多个 OP 和循环。同一函数可以被调用多次。Kernel 是设备端执行实现的概念，不能仅凭 MatMul 名称就把一个 OP 等同于 kernel。'],
+ kernel:['Kernel · 设备端执行入口','本报告以带执行目标的函数范围框表示 kernel：标题标识入口，AIC / AIV 标记设备执行目标，内部展示操作与循环。它不是物理核心，也不是一次运行实例。PyPTO 的混合 InCore 可拆成 AIC 与 AIV kernel，由 Group 组织；单个 MatMul OP 不保证对应一个 kernel。Task 表示一次 Kernel 调度。'],
+ task:['Task · 一次 Kernel 调度','PyPTO 官方定义：A task is one kernel dispatch。Task 引用本次执行的 Kernel，并关联参数与依赖；同一个 Kernel 可被多次调度。运行时根据依赖调度就绪任务。此处为身份示意，卡片宽度不表示耗时；设备指令属于 Kernel 内部的执行细节。'],
+ buffer:['MemRef · 内存引用','MemRef 记录底层分配引用、字节偏移和分配大小。Tile 类型通过 MemRef 关联存储；满足复用约束的多个值可以共享 MemRef。图中矩形表示这种引用关系，不表示硬件内存模块。'],
+ address:['地址区间','新增：带单位刻度的轴与区间块。区间包含起点、不包含终点，即 [offset, offset + size)。相同 offset 在不同 memory space 中属于不同地址域。'],
+ pass:['Pass · 编译处理步骤','新增：紧凑的编号步骤标签，用在编译轴上。它可以分析或变换 IR；不作为计算操作或运行任务画进数据流。'],
+ snapshot:['阶段 IR · 程序结构','用节点与有向边呈现阶段 IR 的局部数据流：X、W 被操作消费，操作产生结果。此图是结构示意，不是从文件自动解析的真实图。PyPTO IR 还包含函数、循环、条件和类型，不能把整个 IR 等同于 DAG。IR dump 是该结构的文本导出载体。'],
+ opflow:['操作间数据依赖 →','灰色实线箭头表达函数体内操作之间的数据依赖；与双折角数据箭头含义一致，局部简图使用中性色减少视觉干扰。'],
+ data:['数据依赖 →','浅灰白连续实线与双折角箭头，连接数据与操作的输入输出。它表明消费关系，不表示实际搬运耗时。'],
+ mapping:['跨阶段 IR 对应 ⋯◇','新增：灰色点线与空心菱形终点。表达教学对应或已核对的对象映射；它不属于程序内部执行边。映射必须说明依据。'],
+ call:['调用 / 引用 ⇢','新增：灰色长虚线与空心箭头。从调用点或任务指向 Callable 定义；一条边不代表一次耗时区间。'],
+ dependency:['任务依赖 →','新增：实线空心箭头，直接标注“先完成”。它约束 Task 之间的顺序，和携带张量值的数据边分开。'],
+ binding:['存储绑定 ─○','新增：灰色实线、空心圆终点，显式标注“存于”。它连接逻辑值与存储对象，不表示数据流动。'],
+ incore:['InCore → AIC / AIV / Group','PyPTO 实现：混合 InCore 函数可以展开为 AIC、AIV 与 Group。纯 Cube 或纯 Vector 函数仅转换为对应类型。拆分取决于操作构成，不是所有 MatMul 都会一分为二。'],
+ load:['Load / Store · 显式读写','PyPTO 的 Tensor→Tile 转换会按操作语义插入或改写加载与存储。图中折叠了具体搬运指令和中间内存层，不以箭头长短表示搬运成本。'],
+ sequence:['编译阶段轴','从左到右表达编译先后，间隔没有耗时比例。本图省略中间 Pass；分组顺序参考当前本地 PassManager，而非将每个 run 都固定成相同序列。'],
+ evidence:['真实 IR 对照','以 l3_decode_csa 的相邻阶段 IR 文件为例，核对函数体中的 tensor.matmul 到 tile.matmul。只报告 IR 文件可直接支持的变换，不推出性能改善。']
+};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function t(x,y,s,cl='',anchor='start'){return `<text x="${x}" y="${y}" class="${cl}" text-anchor="${anchor}">${esc(s)}</text>`}
+function hit(key,html,layer=''){return `<g class="hit" tabindex="0" role="button" aria-label="${esc(glossary[key][0])}" data-key="${key}" data-layer="${layer}">${html}</g>`}
+// Tensor-node styling from the AI Infra training / inference reports.
+function grid(x,y,label,key='x',type='i',detail='',tile=false,w=120,h=60){
+ const color=C[type],cols=Math.floor((w-10)/14),rows=Math.floor((h-8)/14),left=x+(w-cols*14+3)/2,top=y+(h-rows*14+3)/2;
+ let q=`<rect class="outline" data-node-box="grid" x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="#131313" stroke="${color}" stroke-width="1.2"/>`;
+ for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)q+=`<rect data-cell="1" x="${left+c*14}" y="${top+r*14}" width="11" height="11" fill="${color}" opacity=".22"/>`;
+ q+=`<g class="data-label" style="--tensor-color:${color}">`+t(x+w/2,y+h/2+(detail?-4:5),label,'grid-label','middle')+(detail?t(x+w/2,y+h/2+15,detail,'grid-detail','middle'):'')+'</g>';
+ return hit(key,q,'data');
+}
+function op(x,y,label,key='op',w=140){return hit(key,`<rect class="op outline" x="${x}" y="${y}" width="${w}" height="48" rx="24" fill="#685CF0" stroke="#685CF0" stroke-width="1"/><circle cx="${x+25}" cy="${y+24}" r="12" fill="#211391"/><text x="${x+25}" y="${y+25}" text-anchor="middle" dominant-baseline="middle" style="font-size:15px;font-style:italic;fill:#A58BFF">ƒₓ</text>`+t(x+(w+28)/2,y+24,label,'op-label','middle'),'data')}
+
+function arithmetic(cx,cy,key){const d=key==='add'?`M${cx-8} ${cy} H${cx+8} M${cx} ${cy-8} V${cy+8}`:`M${cx-6} ${cy-6} L${cx+6} ${cy+6} M${cx+6} ${cy-6} L${cx-6} ${cy+6}`;return hit(key,`<circle class="outline" cx="${cx}" cy="${cy}" r="24"/><path class="symbol-mark" d="${d}" stroke="#E8EDF2" stroke-width="2.4" stroke-linecap="round" fill="none"/>`).replace('class="hit"','class="hit symbol"')}
+function boundary(x,y,w,h,label,key='callable'){return hit(key,`<rect class="outline" x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="none" stroke="#6b6b6b"/><path d="M${x} ${y+31} H${x+w}" stroke="#444"/>`+t(x+14,y+22,label,'small'),'program')}
+function loop(x,y,w,h,label){return hit('loop',`<path class="outline" d="M${x+14} ${y} H${x} V${y+h} H${x+14}" fill="none" stroke="#8EAED0" stroke-width="1.5"/><path d="M${x+14} ${y} H${x+w} V${y+h} H${x+14}" stroke="#8EAED0" stroke-width="1.5" stroke-dasharray="4 5" fill="none"/>`+t(x+25,y+20,label,'small'),'program')}
+function kernel(x,y,w,h,label,target){return hit('kernel',`<rect class="outline" x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="#171422" stroke="#685CF0" stroke-width="1.5"/><path d="M${x+1} ${y+35} H${x+w-1}" stroke="#685CF0"/><rect x="${x+w-54}" y="${y+9}" width="42" height="19" rx="4" fill="#392A7C"/>`+t(x+13,y+24,label,'small')+`<text x="${x+w-33}" y="${y+23}" text-anchor="middle" style="font-size:11px;fill:#DFD7FF">${esc(target)}</text>`,'program')}
+
+function instruction(x,y,label,w=200){return hit('instruction',`<rect class="outline" x="${x}" y="${y}" width="${w}" height="27" rx="1" fill="#211C3C" stroke="#685CF0"/><path d="M${x+7} ${y+5} V${y+22}" stroke="#685CF0"/>`+t(x+18,y+18,label,'tiny'),'program')}
+function task(x,y,label,w=170){return hit('task',`<rect class="outline" x="${x}" y="${y}" width="${w}" height="65" rx="8" fill="#242424" stroke="#999"/>`+t(x+12,y+19,'TASK','tiny')+t(x+12,y+45,label,'small'),'program')}
+function buffer(x,y,label,w=180){return hit('buffer',`<rect class="outline" x="${x}" y="${y}" width="${w}" height="53" fill="#242424" stroke="#999"/><path d="M${x+9} ${y+5} V${y+48} M${x+w-9} ${y+5} V${y+48}" stroke="#666"/>`+t(x+w/2,y+32,label,'small','middle'),'storage')}
+function doc(x,y,label){
+ const node=(nx,ny,w,text,kind='tensor')=>`<rect data-ir-kind="${kind}" x="${nx}" y="${ny}" width="${w}" height="20" rx="${kind==='op'?10:4}" fill="${kind==='op'?'#685CF0':'#242424'}" stroke="${kind==='op'?'#685CF0':'#aaa'}" stroke-width="1.1"/>`+t(nx+w/2,ny+14,text,'tiny','middle');
+ return hit('snapshot',`<path class="outline" d="M${x} ${y+3} V${y+65} M${x+162} ${y+3} V${y+65}" fill="none" stroke="#aaa"/>`+t(x+81,y-10,label,'small','middle')+`<path d="M${x+47} ${y+17} H${x+66} V${y+33} H${x+80} M${x+47} ${y+49} H${x+66} V${y+33} M${x+130} ${y+33} H${x+151}" fill="none" stroke="#aaa" stroke-width="1.3"/><path d="M${x+76} ${y+30} L${x+80} ${y+33} L${x+76} ${y+36} M${x+147} ${y+30} L${x+151} ${y+33} L${x+147} ${y+36}" fill="none" stroke="#aaa"/>`+node(x+10,y+7,37,'X')+node(x+10,y+39,37,'W')+node(x+80,y+23,50,'op','op'),'program');
+}
+function pass(x,y,label){return hit('pass',`<rect class="outline" x="${x}" y="${y}" width="260" height="36" rx="3" fill="#252525" stroke="#656565"/>`+t(x+130,y+23,label,'small','middle'),'program')}
+function route(points,kind='data',label='',pos=null){
+ const styles={opflow:['#aaa','','open'],data:['#E8E8E8','','arrow'],mapping:['#aaa','3 6','diamond'],call:['#ccc','10 6','open'],dependency:['#ccc','','open'],binding:['#aaa','','circle']};const[c,d,m]=styles[kind];
+ const path=points.map(([x,y],i)=>`${i?'L':'M'}${x} ${y}`).join(' ');
+ for(let i=1;i<points.length;i++)if(points[i][0]!==points[i-1][0]&&points[i][1]!==points[i-1][1])throw new Error('Non-orthogonal relationship');
+ const a=points[0],b=points[1];const lp=pos||[(a[0]+b[0])/2+(a[0]===b[0]?24:0),(a[1]+b[1])/2-10];
+ return hit(kind,`<path class="outline edge" d="${path}" fill="none" stroke="${c}" stroke-width="1.7" stroke-linejoin="round" ${d?`stroke-dasharray="${d}"`:''} marker-end="url(#${m})"/><path d="${path}" fill="none" stroke="transparent" stroke-width="12"/>`+(label?t(lp[0],lp[1],label,'edge-label','middle'):''));
+}
+function line(x1,y1,x2,y2,kind='data',label=''){return route(x1===x2||y1===y2?[[x1,y1],[x2,y2]]:[[x1,y1],[x1,(y1+y2)/2],[x2,(y1+y2)/2],[x2,y2]],kind,label)}
+function address(x,y,w,label,used=1){return hit('address',`<path class="outline" d="M${x} ${y} H${x+w} M${x} ${y-5} V${y+7} M${x+w} ${y-5} V${y+7}" stroke="#999" fill="none"/><rect x="${x}" y="${y+15}" width="${w*used}" height="32" fill="#555" stroke="#aaa"/>`+t(x,y+100,label,'small')+t(x,y+69,'0','tiny')+t(x+w,y+69,'8192 B','tiny','end'),'storage')}
+const defs=`<defs><linearGradient id="op-purple" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#4D3BC9"/><stop offset="1" stop-color="#3D2DC0"/></linearGradient><marker id="arrow" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="10" markerHeight="10" orient="auto"><path d="M8 7 H12" stroke="#131313" stroke-width="2.5"/><path d="M3 2 L8 7 L3 12 M7 2 L12 7 L7 12" stroke="#E8E8E8" stroke-width="1.4" stroke-linejoin="miter" fill="none"/></marker><marker id="open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1 L9 5 L1 9" stroke="#ccc" stroke-width="1.5" fill="none"/></marker><marker id="diamond" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto"><path d="M1 6 L6 1 L11 6 L6 11Z" fill="#131313" stroke="#aaa"/></marker><marker id="circle" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><circle cx="5" cy="5" r="3" fill="#131313" stroke="#aaa"/></marker></defs>`;
+
+const css="svg text{font-family:Inter,\"PingFang SC\",system-ui,sans-serif;fill:#e8e8e8;font-size:18px}\nsvg .small{font-size:14px;fill:#ababab}\nsvg .tiny{font-size:12px;fill:#ababab}\nsvg .op-label{font-size:18px;font-weight:650;fill:#fff;dominant-baseline:middle}\nsvg .hit{cursor:pointer}\nsvg .hit .outline{transition:stroke .12s}\nsvg .hit:hover .outline,svg .hit.selected .outline,svg .hit:focus .outline{stroke:#fff;stroke-width:2.5}\nsvg .hit.selected text{fill:#fff}\nsvg .hit:focus{outline:none}\nsvg .data-label{paint-order:stroke;stroke:#131313;stroke-width:2.5px;stroke-linejoin:round}\nsvg .grid-label{font-size:14px;fill:var(--tensor-color);font-weight:400}\nsvg .grid-detail{font-size:12px;fill:var(--tensor-color);font-weight:400}\nsvg .hit.selected .data-label text{fill:var(--tensor-color)}\nsvg .edge-label{font-size:12px;fill:#ccc;paint-order:stroke;stroke:#131313;stroke-width:5px}\nsvg .soft{opacity:.24}\nsvg .hit.selected{opacity:1}\nsvg .hit[data-key=\"task\"]{--object-color:#685CF0}\nsvg .hit[data-key=\"loop\"]{--object-color:#685CF0}\nsvg .hit[data-key=\"loop\"]>path{stroke:#685CF0}\nsvg .hit[data-key=\"loop\"]>text{fill:#685CF0}\nsvg .hit[data-key=\"buffer\"],svg .hit[data-key=\"address\"]{--object-color:#C7AD88}\nsvg .hit[data-key=\"pass\"],svg .hit[data-key=\"snapshot\"]{--object-color:#aaa}\nsvg .hit[data-key=\"callable\"]>.outline,svg .hit[data-key=\"loop\"]>.outline,svg .hit[data-key=\"task\"]>.outline,svg .hit[data-key=\"buffer\"]>.outline,svg .hit[data-key=\"address\"]>.outline,svg .hit[data-key=\"pass\"]>.outline,svg .hit[data-key=\"snapshot\"]>.outline{stroke:var(--object-color);stroke-width:1.3}\nsvg .hit[data-key=\"callable\"]>text,svg .hit[data-key=\"loop\"]>text,svg .hit[data-key=\"task\"]>text,svg .hit[data-key=\"buffer\"]>text,svg .hit[data-key=\"address\"]>text,svg .hit[data-key=\"pass\"]>text,svg .hit[data-key=\"snapshot\"]>text{fill:var(--object-color)}\nsvg .hit[data-key=\"task\"]>.outline{fill:#211C3C}\nsvg .hit[data-key=\"buffer\"]>.outline{fill:#25221D}\nsvg .hit[data-key=\"pass\"]>.outline,svg .hit[data-key=\"snapshot\"]>.outline{fill:#202020}\nsvg .hit[data-key=\"callable\"]>path{stroke:#8EAED0;stroke-opacity:.3}\nsvg .hit[data-key=\"buffer\"]>path{stroke:#C7AD88;stroke-opacity:.45}\nsvg .hit[data-key=\"address\"]>rect{fill:#C7AD88;fill-opacity:.17;stroke:#C7AD88;stroke-width:1.2}\nsvg .hit:hover>.outline,svg .hit.selected>.outline,svg .hit:focus>.outline{stroke-width:2;stroke:var(--object-color,#fff)}\nsvg .symbol .outline{stroke:#B9C2CD;stroke-width:1.5;fill:#1A1E23}\nsvg .symbol.selected .outline,svg .symbol:hover .outline,svg .symbol:focus .outline{stroke:#fff;stroke-width:2}\nsvg .hit[data-key=\"kernel\"]{--object-color:#685CF0}\nsvg .hit[data-key=\"kernel\"]>text{fill:#CEC4F9}\nsvg .hit[data-key=\"op\"]{--object-color:#685CF0}\nsvg .cell-title{font-size:16px;font-weight:600;fill:#eee}";
+return {css,defs,glossary,grid,op,arithmetic,boundary,loop,kernel,task,instruction,buffer,address,doc,pass,route,line};
+})();
+
+const P=CompilerPrimitives,defs=P.defs;
+document.head.insertAdjacentHTML("beforeend","<style>"+P.css+"</style>");
+const glossary={...P.glossary,...{"identity": ["对象对应 · 有证据的跨阶段关联", "同一名称可用于定位，但不能独立证明跨阶段来源。需结合固定 run、相邻快照、类型、调用关系及具体变换规则；无法证明时保持未知。"], "callsite": ["调用点 · 对函数定义的一次静态引用", "两个调用点可引用同一函数定义。循环中的一个调用点可动态执行多次；调用点不是运行时任务实例。"], "inline": ["内联 · 在调用位置复制函数体", "以实参替换形参，并为局部变量生成新名字。源函数边界可以消失，计算不因此消失。"], "outline": ["区域提取 · Scope 变为 Function 与 Call", "分析跨区域的输入和输出，创建函数定义，再在原位置建立调用；需要维护 SSA 和返回接口约束。"], "signature": ["接口联动 · 定义与调用共同更新", "函数参数或返回形式改变时，调用方及相关包装层也需同步；Tile 是局部数据值，外部输出可由 Tensor 参数承载。"], "split": ["混合核分解 · Cube 与 Vector 分属不同核函数", "当前 ExpandMixedKernel 处理混合 InCore，产生或改写协调包装及 AIC/AIV 函数。实际传输与同步以生成 IR 为准。"], "pure": ["纯核类型转换", "纯 Cube 转 AIC，纯 Vector 或 shared-only 转 AIV；并不必然产生两个新核函数。"], "control": ["控制范围 · 循环与条件", "图中边界表示静态结构。运行次数、实际走过的分支与耗时需要运行证据，不能从布局位置推导。"], "mapping": ["跨阶段对应", "菱形点线连接变换前后对象，表示教学对应或需要核查的关系，不是运行时数据依赖。"], "op": ["计算操作", "本报告依页面标注区分概念乘法和 tile.matmul 等操作；操作节点不代表整个 Callable 或运行时 Task。"]}};
+Object.assign(P.glossary,glossary); // Keep shared primitive accessibility labels aligned with this report.
+const refs={"inline": ["01-inline_functions.md", "source-evidence.md#inline"], "outline": ["08-outline_incore_scopes.md", "source-evidence.md#outline"], "tile": ["10-convert_tensor_to_tile_ops.md", "source-evidence.md#tile"], "mixed": ["19-expand_mixed_kernel.md", "source-evidence.md#mixed"], "vector": ["21-split_vector_kernel.md", "source-evidence.md#vector"], "explorer": ["app.js", "source-evidence.md#explorer"], "transport": ["ExpandMixedKernel 跨核传递摘录", "source-evidence.md#transport"]};
+const pages=[
+  {
+    "id": "cover",
+    "nav": "封面"
+  },
+  {
+    "id": "objects",
+    "nav": "对象层级",
+    "en": "01 / CALLABLE EVOLUTION",
+    "title": "先区分函数定义、调用点和执行实例",
+    "sub": "Callable 在本报告中是阅读视角，不是新增的 IR 节点类型。",
+    "h": "同一函数可以有多个调用点",
+    "p": [
+      "Function 定义参数、函数体、返回值与函数类型；Call 是函数体中引用被调用函数的表达式。Scope 表示结构化的计算范围，可能在后续 Pass 中被提取为独立 Function。",
+      "Kernel 指面向设备核生成代码的函数。Task 是运行时调度的工作实例；普通函数调用、核函数定义和任务提交不能仅按数量直接等同。追踪时先标明当前观察层。"
+    ],
+    "f": "Function 定义 ≠ Call 调用点\nKernel 定义 ≠ Task 执行实例",
+    "g": "identity",
+    "refs": [
+      "inline",
+      "outline",
+      "explorer"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。"
+  },
+  {
+    "id": "calls",
+    "nav": "两个调用点",
+    "en": "02 / CALLABLE EVOLUTION",
+    "title": "一个 Inline helper 被两处调用",
+    "sub": "教学例：square(x) 的函数体为 y = mul(x, x)。",
+    "h": "先确定调用点，再追踪展开结果",
+    "p": [
+      "主函数分别调用 square(a) 和 square(b)。两处 Call 引用同一个定义，却传入不同实参。函数名只能标识被调用定义，不能区分调用位置。",
+      "下一页展示 InlineFunctions 如何为每个调用点生成独立的局部变量。此处的乘法是概念运算；尚未指定 Tensor→Tile 或设备指令层级。"
+    ],
+    "f": "c0: square(a)\nc1: square(b)\n两个调用点，共用一个定义",
+    "g": "callsite",
+    "refs": [
+      "inline"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。",
+    "modes": [
+      "调用 a",
+      "调用 b"
+    ]
+  },
+  {
+    "id": "inline",
+    "nav": "内联展开",
+    "en": "03 / CALLABLE EVOLUTION",
+    "title": "调用点被替换为各自的函数体副本",
+    "sub": "展开后 Inline 定义及对它的调用应被消除。",
+    "h": "计算保留，函数边界消失",
+    "p": [
+      "InlineFunctions 将形参替换为调用点实参，并为各副本的局部变量生成新名字，避免多个展开结果发生命名冲突。图中 a² 和 b² 分别来自两个调用点。",
+      "不应把函数定义从列表消失解释为计算被删除。对应依据应包含调用点、实参替换与复制后的语句。当前文档列出的不支持嵌套调用表达式由后置性质验证器捕获，不能默认为所有语法都已展开。"
+    ],
+    "f": "形参 x → 实参 a / b\n局部 y → y_inline0 / y_inline1",
+    "g": "inline",
+    "refs": [
+      "inline"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。",
+    "modes": [
+      "展开前",
+      "展开后"
+    ]
+  },
+  {
+    "id": "outline",
+    "nav": "区域提取",
+    "en": "04 / CALLABLE EVOLUTION",
+    "title": "计算区域变成函数，边界值形成接口",
+    "sub": "这是 outlining：提取定义并在原位置建立调用。",
+    "h": "输入看外部定义，输出看区域外使用",
+    "p": [
+      "OutlineIncoreScopes 在 Opaque 函数中寻找 InCoreScopeStmt。区域外定义、区域内使用的值形成输入；区域内定义、区域外使用的值需要通过返回接口传出。输入 IR 要满足 SSA 约束。",
+      "若输出通过参数写入，提取后的返回值按 ReturnParamsExplicit 约束对应参数；核内分配的输出仍保留其 SSA 值。图中用 y 表示抽象结果，不给实际参数方向或存储别名作额外假设。"
+    ],
+    "f": "区域：输入 x → 计算 → 输出 y\n提取：y = region_fn(x)",
+    "g": "outline",
+    "refs": [
+      "outline"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。",
+    "modes": [
+      "区域内嵌",
+      "独立函数"
+    ]
+  },
+  {
+    "id": "signature",
+    "nav": "接口联动",
+    "en": "05 / CALLABLE EVOLUTION",
+    "title": "Tensor→Tile 变换可能同时改变调用接口",
+    "sub": "只看被调用函数的函数体，会漏掉调用方更新。",
+    "h": "局部值与外部 Tensor 分别处理",
+    "p": [
+      "ConvertTensorToTileOps 将 InCore 内的 Tensor 运算降为 Tile 运算，并插入必要的加载与存储。对转成 Tile 的返回值，可能新增 Out 参数并写回相应 Tensor。",
+      "新增输出参数需要调用方创建输出 Tensor 并传入；透明的 Spmd / Group 包装函数也要同步接口。具体签名以实际前后 IR 为准，不能将这个示例推广为所有 Tensor 参数都会被加载。"
+    ],
+    "f": "抽象前：y = f(x)\n抽象后：out = tensor.create(...)\nf(x, out) → tile.store(..., out)",
+    "g": "signature",
+    "refs": [
+      "tile"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。",
+    "modes": [
+      "原接口",
+      "输出参数"
+    ]
+  },
+  {
+    "id": "mixed",
+    "nav": "混合拆核",
+    "en": "06 / CALLABLE EVOLUTION",
+    "title": "混合 InCore 被分解为 AIC 与 AIV",
+    "sub": "仅讨论包含 Cube 和 Vector 操作的情况。",
+    "h": "计算归属与跨核交接需要一起检查",
+    "p": [
+      "ExpandMixedKernel 将混合 InCore 的计算分别放入 AIC 与 AIV 函数，并由 Group 协调调用。若已有适用的 Group 包装，Pass 可直接改写它；存在 Spmd 包装时还需保留其启动语义。",
+      "显式 tile.move 的跨核边界可降为 tpush/tpop 配对。图中交接是这种数据传递的概念示意；Group 中的调用排列并不单独证明设备上完全串行执行。同步正确性仍需具体生成代码和后端语义。"
+    ],
+    "f": "混合计算范围 → Group + AIC + AIV\n跨核值 → 传输操作与相应同步",
+    "g": "split",
+    "refs": [
+      "mixed",
+      "transport"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。",
+    "modes": [
+      "混合 InCore",
+      "AIC / AIV"
+    ]
+  },
+  {
+    "id": "pure",
+    "nav": "纯核分支",
+    "en": "07 / CALLABLE EVOLUTION",
+    "title": "纯 Cube 或纯 Vector 不必拆成两个函数",
+    "sub": "函数类型改变与函数体分解是两种不同变化。",
+    "h": "不能由 Pass 名推断所有输入的结果",
+    "p": [
+      "ExpandMixedKernel 将纯 Cube 的 InCore 改为 AIC；纯 Vector 或仅含共享操作的 InCore 改为 AIV。这类输入不采用上一页的混合核分解。",
+      "当前 SplitVectorKernel 的主要分支是为已经降为 per-lane 形式的 split_aiv 函数写入属性，另有特定后端的双 AIV 调度处理；它已不再承担函数体减半。应根据版本、函数类型、属性和前后 IR 判断具体变化。"
+    ],
+    "f": "纯 Cube：InCore → AIC\n纯 Vector / shared-only：InCore → AIV",
+    "g": "pure",
+    "refs": [
+      "mixed",
+      "vector"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。",
+    "modes": [
+      "纯 Cube",
+      "纯 Vector"
+    ]
+  },
+  {
+    "id": "control",
+    "nav": "控制流",
+    "en": "08 / CALLABLE EVOLUTION",
+    "title": "相同操作名可以出现在不同控制范围",
+    "sub": "调用图、控制流结构和 def-use 关系应配合阅读。",
+    "h": "循环次数不等于函数定义数量",
+    "p": [
+      "循环中的调用点可能在运行时执行多次；条件分支中的调用是否执行取决于条件。仅按源代码里出现几次 Call，无法直接得到任务实例数或动态执行次数。",
+      "跨 Pass 对应还需检查循环边界、分支路径、归约携带值和返回值。展开或复制会让一个原始范围对应多个后继区域；图中 i 和条件均为教学标记，不是设备时间轴。"
+    ],
+    "f": "结构路径：main / for i / if cond / Call\n调用点数量与动态执行次数分别统计",
+    "g": "control",
+    "refs": [
+      "explorer",
+      "inline"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。",
+    "modes": [
+      "循环调用",
+      "条件调用"
+    ]
+  },
+  {
+    "id": "identity",
+    "nav": "对应证据",
+    "en": "09 / CALLABLE EVOLUTION",
+    "title": "函数名是定位线索，不能独立证明来源",
+    "sub": "同一 run 内先关联快照，再核对具体变换。",
+    "h": "把已确认、规则识别和未知分开",
+    "p": [
+      "Transform Explorer 将每个 Pass 的 functions / changedFunctions 按名称转置，形成 Callable 主线。混合拆核识别还要求同一步原函数类型改为 Group，并新增对应 _aic / _aiv 名称；单纯同名前缀不满足条件。",
+      "这是一套有适用范围的识别规则，不是编译器导出的通用 provenance。名字冲突可产生后缀，重命名或其他包装方式也可能无法被该规则关联。缺少可靠证据时应保留“对应未确认”，而不是自动归入同一对象。"
+    ],
+    "f": "定位：run + Pass 序号 + 函数名\n核对：类型 / 调用 / 参数 / 语句 / 变换规则",
+    "g": "identity",
+    "refs": [
+      "explorer",
+      "outline"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。",
+    "modes": [
+      "仅名称相似",
+      "结构证据"
+    ]
+  },
+  {
+    "id": "overview",
+    "nav": "完整追踪",
+    "en": "10 / CALLABLE EVOLUTION",
+    "title": "沿计算范围追踪，同时保留每次边界变化",
+    "sub": "先确认是哪次编译，再解释这一阶段的对应关系。",
+    "h": "不要求每一阶段仍有同名 Callable",
+    "p": [
+      "内联可能消除函数边界；提取可能新增函数；Tensor→Tile 可能改变接口；混合拆核可能将计算分散到不同核函数。追踪对象是经证据确认的计算对应关系，不能要求六个阶段始终共用一个名称。",
+      "实际使用时先固定源码、编译版本、目标和配置，再比较相邻快照。记录确认依据与缺口，并用适合的调用、控制流或数据流视角检查。此图总结关系，不代表所有程序都会经过全部分支，也不替代完整 Pass 序列。"
+    ],
+    "f": "输入身份 → 相邻快照 → 结构差异\n→ 对应证据 → 已确认 / 待确认",
+    "g": "identity",
+    "refs": [
+      "inline",
+      "outline",
+      "tile",
+      "mixed",
+      "explorer"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。"
+  }
+];
+const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const t=(x,y,s,cl='',anchor='start')=>`<text x="${x}" y="${y}" class="${cl}" text-anchor="${anchor}">${esc(s)}</text>`;
+function hit(key,body){return `<g class="hit" tabindex="0" role="button" data-key="${key}" aria-label="${esc(glossary[key][0])}">${body}</g>`}
+
+function caption(y,s){return t(400,y,s,'small','middle')}
+function box(x,y,w,h,title,detail,key='identity') {return hit(key,`<rect class="outline" x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="#202020" stroke="#707070"/>`+t(x+w/2,y+28,title,'','middle')+t(x+w/2,y+54,detail,'small','middle'))}
+function operand(x,y,label,type,detail,key){return P.grid(x,y,label,'tile',type,detail,true,170,70).replaceAll('data-key="tile"',`data-key="${key}"`).replaceAll('aria-label="Tile · 带类型与布局信息的局部数据"',`aria-label="${esc(glossary[key][0])}"`)}
+function block(x,y,w,label,key='capacity',color='#C7AD88'){return hit(key,`<rect class="outline" x="${x}" y="${y}" width="${w}" height="45" rx="3" fill="${color}" fill-opacity=".13" stroke="${color}"/>`+t(x+w/2,y+28,label,'small','middle'))}
+function chain(nodes,y){let s='';nodes.forEach((n,i)=>{let x=45+i*255;if(i<2)s+=P.line(x+200,y+40,x+255,y+40,'mapping');s+=box(x,y,200,80,n[0],n[1],n[2])});return s}
+
+function diagram(id){bounds={w:800,h:540};let s='';
+if(id==='objects'){
+ s=P.boundary(45,80,300,290,'main · Function')+box(85,145,215,75,'Call c0','引用 square(a)','callsite')+box(85,260,215,75,'Call c1','引用 square(b)','callsite');
+ s+=P.boundary(470,135,280,190,'square · Function')+P.op(515,210,'mul','op',180)+P.route([[300,180],[395,180],[395,195],[470,195]],'call')+P.route([[300,300],[420,300],[420,265],[470,265]],'call');
+ s+=caption(450,'静态定义与调用；本图没有运行时任务实例');
+}else if(id==='calls'){
+ s=P.boundary(50,90,285,300,'main')+box(85,165,215,80,mode?'c1: square(b)':'c0: square(a)','当前追踪的调用点','callsite')+P.boundary(470,90,280,300,'square(x)')+P.op(520,190,'mul(x,x)','op',180)+P.route([[300,205],[470,205]],'call')+caption(460,mode?'实参 b 将替换形参 x':'实参 a 将替换形参 x');
+}else if(id==='inline'){
+ s=P.boundary(65,70,670,355,'main · 两个独立计算范围');
+ if(!mode){s+=box(115,150,210,80,'square(a)','调用点 c0','callsite')+box(460,150,210,80,'square(b)','调用点 c1','callsite')+box(290,290,220,75,'Inline 定义','两处调用共用定义','inline')+P.route([[220,230],[220,327],[290,327]],'call')+P.route([[565,230],[565,327],[510,327]],'call')}
+ else{s+=P.op(125,165,'mul(a,a)','op',190)+P.op(475,165,'mul(b,b)','op',190)+t(220,280,'y_inline0','small','middle')+t(570,280,'y_inline1','small','middle')+P.line(220,213,220,250,'data')+P.line(570,213,570,250,'data')+caption(365,'Inline 定义移除；两个计算副本仍然存在')}
+}else if(id==='outline'){
+ s=P.boundary(40,70,310,345,'main · Opaque');
+ if(!mode){s+=P.boundary(80,150,230,170,'InCore scope')+P.op(120,210,'compute','op',150)+t(95,130,'输入 x','small')+t(95,360,'结果 y','small')+P.line(195,135,195,150,'data')+P.line(195,320,195,345,'data')}
+ else{s+=box(85,175,220,80,'Call region_fn(x)','接收结果 y','callsite')+P.boundary(450,135,300,240,'region_fn · InCore')+P.op(520,225,'compute','op',160)+P.route([[305,210],[450,210]],'call')+t(600,340,'参数 x / 返回 y','small','middle')}
+ s+=caption(475,mode?'区域边界变为函数接口；实际返回需核对参数对应':'尚未创建独立的 region_fn 定义');
+}else if(id==='signature'){
+ s=P.boundary(45,90,300,315,'调用方')+P.boundary(445,90,310,315,mode?'f(x, out)':'f(x)');
+ if(!mode){s+=box(90,180,210,80,'y = f(x)','接收返回值','signature')+box(495,180,210,80,'Tensor 计算','返回 y','signature')+P.line(300,220,445,220,'call')}
+ else{s+=box(85,145,220,75,'tensor.create','准备 out','signature')+box(85,280,220,75,'f(x, out)','传入输出参数','callsite')+P.op(510,180,'Tile op','op',180)+box(495,280,210,75,'tile.store','写入 out','signature')+P.route([[305,317],[380,317],[380,230],[445,230]],'call')+P.line(600,228,600,280,'data')}
+ s+=caption(465,'接口示意，不表示所有参数均被转换或加载');
+}else if(id==='mixed'){
+ if(!mode){s=P.boundary(155,70,490,350,'mixed · InCore')+P.op(210,170,'tile.matmul','op',180)+P.op(410,290,'tile.add','op',170)+P.route([[390,194],[495,194],[495,290]],'data')+caption(465,'同一计算范围包含 Cube 与 Vector 操作')}
+ else{s=P.boundary(45,55,710,100,'Group · 协调调用')+t(240,118,'call mixed_aic','small','middle')+t(565,118,'call mixed_aiv','small','middle')+P.kernel(50,225,290,190,'mixed_aic','AIC')+P.kernel(460,225,290,190,'mixed_aiv','AIV')+P.op(90,290,'tile.matmul','op',210)+P.op(510,290,'tile.add','op',190)+P.line(240,155,240,225,'call')+P.line(565,155,565,225,'call')+P.line(340,365,460,365,'data','交接值')+caption(475,'数据边表示概念交接；具体 tpush / tpop 另查 IR')}
+}else if(id==='pure'){
+ s=P.boundary(55,130,270,225,mode?'纯 Vector · InCore':'纯 Cube · InCore')+P.op(90,220,mode?'tile.add':'tile.matmul','op',200)+P.kernel(470,130,270,225,mode?'同一计算范围':'同一计算范围',mode?'AIV':'AIC')+P.op(505,220,mode?'tile.add':'tile.matmul','op',200)+P.line(325,240,470,240,'mapping','类型转换')+caption(450,'此分支不产生 AIC / AIV 两个计算副本');
+}else if(id==='control'){
+ s=P.boundary(65,55,670,385,'main');
+ if(!mode){s+=P.loop(115,115,570,260,'for i in range(N)')+box(210,215,380,90,'Call f(x[i])','一个调用点；动态执行次数依赖 N','control')}
+ else{s+=P.boundary(105,135,590,250,'if cond')+box(140,215,235,85,'then: Call f(x)','条件满足时执行','control')+box(430,215,225,85,'else: Call g(x)','其他分支','control')}
+ s+=caption(485,'静态结构路径用于定位；设备运行次数需要另外核对');
+}else if(id==='identity'){
+ if(!mode){s=box(75,160,245,100,'foo','函数 A','identity')+box(480,160,245,100,'foo_0','函数 B','identity')+caption(340,'名称相似：不足以证明父子或复制关系')+caption(400,'不画未经证实的跨阶段对应边')}
+ else{s=box(70,100,250,90,'foo · InCore','Pass 前','identity')+box(470,100,260,90,'foo · Group','同一步类型改变','identity')+box(430,300,160,85,'foo_aic','同一步新增','split')+box(610,300,160,85,'foo_aiv','同一步新增','split')+P.line(320,145,470,145,'mapping')+P.route([[545,190],[545,250],[510,250],[510,300]],'call')+P.route([[655,190],[655,250],[690,250],[690,300]],'call')+caption(465,'满足 Explorer 的有限识别规则；仍需查看实际 IR')}
+}else if(id==='overview'){
+ s=chain([['调用点','一个定义，多处引用','callsite'],['内联展开','边界消失，计算保留','inline'],['区域提取','新增定义与调用','outline']],85)+chain([['接口联动','定义和调用同步更新','signature'],['混合拆核','有条件地产生核函数','split'],['对应核查','证据支持或保持未知','identity']],315)+P.route([[655,165],[755,165],[755,275],[145,275],[145,315]],'mapping')+caption(490,'菱形点线总结对应关系，不是完整 Pass 执行顺序');
+}
+return s;}
+function coverDiagram(){return P.boundary(70,70,270,220,'源码计算范围')+P.op(120,150,'compute','op',170)+P.kernel(480,80,260,150,'计算后继 A','AIC')+P.kernel(480,290,260,150,'计算后继 B','AIV')+P.route([[340,170],[410,170],[410,155],[480,155]],'mapping')+P.route([[340,220],[390,220],[390,365],[480,365]],'mapping')+caption(495,'边界与名称可以改变；对应关系必须有依据');}
+function updateFormula(){}
+let page=0,mode=0,selected='',bounds={w:800,h:540},zoom=1,view={x:0,y:0,w:800,h:540},drag=null,moved=false;
+function draw(){const body=diagram(pages[page].id);$('canvas').innerHTML=`<svg role="group" aria-label="${esc(pages[page].title)}" viewBox="0 0 ${bounds.w} ${bounds.h}">${defs}<g id="scene">${body}</g></svg>`;fit();select(pages[page].g);updateFormula();}
+
+function select(key){selected=key;document.querySelectorAll('#scene .hit').forEach(el=>el.classList.toggle('selected',el.dataset.key===key));$('node-title').textContent=glossary[key][0];$('node-copy').textContent=glossary[key][1]}
+function updateView(){let svg=$('canvas').querySelector('svg');if(svg)svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`);$('zoom-label').textContent=Math.round(zoom*100)+'%';$('minus').disabled=zoom<=1;$('plus').disabled=zoom>=4}
+function fit(){zoom=1;view={x:0,y:0,w:bounds.w,h:bounds.h};updateView()}
+function scale(f){const z=Math.max(1,Math.min(4,zoom*f));const w=bounds.w/z,h=bounds.h/z;view={x:view.x+(view.w-w)/2,y:view.y+(view.h-h)/2,w,h};zoom=z;clamp();updateView()}
+function clamp(){view.x=Math.max(-bounds.w*.12,Math.min(bounds.w-view.w+bounds.w*.12,view.x));view.y=Math.max(-bounds.h*.12,Math.min(bounds.h-view.h+bounds.h*.12,view.y))}
+function info(open){$('info-panel').hidden=!open;$('info-toggle').setAttribute('aria-expanded',String(open))}
+
+function render(n){page=Math.max(0,Math.min(pages.length-1,n));mode=0;drag=null;info(false);document.body.classList.toggle('cover-mode',!page);$('cover').hidden=!!page;$('heading').hidden=!page;$('workspace').hidden=!page;$('prev').disabled=page===0;$('next').disabled=page===pages.length-1;document.querySelectorAll('#steps button').forEach((b,i)=>{if(i===page)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current')});const p=pages[page];history.replaceState(null,'','#'+p.id);if(!page){$('canvas').innerHTML='';return;}$('eyebrow').textContent=p.en;$('title').textContent=p.title;$('subtitle').textContent=p.sub;$('number').textContent=String(page).padStart(2,'0');$('explain-title').textContent=p.h;$('copy').innerHTML=p.p.map(x=>'<p>'+x+'</p>').join('');$('formula').textContent=p.f;$('scope-note').textContent=p.note;$('sources').innerHTML='<p>'+esc(p.note)+'</p><ul>'+p.refs.map(k=>`<li><a href="${refs[k][1]}" target="_blank" rel="noopener">${esc(refs[k][0])}</a></li>`).join('')+'</ul><p>核对日期：2026-10-10。实现依据为本地 PyPTO 87b129aa 快照，所读文件哈希见来源说明；官网可能已演进。教学数值与图形为构造示例，未执行编译或性能实验。</p>';
+ $('modes').innerHTML=(p.modes||[]).map((s,i)=>`<button data-mode="${i}" class="${i===0?'active':''}" aria-pressed="${i===0}">${esc(s)}</button>`).join('');document.querySelector('.explanation').scrollTop=0;draw();let active=document.querySelector('#steps [aria-current]');$('steps').scrollTo({left:active.offsetLeft-$('steps').offsetLeft-70,behavior:'instant'});if(innerWidth<761)window.scrollTo(0,0)}
+$('steps').innerHTML=pages.map((p,i)=>`<button data-page="${i}"><span>${String(i).padStart(2,'0')}</span>${p.nav}</button>`).join('');$('steps').onclick=e=>{let b=e.target.closest('[data-page]');if(b)render(+b.dataset.page)};$('prev').onclick=()=>render(page-1);$('next').onclick=()=>render(page+1);$('start').onclick=()=>render(1);$('legend-link').onclick=()=>render(1);$('info-toggle').onclick=()=>info($('info-panel').hidden);document.addEventListener('click',e=>{if(!e.target.closest('.info'))info(false)});$('fit').onclick=fit;$('plus').onclick=()=>scale(1.3);$('minus').onclick=()=>scale(1/1.3);$('modes').onclick=e=>{let b=e.target.closest('[data-mode]');if(!b)return;mode=+b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>{x.classList.toggle('active',+x.dataset.mode===mode);x.setAttribute('aria-pressed',String(+x.dataset.mode===mode))});draw()};
+$('canvas').onclick=e=>{if(moved){moved=false;return}let h=e.target.closest('[data-key]');if(h)select(h.dataset.key)};$('canvas').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.dataset.key){e.preventDefault();select(e.target.dataset.key)}});document.addEventListener('keydown',e=>{if(e.key==='Escape')info(false);if(e.target.matches('input,textarea')||e.altKey||e.metaKey||e.ctrlKey)return;if(e.key==='ArrowRight'){e.preventDefault();render(page+1)}if(e.key==='ArrowLeft'){e.preventDefault();render(page-1)}});
+$('canvas').addEventListener('pointerdown',e=>{moved=false;if(zoom<=1)return;const svg=$('canvas').querySelector('svg');const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(svg.getScreenCTM().inverse());drag={px:e.clientX,py:e.clientY,x:p.x,y:p.y,vx:view.x,vy:view.y,matrix:svg.getScreenCTM().inverse()}});$('canvas').addEventListener('pointermove',e=>{if(!drag)return;if(Math.hypot(e.clientX-drag.px,e.clientY-drag.py)>5){moved=true;$('canvas').setPointerCapture(e.pointerId);$('canvas').classList.add('dragging')}if(moved){let p=new DOMPoint(e.clientX,e.clientY).matrixTransform(drag.matrix);view.x=drag.vx+drag.x-p.x;view.y=drag.vy+drag.y-p.y;clamp();updateView()}});function stop(){drag=null;$('canvas').classList.remove('dragging')}$('canvas').addEventListener('pointerup',stop);$('canvas').addEventListener('pointercancel',stop);window.addEventListener('resize',()=>{if(page)updateView()});
+
+$('cover-art').innerHTML=`<svg viewBox="0 0 800 540" role="img" aria-label="计算范围与后继核函数的对应">${defs}${coverDiagram()}</svg>`;
+$('cover-art').querySelectorAll('[tabindex]').forEach(el=>{el.removeAttribute('tabindex');el.removeAttribute('role')});
+$('cover-art').innerHTML=$('cover-art').innerHTML.replace(/id="(arrow|open|diamond|circle)"/g,'id="cover-$1"').replace(/url\(#(arrow|open|diamond|circle)\)/g,'url(#cover-$1)');
+window.addEventListener('hashchange',()=>render(Math.max(0,pages.findIndex(p=>p.id===location.hash.slice(1)))));
+render(Math.max(0,pages.findIndex(p=>p.id===location.hash.slice(1))));
+
+</script></body></html>

@@ -1,0 +1,888 @@
+{
+  "checkedAt": "2026-10-10T09:56:10.817Z",
+  "scope": "Static JS, all non-cover SVG states, glossary keys, bundled refs and chapter data. No browser layout or runtime/compiler validation.",
+  "svgDirectory": "/var/folders/wd/6h8swspn5_jd9vq1flwnf9sr0000gr/T/pypto-series-svg-EIVCDk",
+  "reports": [
+    {
+      "name": "pypto-compilation-guide",
+      "pages": 12,
+      "diagramStates": 20,
+      "script": "pass",
+      "glossary": "pass",
+      "sourceReferencesUnbundled": [
+        "PassManager：策略与条件分支",
+        "OutlineIncoreScopes",
+        "ConvertTensorToTileOps",
+        "AutoTileMatmulL0",
+        "ExpandMixedKernel",
+        "InitMemRef",
+        "MaterializeSemanticAliases",
+        "MemoryReuse",
+        "AllocateMemoryAddr",
+        "AutoDeriveTaskDependencies",
+        "Transform Explorer：范围与解析边界"
+      ],
+      "sha256": "5e7b49f20da962aede72d8aa92c98363eaaace67139ed984261f3f89675da6e0",
+      "states": [
+        {
+          "page": "inherited",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compilation-guide-inherited-0.svg"
+        },
+        {
+          "page": "objects",
+          "mode": 0,
+          "width": 1050,
+          "height": 830,
+          "file": "pypto-compilation-guide-objects-0.svg"
+        },
+        {
+          "page": "relations",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compilation-guide-relations-0.svg"
+        },
+        {
+          "page": "tensor",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compilation-guide-tensor-0.svg"
+        },
+        {
+          "page": "outline",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compilation-guide-outline-0.svg"
+        },
+        {
+          "page": "tile",
+          "mode": 0,
+          "width": 800,
+          "height": 650,
+          "file": "pypto-compilation-guide-tile-0.svg"
+        },
+        {
+          "page": "tile",
+          "mode": 1,
+          "width": 800,
+          "height": 650,
+          "file": "pypto-compilation-guide-tile-1.svg"
+        },
+        {
+          "page": "loop",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compilation-guide-loop-0.svg"
+        },
+        {
+          "page": "loop",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compilation-guide-loop-1.svg"
+        },
+        {
+          "page": "loop",
+          "mode": 2,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compilation-guide-loop-2.svg"
+        },
+        {
+          "page": "loop",
+          "mode": 3,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compilation-guide-loop-3.svg"
+        },
+        {
+          "page": "kernel",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compilation-guide-kernel-0.svg"
+        },
+        {
+          "page": "kernel",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compilation-guide-kernel-1.svg"
+        },
+        {
+          "page": "memory",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compilation-guide-memory-0.svg"
+        },
+        {
+          "page": "memory",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compilation-guide-memory-1.svg"
+        },
+        {
+          "page": "evidence",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compilation-guide-evidence-0.svg"
+        },
+        {
+          "page": "overview",
+          "mode": 0,
+          "width": 1050,
+          "height": 830,
+          "file": "pypto-compilation-guide-overview-0.svg"
+        },
+        {
+          "page": "overview",
+          "mode": 1,
+          "width": 1050,
+          "height": 830,
+          "file": "pypto-compilation-guide-overview-1.svg"
+        },
+        {
+          "page": "overview",
+          "mode": 2,
+          "width": 1050,
+          "height": 830,
+          "file": "pypto-compilation-guide-overview-2.svg"
+        },
+        {
+          "page": "overview",
+          "mode": 3,
+          "width": 1050,
+          "height": 830,
+          "file": "pypto-compilation-guide-overview-3.svg"
+        }
+      ]
+    },
+    {
+      "name": "pypto-memory-reuse-guide",
+      "pages": 11,
+      "diagramStates": 18,
+      "script": "pass",
+      "glossary": "pass",
+      "sourceReferencesUnbundled": [
+        "本地 MemoryReuse 文档",
+        "本地 MemoryReuse 实现",
+        "本地 AllocateMemoryAddr 实现",
+        "本地地址分配文档（部分 alloc 描述滞后，以实现与 IR 为准）",
+        "本地 PassManager",
+        "Memory Inspector 字段与异常判定",
+        "原始 memory map JSON",
+        "Pass Atlas",
+        "Pass Transform Explorer",
+        "Memory Inspector V2"
+      ],
+      "sha256": "0b56a76d0e8758af9c9d0daec8b36e707a04cbc3188f4cd257e311ed35a9dad7",
+      "states": [
+        {
+          "page": "objects",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-memory-reuse-guide-objects-0.svg"
+        },
+        {
+          "page": "lifetime",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-memory-reuse-guide-lifetime-0.svg"
+        },
+        {
+          "page": "lifetime",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-memory-reuse-guide-lifetime-1.svg"
+        },
+        {
+          "page": "conflicts",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-memory-reuse-guide-conflicts-0.svg"
+        },
+        {
+          "page": "conflicts",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-memory-reuse-guide-conflicts-1.svg"
+        },
+        {
+          "page": "reuse",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-memory-reuse-guide-reuse-0.svg"
+        },
+        {
+          "page": "reuse",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-memory-reuse-guide-reuse-1.svg"
+        },
+        {
+          "page": "constraints",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-memory-reuse-guide-constraints-0.svg"
+        },
+        {
+          "page": "constraints",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-memory-reuse-guide-constraints-1.svg"
+        },
+        {
+          "page": "constraints",
+          "mode": 2,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-memory-reuse-guide-constraints-2.svg"
+        },
+        {
+          "page": "pipeline",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-memory-reuse-guide-pipeline-0.svg"
+        },
+        {
+          "page": "pipeline",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-memory-reuse-guide-pipeline-1.svg"
+        },
+        {
+          "page": "address",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-memory-reuse-guide-address-0.svg"
+        },
+        {
+          "page": "address",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-memory-reuse-guide-address-1.svg"
+        },
+        {
+          "page": "planner",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-memory-reuse-guide-planner-0.svg"
+        },
+        {
+          "page": "evidence",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-memory-reuse-guide-evidence-0.svg"
+        },
+        {
+          "page": "evidence",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-memory-reuse-guide-evidence-1.svg"
+        },
+        {
+          "page": "overview",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-memory-reuse-guide-overview-0.svg"
+        }
+      ]
+    },
+    {
+      "name": "pypto-compiler-decisions-guide",
+      "pages": 11,
+      "diagramStates": 19,
+      "script": "pass",
+      "glossary": "pass",
+      "sourceReferencesUnbundled": [],
+      "sha256": "604e9c9c18c201fa368b6c6b096c0c99da84bf4c51e5c6f065746833e4fe1592",
+      "states": [
+        {
+          "page": "scope",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compiler-decisions-guide-scope-0.svg"
+        },
+        {
+          "page": "tiling",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compiler-decisions-guide-tiling-0.svg"
+        },
+        {
+          "page": "tiling",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compiler-decisions-guide-tiling-1.svg"
+        },
+        {
+          "page": "cost",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compiler-decisions-guide-cost-0.svg"
+        },
+        {
+          "page": "cost",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compiler-decisions-guide-cost-1.svg"
+        },
+        {
+          "page": "pipeline",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compiler-decisions-guide-pipeline-0.svg"
+        },
+        {
+          "page": "pipeline",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compiler-decisions-guide-pipeline-1.svg"
+        },
+        {
+          "page": "capacity",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compiler-decisions-guide-capacity-0.svg"
+        },
+        {
+          "page": "capacity",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compiler-decisions-guide-capacity-1.svg"
+        },
+        {
+          "page": "capacity",
+          "mode": 2,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compiler-decisions-guide-capacity-2.svg"
+        },
+        {
+          "page": "reuse",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compiler-decisions-guide-reuse-0.svg"
+        },
+        {
+          "page": "reuse",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compiler-decisions-guide-reuse-1.svg"
+        },
+        {
+          "page": "deps",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compiler-decisions-guide-deps-0.svg"
+        },
+        {
+          "page": "deps",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compiler-decisions-guide-deps-1.svg"
+        },
+        {
+          "page": "evidence",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compiler-decisions-guide-evidence-0.svg"
+        },
+        {
+          "page": "evidence",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compiler-decisions-guide-evidence-1.svg"
+        },
+        {
+          "page": "experiment",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compiler-decisions-guide-experiment-0.svg"
+        },
+        {
+          "page": "experiment",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compiler-decisions-guide-experiment-1.svg"
+        },
+        {
+          "page": "overview",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-compiler-decisions-guide-overview-0.svg"
+        }
+      ]
+    },
+    {
+      "name": "pypto-callable-evolution-guide",
+      "pages": 11,
+      "diagramStates": 18,
+      "script": "pass",
+      "glossary": "pass",
+      "sourceReferencesUnbundled": [],
+      "sha256": "b4da55bda2cf0cf83af7000353d71539c10dc6cbbe9bd00e0a0b790b4a3009ff",
+      "states": [
+        {
+          "page": "objects",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-callable-evolution-guide-objects-0.svg"
+        },
+        {
+          "page": "calls",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-callable-evolution-guide-calls-0.svg"
+        },
+        {
+          "page": "calls",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-callable-evolution-guide-calls-1.svg"
+        },
+        {
+          "page": "inline",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-callable-evolution-guide-inline-0.svg"
+        },
+        {
+          "page": "inline",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-callable-evolution-guide-inline-1.svg"
+        },
+        {
+          "page": "outline",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-callable-evolution-guide-outline-0.svg"
+        },
+        {
+          "page": "outline",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-callable-evolution-guide-outline-1.svg"
+        },
+        {
+          "page": "signature",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-callable-evolution-guide-signature-0.svg"
+        },
+        {
+          "page": "signature",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-callable-evolution-guide-signature-1.svg"
+        },
+        {
+          "page": "mixed",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-callable-evolution-guide-mixed-0.svg"
+        },
+        {
+          "page": "mixed",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-callable-evolution-guide-mixed-1.svg"
+        },
+        {
+          "page": "pure",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-callable-evolution-guide-pure-0.svg"
+        },
+        {
+          "page": "pure",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-callable-evolution-guide-pure-1.svg"
+        },
+        {
+          "page": "control",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-callable-evolution-guide-control-0.svg"
+        },
+        {
+          "page": "control",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-callable-evolution-guide-control-1.svg"
+        },
+        {
+          "page": "identity",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-callable-evolution-guide-identity-0.svg"
+        },
+        {
+          "page": "identity",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-callable-evolution-guide-identity-1.svg"
+        },
+        {
+          "page": "overview",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-callable-evolution-guide-overview-0.svg"
+        }
+      ]
+    },
+    {
+      "name": "pypto-runtime-evidence-guide",
+      "pages": 11,
+      "diagramStates": 19,
+      "script": "pass",
+      "glossary": "pass",
+      "sourceReferencesUnbundled": [],
+      "sha256": "b30878de47a7594d596f0e402ab55581720c4e41722ef5b43a767e55364007a1",
+      "states": [
+        {
+          "page": "contract",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-runtime-evidence-guide-contract-0.svg"
+        },
+        {
+          "page": "contract",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-runtime-evidence-guide-contract-1.svg"
+        },
+        {
+          "page": "instance",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-runtime-evidence-guide-instance-0.svg"
+        },
+        {
+          "page": "instance",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-runtime-evidence-guide-instance-1.svg"
+        },
+        {
+          "page": "wait",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-runtime-evidence-guide-wait-0.svg"
+        },
+        {
+          "page": "wait",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-runtime-evidence-guide-wait-1.svg"
+        },
+        {
+          "page": "hypothesis",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-runtime-evidence-guide-hypothesis-0.svg"
+        },
+        {
+          "page": "hypothesis",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-runtime-evidence-guide-hypothesis-1.svg"
+        },
+        {
+          "page": "critical",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-runtime-evidence-guide-critical-0.svg"
+        },
+        {
+          "page": "critical",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-runtime-evidence-guide-critical-1.svg"
+        },
+        {
+          "page": "link",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-runtime-evidence-guide-link-0.svg"
+        },
+        {
+          "page": "link",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-runtime-evidence-guide-link-1.svg"
+        },
+        {
+          "page": "compile",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-runtime-evidence-guide-compile-0.svg"
+        },
+        {
+          "page": "compile",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-runtime-evidence-guide-compile-1.svg"
+        },
+        {
+          "page": "failure",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-runtime-evidence-guide-failure-0.svg"
+        },
+        {
+          "page": "failure",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-runtime-evidence-guide-failure-1.svg"
+        },
+        {
+          "page": "experiment",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-runtime-evidence-guide-experiment-0.svg"
+        },
+        {
+          "page": "experiment",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-runtime-evidence-guide-experiment-1.svg"
+        },
+        {
+          "page": "overview",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-runtime-evidence-guide-overview-0.svg"
+        }
+      ]
+    },
+    {
+      "name": "pypto-pass-contracts-guide",
+      "pages": 11,
+      "diagramStates": 17,
+      "script": "pass",
+      "glossary": "pass",
+      "sourceReferencesUnbundled": [],
+      "sha256": "c453ac2ddeb77f80dd4f349dcf397c1276417bb7dd99a2eab220e68661919552",
+      "states": [
+        {
+          "page": "contract",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-pass-contracts-guide-contract-0.svg"
+        },
+        {
+          "page": "contract",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-pass-contracts-guide-contract-1.svg"
+        },
+        {
+          "page": "chain",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-pass-contracts-guide-chain-0.svg"
+        },
+        {
+          "page": "declaration",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-pass-contracts-guide-declaration-0.svg"
+        },
+        {
+          "page": "declaration",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-pass-contracts-guide-declaration-1.svg"
+        },
+        {
+          "page": "coverage",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-pass-contracts-guide-coverage-0.svg"
+        },
+        {
+          "page": "coverage",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-pass-contracts-guide-coverage-1.svg"
+        },
+        {
+          "page": "window",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-pass-contracts-guide-window-0.svg"
+        },
+        {
+          "page": "window",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-pass-contracts-guide-window-1.svg"
+        },
+        {
+          "page": "first",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-pass-contracts-guide-first-0.svg"
+        },
+        {
+          "page": "first",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-pass-contracts-guide-first-1.svg"
+        },
+        {
+          "page": "nonmonotone",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-pass-contracts-guide-nonmonotone-0.svg"
+        },
+        {
+          "page": "blindspots",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-pass-contracts-guide-blindspots-0.svg"
+        },
+        {
+          "page": "blindspots",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-pass-contracts-guide-blindspots-1.svg"
+        },
+        {
+          "page": "repro",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-pass-contracts-guide-repro-0.svg"
+        },
+        {
+          "page": "repro",
+          "mode": 1,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-pass-contracts-guide-repro-1.svg"
+        },
+        {
+          "page": "overview",
+          "mode": 0,
+          "width": 800,
+          "height": 540,
+          "file": "pypto-pass-contracts-guide-overview-0.svg"
+        }
+      ]
+    }
+  ],
+  "svgChecks": {
+    "states": 111,
+    "xml": "pass",
+    "markers": "pass",
+    "textAnchors": "pass",
+    "actualTextExtent": "not checked",
+    "browserLayout": "not checked"
+  },
+  "sourceChecks": {
+    "excerpts": 33,
+    "excerptAndHash": "pass",
+    "memoryMapFunctions": 2,
+    "memoryMap": "exact source match",
+    "insightInventory": 34
+  }
+}

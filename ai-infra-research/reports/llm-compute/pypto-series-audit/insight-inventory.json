@@ -1,0 +1,4424 @@
+[
+  {
+    "path": "Insight/02 Model Architecture & Inference Semantics.md",
+    "sha256": "44497319896608517f4556992946f74a4928b0059eef5788698affd37578685a",
+    "bytes": 33018,
+    "classification": "模型结构；Attention、MLA、MoE、KV 未作为本系列专题解释",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# 02. Model Architecture & Inference Semantics：模型结构为什么会改变推理行为"
+      },
+      {
+        "line": 15,
+        "heading": "## 02.1 从模型结构到推理行为：先建立三个层级"
+      },
+      {
+        "line": 79,
+        "heading": "# 02.2 Decoder-only 模型的一次 Forward 到底发生了什么"
+      },
+      {
+        "line": 169,
+        "heading": "# 02.3 为什么生成模型必须区分 Prefill 和 Decode"
+      },
+      {
+        "line": 196,
+        "heading": "## Prefill"
+      },
+      {
+        "line": 224,
+        "heading": "## Decode"
+      },
+      {
+        "line": 270,
+        "heading": "# 02.4 KV Cache：为什么不需要每次重算所有历史 token"
+      },
+      {
+        "line": 346,
+        "heading": "# 02.5 MHA → MQA → GQA：真正变化的是 KV Representation"
+      },
+      {
+        "line": 360,
+        "heading": "## 02.5.1 MHA：每个 Query Head 都拥有自己的 K/V Head"
+      },
+      {
+        "line": 393,
+        "heading": "# 02.5.2 MQA：所有 Query Head 共用一组 K/V"
+      },
+      {
+        "line": 423,
+        "heading": "# 02.5.3 GQA：MHA 和 MQA 之间的折中"
+      },
+      {
+        "line": 482,
+        "heading": "# 02.6 MLA：进一步改变“缓存什么”"
+      },
+      {
+        "line": 499,
+        "heading": "### MHA / GQA"
+      },
+      {
+        "line": 509,
+        "heading": "### MLA"
+      },
+      {
+        "line": 589,
+        "heading": "# 02.7 Attention Architecture 最终改变哪三件事"
+      },
+      {
+        "line": 623,
+        "heading": "# 02.8 Dense FFN：为什么模型大量计算集中在 Linear"
+      },
+      {
+        "line": 699,
+        "heading": "# 02.9 Dense → MoE：改变的是“参数规模”和“每 token 计算量”的关系"
+      },
+      {
+        "line": 743,
+        "heading": "## 02.9.1 Total Parameters"
+      },
+      {
+        "line": 765,
+        "heading": "## 02.9.2 Activated Parameters"
+      },
+      {
+        "line": 805,
+        "heading": "# 02.10 Router、Top-K、Shared Expert 与 Routed Expert"
+      },
+      {
+        "line": 836,
+        "heading": "### Routed Expert"
+      },
+      {
+        "line": 842,
+        "heading": "### Top-K"
+      },
+      {
+        "line": 867,
+        "heading": "### Shared Expert"
+      },
+      {
+        "line": 886,
+        "heading": "### Load Balance"
+      },
+      {
+        "line": 910,
+        "heading": "# 02.11 为什么 MoE 会改变 Communication"
+      },
+      {
+        "line": 996,
+        "heading": "# 02.12 模型结构如何分别决定 Compute、Memory、Communication"
+      },
+      {
+        "line": 1038,
+        "heading": "# 02.13 从 `config.json` 能提前读出什么"
+      },
+      {
+        "line": 1046,
+        "heading": "## 第一组：模型规模"
+      },
+      {
+        "line": 1068,
+        "heading": "## 第二组：Attention"
+      },
+      {
+        "line": 1120,
+        "heading": "# 02.14 第三组：FFN / MoE"
+      },
+      {
+        "line": 1186,
+        "heading": "# 02.15 `config.json` 仍然不等于完整模型结构"
+      },
+      {
+        "line": 1250,
+        "heading": "# 02.16 config、model.py 与 profiling 的职责边界"
+      },
+      {
+        "line": 1254,
+        "heading": "### Config"
+      },
+      {
+        "line": 1269,
+        "heading": "### model.py"
+      },
+      {
+        "line": 1289,
+        "heading": "### Profiling"
+      },
+      {
+        "line": 1339,
+        "heading": "# 02.17 用 DeepSeek-V3 做一次完整的“读 Config 推理”"
+      },
+      {
+        "line": 1367,
+        "heading": "### Architecture"
+      },
+      {
+        "line": 1385,
+        "heading": "### Compute"
+      },
+      {
+        "line": 1397,
+        "heading": "### Memory"
+      },
+      {
+        "line": 1409,
+        "heading": "### Communication"
+      },
+      {
+        "line": 1423,
+        "heading": "### Performance Hypothesis"
+      },
+      {
+        "line": 1447,
+        "heading": "# 02.18 本章最终应该形成的分析方法"
+      }
+    ]
+  },
+  {
+    "path": "Insight/05Operator-hardware.md",
+    "sha256": "96e9d128c22e5a89e6a4a0bf62dbcb38b68a57759fc38c4f0295cd3421d0a18f",
+    "bytes": 40199,
+    "classification": "部分覆盖算子/核/分块；Roofline、向量化、访存模式未深入解释",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# 05. Operator / Kernel / Hardware：一次模型计算最终怎样在设备上执行"
+      },
+      {
+        "line": 51,
+        "heading": "# 05.1 先建立四个层级：Module、Operator、Kernel、Instruction"
+      },
+      {
+        "line": 53,
+        "heading": "## 05.1.1 Model Module：模型作者眼中的计算语义"
+      },
+      {
+        "line": 120,
+        "heading": "# 05.2 Operator：把模型语义变成计算图节点"
+      },
+      {
+        "line": 178,
+        "heading": "# **Fusion。**"
+      },
+      {
+        "line": 182,
+        "heading": "# 05.3 为什么 Operator 和 Kernel 不会一一对应"
+      },
+      {
+        "line": 219,
+        "heading": "# 05.4 一个 Operator 为什么可能变成多个 Kernel"
+      },
+      {
+        "line": 307,
+        "heading": "# 05.5 Fusion 到底优化了什么"
+      },
+      {
+        "line": 369,
+        "heading": "# 05.6 Attention 是理解 Fusion 最好的例子"
+      },
+      {
+        "line": 422,
+        "heading": "# 05.7 从 Kernel 再往下一层：数据究竟放在哪里"
+      },
+      {
+        "line": 454,
+        "heading": "# 05.8 NVIDIA GPU：HBM → Cache / Shared Memory → Register → Compute"
+      },
+      {
+        "line": 501,
+        "heading": "# 05.9 Ascend：GM → L1 / UB / L0 → Cube / Vector"
+      },
+      {
+        "line": 532,
+        "heading": "### Vector 计算"
+      },
+      {
+        "line": 552,
+        "heading": "### Cube / MatMul 计算"
+      },
+      {
+        "line": 596,
+        "heading": "# 05.10 MatMul / GEMM 为什么是 LLM 最重要的 Kernel"
+      },
+      {
+        "line": 653,
+        "heading": "# 05.11 Prefill 与 Decode 为什么会让同一个 Linear 表现不同"
+      },
+      {
+        "line": 721,
+        "heading": "# 05.12 Compute-bound 与 Memory-bound"
+      },
+      {
+        "line": 769,
+        "heading": "# 05.13 Arithmetic Intensity：把 Compute 和 Memory 联系起来"
+      },
+      {
+        "line": 787,
+        "heading": "### Kernel A"
+      },
+      {
+        "line": 800,
+        "heading": "### Kernel B"
+      },
+      {
+        "line": 834,
+        "heading": "# 05.14 为什么 Elementwise Operator 常常 Memory-bound"
+      },
+      {
+        "line": 904,
+        "heading": "# 05.15 为什么 MatMul 更容易 Compute-bound"
+      },
+      {
+        "line": 941,
+        "heading": "# 05.16 Tensor Core / Cube Unit：为什么矩阵乘需要专用硬件"
+      },
+      {
+        "line": 971,
+        "heading": "# 05.17 Tiling：为什么不能把整个 Tensor 一次搬进计算单元"
+      },
+      {
+        "line": 1020,
+        "heading": "# 05.18 Ascend 为什么特别强调 Tiling"
+      },
+      {
+        "line": 1076,
+        "heading": "# 05.19 一个 MatMul 的 Ascend 执行可以怎样理解"
+      },
+      {
+        "line": 1145,
+        "heading": "# 05.20 GPU 上也存在同样的 Tile 思想"
+      },
+      {
+        "line": 1185,
+        "heading": "# 05.21 Compute-Memory Overlap：不要等数据搬完才开始计算"
+      },
+      {
+        "line": 1249,
+        "heading": "# 05.22 Kernel Launch 为什么也是性能成本"
+      },
+      {
+        "line": 1297,
+        "heading": "# 05.23 Softmax 为什么和 MatMul 的优化逻辑不同"
+      },
+      {
+        "line": 1354,
+        "heading": "# 05.24 RMSNorm 的硬件特征"
+      },
+      {
+        "line": 1394,
+        "heading": "# 05.25 SiLU 为什么通常适合 Fusion"
+      },
+      {
+        "line": 1435,
+        "heading": "# 05.26 MoE 为什么会出现 Grouped GEMM"
+      },
+      {
+        "line": 1525,
+        "heading": "# 05.27 Vectorization 到底是什么"
+      },
+      {
+        "line": 1588,
+        "heading": "# 05.28 Memory Access Pattern 为什么会影响性能"
+      },
+      {
+        "line": 1641,
+        "heading": "# 05.29 “Kernel 慢”实际上可能是很多不同的问题"
+      },
+      {
+        "line": 1693,
+        "heading": "# 05.30 一个完整案例：Linear 最终怎样运行"
+      },
+      {
+        "line": 1701,
+        "heading": "### Level 1：Model Module"
+      },
+      {
+        "line": 1713,
+        "heading": "### Level 2：Graph Operator"
+      },
+      {
+        "line": 1723,
+        "heading": "### Level 3：Graph Optimization"
+      },
+      {
+        "line": 1737,
+        "heading": "### Level 4：Kernel Selection / Generation"
+      },
+      {
+        "line": 1752,
+        "heading": "### Level 5：Tiling"
+      },
+      {
+        "line": 1763,
+        "heading": "### Level 6：Memory Movement"
+      },
+      {
+        "line": 1787,
+        "heading": "### Level 7：Compute"
+      },
+      {
+        "line": 1801,
+        "heading": "### Level 8：Accumulation"
+      },
+      {
+        "line": 1817,
+        "heading": "### Level 9：Epilogue"
+      },
+      {
+        "line": 1827,
+        "heading": "### Level 10：Store"
+      },
+      {
+        "line": 1861,
+        "heading": "# 05.31 再看一个完整案例：RMSNorm"
+      },
+      {
+        "line": 1941,
+        "heading": "# 05.32 再看一个完整案例：Attention"
+      },
+      {
+        "line": 2009,
+        "heading": "# 05.33 Profiler 为什么和模型结构图长得完全不同"
+      },
+      {
+        "line": 2090,
+        "heading": "# 05.34 NVIDIA 与 Ascend 的统一理解框架"
+      },
+      {
+        "line": 2111,
+        "heading": "# 05.35 最终要建立的性能分析链路"
+      },
+      {
+        "line": 2245,
+        "heading": "# 05.36 一张完整 Knowledge Map"
+      },
+      {
+        "line": 2305,
+        "heading": "# 05.37 本章最重要的十个判断"
+      },
+      {
+        "line": 2329,
+        "heading": "## 本章与后续章节的边界"
+      },
+      {
+        "line": 2366,
+        "heading": "### 官方资料依据"
+      }
+    ]
+  },
+  {
+    "path": "Insight/09lingqu.md",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0,
+    "classification": "空文件；没有可审计的概念",
+    "headings": []
+  },
+  {
+    "path": "Insight/Ascend-ecosystem-whitepaper/index.html",
+    "sha256": "6275ac9d01d09db55b51ba8d94419804ad426ea7aee2951cbc763ef4c84fb52d",
+    "bytes": 71970,
+    "classification": "生态定位与执行可追溯性；05 仅覆盖运行/编译证据，不覆盖产业判断",
+    "headings": [
+      {
+        "heading": "昇腾 AI 软件生态：控制边界、迁移成本与硬件可达性"
+      },
+      {
+        "heading": "生态结构的核心矛盾在于产品控制边界未能匹配用户资产分布"
+      },
+      {
+        "heading": "稳定扩展接口可以降低异构硬件的接入成本"
+      },
+      {
+        "heading": "生态成效应以工作负载的硬件可达性衡量"
+      },
+      {
+        "heading": "产品控制边界与用户软件资产分布存在结构性错位"
+      },
+      {
+        "heading": "降低软件迁移成本有助于扩大昇腾硬件的采用规模"
+      },
+      {
+        "heading": "既有软件资产的可延续性影响用户的硬件平台选择"
+      },
+      {
+        "heading": "MindSpore 正在扩大对主流大模型生态的兼容范围"
+      },
+      {
+        "heading": "接口兼容与进入上游生态治理体系属于两个层次"
+      },
+      {
+        "heading": "差异化场景决定完整 Framework 的长期价值"
+      },
+      {
+        "heading": "MindSpeed 以适配器方式将昇腾训练优化接入 Megatron"
+      },
+      {
+        "heading": "推理软件栈需要明确划分控制面职责"
+      },
+      {
+        "heading": "软件层级增加会扩大上游版本变化的传导范围"
+      },
+      {
+        "heading": "CANN 与语义适配层承载上层生态共享的硬件能力"
+      },
+      {
+        "heading": "产品抽象层级影响用户向昇腾迁移的成本"
+      },
+      {
+        "heading": "软件能力模块化可以缩小用户必须迁移的软件范围"
+      },
+      {
+        "heading": "目标架构应兼顾上层生态兼容性与底层硬件差异化"
+      },
+      {
+        "heading": "Ascend Reachability 以四类迁移边界评估硬件接入成本"
+      },
+      {
+        "heading": "ROLL RFC 如何落入 Reachability 评审框架"
+      },
+      {
+        "heading": "接入验收应覆盖可运行性、可维护性与可诊断性"
+      },
+      {
+        "heading": "硬件平台生态要求主流软件能够持续接入昇腾"
+      },
+      {
+        "heading": "参考资料、证据边界与术语说明"
+      },
+      {
+        "heading": "参考资料及其用途"
+      }
+    ]
+  },
+  {
+    "path": "Insight/Ascend-ecosystem-whitepaper-plan.md",
+    "sha256": "866c2a60278ba4c810798f09372d96d2dda8da6cb99a2b7d07ad917b56e72a29",
+    "bytes": 30355,
+    "classification": "白皮书计划；不是新的技术概念来源",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# 《昇腾 AI 软件生态的结构性错位》白皮书生成计划"
+      },
+      {
+        "line": 8,
+        "heading": "## 1. 内容理解"
+      },
+      {
+        "line": 10,
+        "heading": "### 1.1 主题与读者"
+      },
+      {
+        "line": 17,
+        "heading": "### 1.2 保真模式"
+      },
+      {
+        "line": 27,
+        "heading": "### 1.3 来源与证据边界"
+      },
+      {
+        "line": 48,
+        "heading": "### 1.4 来源账本分类"
+      },
+      {
+        "line": 57,
+        "heading": "## 2. 报告结构与内容覆盖"
+      },
+      {
+        "line": 77,
+        "heading": "## 3. 图表设计验收基准"
+      },
+      {
+        "line": 79,
+        "heading": "### 3.1 参考页面"
+      },
+      {
+        "line": 92,
+        "heading": "### 3.2 从参考 FIG-03 继承的设计方法"
+      },
+      {
+        "line": 104,
+        "heading": "### 3.3 从参考 FIG-08 继承的设计方法"
+      },
+      {
+        "line": 114,
+        "heading": "## 4. 报告级视觉系统"
+      },
+      {
+        "line": 132,
+        "heading": "## 5. 完整插图清单"
+      },
+      {
+        "line": 134,
+        "heading": "### FIG-01｜Ascend 的差异化价值与软件控制边界发生错层"
+      },
+      {
+        "line": 148,
+        "heading": "### FIG-02｜硬件采用收益如何被软件迁移摩擦抵消"
+      },
+      {
+        "line": 162,
+        "heading": "### FIG-03｜一个 PyTorch 模型携带的是资产系统，而非 API 列表"
+      },
+      {
+        "line": 181,
+        "heading": "### FIG-04｜垂直全栈与水平可组合生态的替换边界不同"
+      },
+      {
+        "line": 200,
+        "heading": "### FIG-05｜MindSpeed 将 Ascend 优化注入 Megatron，而不接管 Framework"
+      },
+      {
+        "line": 217,
+        "heading": "### FIG-06A｜完整推理引擎并置时产生控制面冲突"
+      },
+      {
+        "line": 231,
+        "heading": "### FIG-06B｜MindIE 组件化后可与第三方引擎形成组合关系"
+      },
+      {
+        "line": 245,
+        "heading": "### FIG-07｜vLLM-Ascend 把硬件能力放进上游定义的扩展点"
+      },
+      {
+        "line": 259,
+        "heading": "### FIG-08｜Vendor layer 越厚，版本同步路径越长"
+      },
+      {
+        "line": 277,
+        "heading": "### FIG-09｜CANN 是多种上层生态共享的硬件能力腰部"
+      },
+      {
+        "line": 296,
+        "heading": "### FIG-10｜产品越靠近适配层，生态错位通常越低"
+      },
+      {
+        "line": 313,
+        "heading": "### FIG-11｜昇腾软件战略从 Stack Ownership 转向 Capability Provisioning"
+      },
+      {
+        "line": 332,
+        "heading": "### FIG-12｜上层兼容、下层差异化的目标生态模型"
+      },
+      {
+        "line": 349,
+        "heading": "### FIG-13｜Ascend Reachability：从现有工作流到硬件的四段距离"
+      },
+      {
+        "line": 367,
+        "heading": "## 6. 图表与正文重复审计"
+      },
+      {
+        "line": 376,
+        "heading": "## 7. 资产处理"
+      },
+      {
+        "line": 388,
+        "heading": "## 8. 页面与交互"
+      },
+      {
+        "line": 399,
+        "heading": "## 9. 计划交付"
+      },
+      {
+        "line": 409,
+        "heading": "## 10. 最终验证"
+      },
+      {
+        "line": 411,
+        "heading": "### 10.1 结构与来源"
+      },
+      {
+        "line": 418,
+        "heading": "### 10.2 编辑质量"
+      },
+      {
+        "line": 426,
+        "heading": "### 10.3 图表与布局"
+      },
+      {
+        "line": 435,
+        "heading": "## 11. 审批状态"
+      },
+      {
+        "line": 442,
+        "heading": "## 12. 内容完整性复核"
+      }
+    ]
+  },
+  {
+    "path": "Insight/Ascend-ecosystem.md",
+    "sha256": "0527c6cc90f2d858a6b20cfc8ff549ed553e16ce72779a593eaf8e18c58b63ed",
+    "bytes": 32539,
+    "classification": "生态定位与执行可追溯性；05 仅覆盖运行/编译证据，不覆盖产业判断",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# 昇腾 AI 软件生态的结构性错位：从全栈闭环到开放硬件后端"
+      },
+      {
+        "line": 3,
+        "heading": "## 摘要"
+      },
+      {
+        "line": 17,
+        "heading": "# 1. “生态错位”究竟指什么"
+      },
+      {
+        "line": 43,
+        "heading": "# 2. 第一重错位：硬件价值捕获与软件入口之间的错位"
+      },
+      {
+        "line": 95,
+        "heading": "# 3. 第二重错位：Framework 中心与用户资产中心的错位——MindSpore 是最典型案例"
+      },
+      {
+        "line": 133,
+        "heading": "### 3.1 MindSpore 面对的问题不是 API 是否足够好"
+      },
+      {
+        "line": 164,
+        "heading": "## 3.2 MindSpore 当前实际上也在主动修正这一问题"
+      },
+      {
+        "line": 203,
+        "heading": "# 4. 第三重错位：垂直完整产品与水平可组合生态之间的错位"
+      },
+      {
+        "line": 257,
+        "heading": "# 5. MindSpeed：Mind 系列中错位最小的产品"
+      },
+      {
+        "line": 306,
+        "heading": "## 5.1 真实互联网项目也正在形成这种集成方式"
+      },
+      {
+        "line": 331,
+        "heading": "# 6. 第四重错位：MindIE 与推理生态控制面的重叠"
+      },
+      {
+        "line": 371,
+        "heading": "# 7. MindIE 当前最重要的变化：从 Engine 变成 Components"
+      },
+      {
+        "line": 420,
+        "heading": "# 8. vLLM-Ascend：目前最典型的正确生态接口"
+      },
+      {
+        "line": 464,
+        "heading": "# 9. 第五重错位：AI 创新速度与 Vendor Release Train 之间的错位"
+      },
+      {
+        "line": 532,
+        "heading": "# 10. 第六重错位：真正具有差异化的能力在底层，上层却承担了过多品牌与产品复杂度"
+      },
+      {
+        "line": 599,
+        "heading": "# 11. TorchNPU / TorchAir 的战略意义也应该放在这个框架下理解"
+      },
+      {
+        "line": 638,
+        "heading": "# 12. 从整个体系看，Mind 系列的“错位程度”并不相同"
+      },
+      {
+        "line": 658,
+        "heading": "# 13. 因此，Mind 系列真正需要解决的不是“生态规模”，而是“生态位置”"
+      },
+      {
+        "line": 692,
+        "heading": "### Ecosystem Coverage ≠ Ecosystem Alignment"
+      },
+      {
+        "line": 714,
+        "heading": "# 14. 昇腾当前正在经历的，本质上是一次“软件价值下沉”"
+      },
+      {
+        "line": 718,
+        "heading": "## 阶段一：Vertical Full Stack"
+      },
+      {
+        "line": 743,
+        "heading": "## 阶段二：Open Hardware Platform"
+      },
+      {
+        "line": 782,
+        "heading": "# 15. 一个更合理的 Ascend 软件生态目标模型"
+      },
+      {
+        "line": 818,
+        "heading": "### 上层追求兼容性，下层追求差异化。"
+      },
+      {
+        "line": 832,
+        "heading": "# 16. 对 Mind 系列未来定位的判断"
+      },
+      {
+        "line": 834,
+        "heading": "## MindSpore"
+      },
+      {
+        "line": 854,
+        "heading": "## MindSpeed"
+      },
+      {
+        "line": 872,
+        "heading": "## MindIE"
+      },
+      {
+        "line": 886,
+        "heading": "# 17. 最深层的问题：Ascend 竞争的对象其实不是 CUDA API，而是 CUDA 的“生态位置”"
+      },
+      {
+        "line": 928,
+        "heading": "# 18. 对昇腾生态战略的最终判断"
+      },
+      {
+        "line": 962,
+        "heading": "### Ascend Native Software Share"
+      },
+      {
+        "line": 968,
+        "heading": "### Ascend Reachability from Mainstream Ecosystems"
+      },
+      {
+        "line": 980,
+        "heading": "# 参考资料索引"
+      }
+    ]
+  },
+  {
+    "path": "Insight/Ascend-ecosystem2-whitepaper/index.html",
+    "sha256": "4ddf57d68bf9731b8af20b756c858ac10acd9674cfce8fab2d417bec10448291",
+    "bytes": 59525,
+    "classification": "生态定位与执行可追溯性；05 仅覆盖运行/编译证据，不覆盖产业判断",
+    "headings": [
+      {
+        "heading": "昇腾 Mind 系列构成 AI 平台的价值实现层"
+      },
+      {
+        "heading": "软件链路决定理论算力向有效 AI 性能的转化效率"
+      },
+      {
+        "heading": "原生框架与主流生态兼容共同扩大工作负载覆盖"
+      },
+      {
+        "heading": "执行证据把平台能力推进到可解释和可运营阶段"
+      },
+      {
+        "heading": "昇腾平台由硬件、CANN 与工作负载层共同构成"
+      },
+      {
+        "heading": "Mind 系列覆盖 AI 工作负载生命周期的不同抽象层"
+      },
+      {
+        "heading": "软件链路决定理论算力向有效 AI 性能的转化效率"
+      },
+      {
+        "heading": "原生框架与主流生态兼容共同扩大工作负载覆盖"
+      },
+      {
+        "heading": "开放上层接口与掌握性能关键路径可以同时成立"
+      },
+      {
+        "heading": "TorchAir 在 PyTorch 编程模型下连接 Ascend 图执行"
+      },
+      {
+        "heading": "上层兼容性控制工作负载迁移成本"
+      },
+      {
+        "heading": "中下层优化深度决定硬件价值兑现程度"
+      },
+      {
+        "heading": "MindSpeed 与 MindIE 将硬件优化扩展到工作负载优化"
+      },
+      {
+        "heading": "MindStudio 为异构计算建立可信使用基础设施"
+      },
+      {
+        "heading": "跨层可追踪性连接用户对象与硬件执行证据"
+      },
+      {
+        "heading": "统一执行证据支撑迁移、性能与优化三类信任"
+      },
+      {
+        "heading": "兼容性、亲和性与可运维性共同支撑生产采用"
+      },
+      {
+        "heading": "平台评价应覆盖工作负载可达性与生产可用性"
+      },
+      {
+        "heading": "每项评价都需要可复核的测量口径与工程证据"
+      },
+      {
+        "heading": "Mind 系列承担 Ascend 的价值实现层职责"
+      },
+      {
+        "heading": "平台价值通过主流 AI 工作流持续触达用户"
+      },
+      {
+        "heading": "执行复杂度在默认隐藏与按需展开之间保持平衡"
+      },
+      {
+        "heading": "证据边界确保事实、分析与战略推论可追溯"
+      },
+      {
+        "heading": "官方与上游资料支持产品事实"
+      },
+      {
+        "heading": "本文分析框架具有明确适用边界"
+      }
+    ]
+  },
+  {
+    "path": "Insight/Ascend-ecosystem2-whitepaper-plan.md",
+    "sha256": "c5cfd2fef48c2785471b2e5679218ae5182b90493758f4d0dcb2b3a9270364fd",
+    "bytes": 15694,
+    "classification": "白皮书计划；不是新的技术概念来源",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# 《昇腾 Mind 系列的体系价值》白皮书生成计划"
+      },
+      {
+        "line": 8,
+        "heading": "## 1. 内容定位"
+      },
+      {
+        "line": 10,
+        "heading": "### 1.1 主题与读者"
+      },
+      {
+        "line": 17,
+        "heading": "### 1.2 保真与编辑原则"
+      },
+      {
+        "line": 29,
+        "heading": "### 1.3 来源与核实策略"
+      },
+      {
+        "line": 39,
+        "heading": "### 1.4 证据账本"
+      },
+      {
+        "line": 48,
+        "heading": "## 2. 页面结构与内容覆盖"
+      },
+      {
+        "line": 67,
+        "heading": "## 3. 完整插图清单"
+      },
+      {
+        "line": 69,
+        "heading": "### FIG-01｜Ascend 平台能力由五层软件与硬件结构共同承载"
+      },
+      {
+        "line": 77,
+        "heading": "### FIG-02｜Mind 系列在 AI 工作负载生命周期中形成互补分工"
+      },
+      {
+        "line": 85,
+        "heading": "### FIG-03｜有效 AI 性能由端到端软件链路共同决定"
+      },
+      {
+        "line": 93,
+        "heading": "### FIG-04｜原生栈与主流生态兼容形成两条工作负载进入路径"
+      },
+      {
+        "line": 101,
+        "heading": "### FIG-05｜性能关键路径承载 Ascend 的主要硬件差异化"
+      },
+      {
+        "line": 109,
+        "heading": "### FIG-06｜训练与推理优化已经扩展为系统级工作负载优化"
+      },
+      {
+        "line": 117,
+        "heading": "### FIG-07｜MindStudio 缩短用户语义与硬件执行语义之间的距离"
+      },
+      {
+        "line": 125,
+        "heading": "### FIG-08｜跨层 Execution Traceability 支持正向映射与反向归因"
+      },
+      {
+        "line": 133,
+        "heading": "### FIG-09｜统一执行证据将三类信任连接为优化闭环"
+      },
+      {
+        "line": 141,
+        "heading": "### FIG-10｜三层平台能力按递进关系支撑生产采用"
+      },
+      {
+        "line": 149,
+        "heading": "### FIG-11｜九项评价维度共同反映 Ascend 的平台竞争力"
+      },
+      {
+        "line": 157,
+        "heading": "### FIG-12｜Mind 系列完成从物理算力到客户价值的连续转化"
+      },
+      {
+        "line": 165,
+        "heading": "## 4. 视觉、标题与组件规范"
+      },
+      {
+        "line": 176,
+        "heading": "## 5. 生成后的验收"
+      },
+      {
+        "line": 185,
+        "heading": "## 6. 执行结果"
+      }
+    ]
+  },
+  {
+    "path": "Insight/Ascend-ecosystem2.md",
+    "sha256": "2a278fc9643f8a788a7b353eb1b4d745408a7096466fc5d276f90eb55c099e89",
+    "bytes": 25955,
+    "classification": "生态定位与执行可追溯性；05 仅覆盖运行/编译证据，不覆盖产业判断",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# 昇腾 Mind 系列的体系价值"
+      },
+      {
+        "line": 3,
+        "heading": "## ——从 AI 芯片能力到 AI 计算平台能力的价值转化"
+      },
+      {
+        "line": 17,
+        "heading": "# 01. 首先需要重新理解：昇腾不是一颗芯片，而是一套 AI 计算栈"
+      },
+      {
+        "line": 69,
+        "heading": "# 02. “Mind 系列”本质上是在不同 AI 生命周期阶段建立用户级抽象"
+      },
+      {
+        "line": 130,
+        "heading": "# 03. 宏观意义一：Mind 系列完成了从“芯片算力”到“有效 AI 算力”的第一次价值转化"
+      },
+      {
+        "line": 198,
+        "heading": "# 04. 宏观意义二：昇腾正在形成“原生栈 + 主流生态兼容”的双路径，而不是要求用户首先迁移自己的 AI 世界"
+      },
+      {
+        "line": 261,
+        "heading": "# 05. 宏观意义三：软件生态的竞争核心从“控制 API”转向“控制性能关键路径”"
+      },
+      {
+        "line": 318,
+        "heading": "# 06. 宏观意义四：MindSpeed 与 MindIE正在把“硬件优化”提升成“工作负载优化”"
+      },
+      {
+        "line": 393,
+        "heading": "# 07. 宏观意义五：MindStudio所代表的“可解释性”是异构计算生态能够被规模化采用的重要条件"
+      },
+      {
+        "line": 460,
+        "heading": "# 08. 下一阶段真正重要的能力：从“多个工具看到数据”升级为“跨层 Execution Traceability”"
+      },
+      {
+        "line": 507,
+        "heading": "# Execution Traceability"
+      },
+      {
+        "line": 557,
+        "heading": "# 09. 对 Ascend 来说，这种 Traceability 的意义远大于“Profiler 更好用”"
+      },
+      {
+        "line": 561,
+        "heading": "## 9.1 Migration Trust"
+      },
+      {
+        "line": 583,
+        "heading": "## 9.2 Performance Trust"
+      },
+      {
+        "line": 609,
+        "heading": "## 9.3 Optimization Trust"
+      },
+      {
+        "line": 641,
+        "heading": "# 10. 从产品战略上看，Mind 系列真正构成的是“三层价值护城河”"
+      },
+      {
+        "line": 645,
+        "heading": "## 第一层：Compatibility —— 让工作负载进入 Ascend"
+      },
+      {
+        "line": 665,
+        "heading": "## 第二层：Affinity —— 让工作负载真正发挥 Ascend 性能"
+      },
+      {
+        "line": 686,
+        "heading": "## 第三层：Explainability & Operability —— 让企业敢于长期使用 Ascend"
+      },
+      {
+        "line": 740,
+        "heading": "# 11. 因此，评价 Mind 系列不能只看“功能是否比竞品更多”"
+      },
+      {
+        "line": 768,
+        "heading": "# 12. 最终判断：Mind 系列承担的是 Ascend 的“价值实现层”"
+      },
+      {
+        "line": 800,
+        "heading": "# 将 Ascend Hardware 变成 Ascend Platform。"
+      },
+      {
+        "line": 844,
+        "heading": "# 参考索引"
+      },
+      {
+        "line": 861,
+        "heading": "### 证据边界说明"
+      }
+    ]
+  },
+  {
+    "path": "Insight/PTO3写算子过程中的硬件内存感知与配置.md",
+    "sha256": "0571a7e9d0ac68a605c16ef3b0e94586f449fb632cf05be47ed0c67c6e9e2c82",
+    "bytes": 14316,
+    "classification": "部分覆盖片上存储；布局坐标、通信工作区和 runtime ring 未深入解释",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# PTO3 写算子过程中的硬件内存感知与配置"
+      },
+      {
+        "line": 5,
+        "heading": "## 1. 总览"
+      },
+      {
+        "line": 35,
+        "heading": "## 2. 硬件内存层级"
+      },
+      {
+        "line": 57,
+        "heading": "## 3. 算子编写阶段的主要场景"
+      },
+      {
+        "line": 59,
+        "heading": "### 3.1 GM 到片上内存的加载"
+      },
+      {
+        "line": 86,
+        "heading": "### 3.2 片上空间之间的数据搬运"
+      },
+      {
+        "line": 106,
+        "heading": "### 3.3 零拷贝视图与真实搬运的区别"
+      },
+      {
+        "line": 122,
+        "heading": "## 4. 内存布局与有效区域"
+      },
+      {
+        "line": 124,
+        "heading": "### 4.1 TileView 参数"
+      },
+      {
+        "line": 140,
+        "heading": "### 4.2 TensorView 参数"
+      },
+      {
+        "line": 152,
+        "heading": "### 4.3 `valid_shape` 与边界 Tile"
+      },
+      {
+        "line": 170,
+        "heading": "## 5. Matmul 的内存感知"
+      },
+      {
+        "line": 180,
+        "heading": "### 5.1 L0 容量约束"
+      },
+      {
+        "line": 209,
+        "heading": "### 5.2 K 切分和 M/N 切分"
+      },
+      {
+        "line": 223,
+        "heading": "### 5.3 Mat scratch"
+      },
+      {
+        "line": 239,
+        "heading": "## 6. 流水线和双缓冲"
+      },
+      {
+        "line": 265,
+        "heading": "## 7. Buffer 生命周期、复用与原地安全"
+      },
+      {
+        "line": 288,
+        "heading": "## 8. MemRef 和地址分配"
+      },
+      {
+        "line": 290,
+        "heading": "### 8.1 InitMemRef"
+      },
+      {
+        "line": 309,
+        "heading": "### 8.2 AllocateMemoryAddr"
+      },
+      {
+        "line": 333,
+        "heading": "## 9. 跨核通信与同步 workspace"
+      },
+      {
+        "line": 335,
+        "heading": "### 9.1 GM pipe buffer"
+      },
+      {
+        "line": 348,
+        "heading": "### 9.2 `system.syncall`"
+      },
+      {
+        "line": 371,
+        "heading": "## 10. 访存粒度和性能提示"
+      },
+      {
+        "line": 391,
+        "heading": "## 11. 运行时 Ring 资源"
+      },
+      {
+        "line": 403,
+        "heading": "## 12. 写算子时的检查清单"
+      },
+      {
+        "line": 405,
+        "heading": "### 内存位置"
+      },
+      {
+        "line": 411,
+        "heading": "### 尺寸和容量"
+      },
+      {
+        "line": 418,
+        "heading": "### 布局和边界"
+      },
+      {
+        "line": 425,
+        "heading": "### 生命周期和复用"
+      },
+      {
+        "line": 432,
+        "heading": "### 通信和运行时"
+      },
+      {
+        "line": 440,
+        "heading": "## 13. 结论"
+      }
+    ]
+  },
+  {
+    "path": "Insight/PyPTO开发者体验洞察报告0818.md",
+    "sha256": "f217b5270608e4cfb86ac20138e6c0a884ff34524bd8fcd7deabfb42a0256cbb",
+    "bytes": 35349,
+    "classification": "DX/生态/工具工作流；01–06 覆盖编译与诊断，环境、API、服务状态与协作流程只部分或未覆盖",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# 沉默的编译器"
+      },
+      {
+        "line": 14,
+        "heading": "## 目录"
+      },
+      {
+        "line": 30,
+        "heading": "## 开场：一个真实的下午"
+      },
+      {
+        "line": 46,
+        "heading": "## 全景：五类人，五种失败方式"
+      },
+      {
+        "line": 58,
+        "heading": "### 产品分层参考"
+      },
+      {
+        "line": 72,
+        "heading": "## 角色 01 · 算子开发者"
+      },
+      {
+        "line": 78,
+        "heading": "### 他的一次迭代要走完这条路"
+      },
+      {
+        "line": 90,
+        "heading": "### 关键痛点"
+      },
+      {
+        "line": 92,
+        "heading": "#### 痛点 1 · 系统主动告诉他\"一切正常\"，然后给出错误答案"
+      },
+      {
+        "line": 108,
+        "heading": "#### 痛点 2 · 出了事，他要靠考古才能知道是哪一步坏的"
+      },
+      {
+        "line": 116,
+        "heading": "#### 痛点 3 · 工具偏偏在最需要的时刻缺席"
+      },
+      {
+        "line": 129,
+        "heading": "#### 痛点 4 · 抽象层次退步了，他被迫回到硬件细节里"
+      },
+      {
+        "line": 137,
+        "heading": "#### 痛点 5 · 优化是门手艺，不是产品能力"
+      },
+      {
+        "line": 145,
+        "heading": "### 他真正期望的"
+      },
+      {
+        "line": 154,
+        "heading": "### 设计机会点"
+      },
+      {
+        "line": 170,
+        "heading": "## 角色 02 · 编译器 Pass 开发者"
+      },
+      {
+        "line": 176,
+        "heading": "### 关键痛点"
+      },
+      {
+        "line": 178,
+        "heading": "#### 痛点 1 · Pass 之间的契约是隐性的，靠口头和惯例维持"
+      },
+      {
+        "line": 186,
+        "heading": "#### 痛点 2 · IR 的打印和解析不可逆，破坏了最基本的自检手段"
+      },
+      {
+        "line": 192,
+        "heading": "#### 痛点 3 · Pass 的知识只存在于人脑和代码里"
+      },
+      {
+        "line": 198,
+        "heading": "### 他真正期望的"
+      },
+      {
+        "line": 204,
+        "heading": "### 设计机会点"
+      },
+      {
+        "line": 214,
+        "heading": "## 角色 03 · 后端 & ISA 工程师"
+      },
+      {
+        "line": 220,
+        "heading": "### 关键痛点"
+      },
+      {
+        "line": 222,
+        "heading": "#### 痛点 1 · 同一个自动化功能，同时是卖点、是 bug 源、也是性能损失"
+      },
+      {
+        "line": 234,
+        "heading": "#### 痛点 2 · 同样的输入，不保证同样的输出"
+      },
+      {
+        "line": 246,
+        "heading": "#### 痛点 3 · 文档描述的是另一个版本的产品"
+      },
+      {
+        "line": 255,
+        "heading": "### 他真正期望的"
+      },
+      {
+        "line": 262,
+        "heading": "### 设计机会点"
+      },
+      {
+        "line": 272,
+        "heading": "## 角色 04 · 运行时 & 系统工程师"
+      },
+      {
+        "line": 278,
+        "heading": "### 关键痛点"
+      },
+      {
+        "line": 280,
+        "heading": "#### 痛点 1 · 系统只肯说数字，不肯说人话"
+      },
+      {
+        "line": 288,
+        "heading": "#### 痛点 2 · 观测能力是五个各自独立的工具，不是一个体验"
+      },
+      {
+        "line": 296,
+        "heading": "#### 痛点 3 · 观测能力本身会成为故障源"
+      },
+      {
+        "line": 306,
+        "heading": "### 他真正期望的"
+      },
+      {
+        "line": 313,
+        "heading": "### 设计机会点"
+      },
+      {
+        "line": 326,
+        "heading": "## 角色 05 · 服务 & 部署工程师"
+      },
+      {
+        "line": 332,
+        "heading": "### 关键痛点"
+      },
+      {
+        "line": 334,
+        "heading": "#### 痛点 1 · 指标口径不对，导致对产品的判断也不对"
+      },
+      {
+        "line": 340,
+        "heading": "#### 痛点 2 · 长时间运行才暴露的问题，现有验证根本覆盖不到"
+      },
+      {
+        "line": 346,
+        "heading": "#### 痛点 3 · 底层的错误码，直接穿透到了服务层"
+      },
+      {
+        "line": 352,
+        "heading": "### 他真正期望的"
+      },
+      {
+        "line": 358,
+        "heading": "### 设计机会点"
+      },
+      {
+        "line": 368,
+        "heading": "## 横切 · 新人与外部贡献者"
+      },
+      {
+        "line": 372,
+        "heading": "### 四道门，一道比一道靠前"
+      },
+      {
+        "line": 382,
+        "heading": "### 设计机会点"
+      },
+      {
+        "line": 392,
+        "heading": "## 贯穿：把五个角色串起来的三条主线"
+      },
+      {
+        "line": 396,
+        "heading": "### 主线一 · 自动化的信任赤字"
+      },
+      {
+        "line": 411,
+        "heading": "### 主线二 · 抽象是一道单向门"
+      },
+      {
+        "line": 421,
+        "heading": "### 主线三 · 工具在最需要的时候失效"
+      },
+      {
+        "line": 436,
+        "heading": "## 收敛：如果只做三件事"
+      },
+      {
+        "line": 451,
+        "heading": "### 一个用来对齐讨论的靶子"
+      },
+      {
+        "line": 473,
+        "heading": "## 方法与局限"
+      }
+    ]
+  },
+  {
+    "path": "Insight/PyPTO性能调优典型用户案例_基于GitHub_20260923.md",
+    "sha256": "61004d8e59292378080e70d40e29d5f36aadab1cc9d5616c3954a89da12f7d0a",
+    "bytes": 33068,
+    "classification": "DX/生态/工具工作流；01–06 覆盖编译与诊断，环境、API、服务状态与协作流程只部分或未覆盖",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# PyPTO 性能调优典型用户案例（基于 GitHub Issue 与经验文档）"
+      },
+      {
+        "line": 9,
+        "heading": "## 一、结论摘要"
+      },
+      {
+        "line": 23,
+        "heading": "## 二、资料来源与方法"
+      },
+      {
+        "line": 47,
+        "heading": "## 三、典型用户与场景总览"
+      },
+      {
+        "line": 62,
+        "heading": "## 四、完整全流程还原：DeepSeek-V4 HCA 解码注意力中的 `softmax_pool` 调优"
+      },
+      {
+        "line": 66,
+        "heading": "### 4.0 触发：目标从哪里来【Mock】"
+      },
+      {
+        "line": 72,
+        "heading": "### 4.1 识别瓶颈：整图 scope 排名【实录】"
+      },
+      {
+        "line": 79,
+        "heading": "### 4.2 问题分析：核内下钻【实录】"
+      },
+      {
+        "line": 99,
+        "heading": "### 4.3 修改：两轮叠加【实录】"
+      },
+      {
+        "line": 104,
+        "heading": "# 改前：128 轮，每轮读 2 个 [1,64]，每行查一次 block table，逐行 staging"
+      },
+      {
+        "line": 108,
+        "heading": "# 改后：16 轮，每轮读 2 个 [8,64]，每块查一次 block table，整块直接落入 UB"
+      },
+      {
+        "line": 130,
+        "heading": "### 4.4 对比验证【实录】"
+      },
+      {
+        "line": 153,
+        "heading": "### 4.5 收口与沉淀【实录 + 还原】"
+      },
+      {
+        "line": 159,
+        "heading": "### 4.6 流程小结"
+      },
+      {
+        "line": 170,
+        "heading": "## 五、七个典型案例"
+      },
+      {
+        "line": 172,
+        "heading": "### 案例 1：模型子模块分步调优（DeepSeek-V4 `compressor_ratio128`）"
+      },
+      {
+        "line": 197,
+        "heading": "### 案例 2：用泳道图诊断伪并行（DeepSeek-V4 decode indexer compressor）"
+      },
+      {
+        "line": 217,
+        "heading": "### 案例 3：`b_trans`，同一招在两个场景结果相反"
+      },
+      {
+        "line": 240,
+        "heading": "### 案例 4：生成的 GEMM 对标手写实现和 torch_npu"
+      },
+      {
+        "line": 252,
+        "heading": "### 案例 5：FlashAttention 版本回归，定位到一行代码"
+      },
+      {
+        "line": 263,
+        "heading": "### 案例 6：“2.3 倍差距”其实是统计范围不一致（Qwen3-14B attention 对比 CCE）"
+      },
+      {
+        "line": 276,
+        "heading": "### 案例 7：服务端到端拆解（DeepSeek-V4 Flash W8A8，8 卡）"
+      },
+      {
+        "line": 290,
+        "heading": "## 六、跨案例的共性：调优旅程"
+      },
+      {
+        "line": 292,
+        "heading": "### 6.1 四个阶段中的用户行为"
+      },
+      {
+        "line": 301,
+        "heading": "### 6.2 社区自发形成的“测量纪律”【实录，汇总】"
+      },
+      {
+        "line": 311,
+        "heading": "### 6.3 痛点与产品机会【推断，供规划参考】"
+      },
+      {
+        "line": 324,
+        "heading": "## 七、2026-08-17 之后的新动态（实时补充）"
+      },
+      {
+        "line": 334,
+        "heading": "## 附录：主要来源索引"
+      }
+    ]
+  },
+  {
+    "path": "Insight/PyPTO性能调优方法论_基于Toolkit与案例.md",
+    "sha256": "bd252bd1839daeedf4257ec2ad4fe56e361efac6102ad504abac6c818cacc7c5",
+    "bytes": 22559,
+    "classification": "DX/生态/工具工作流；01–06 覆盖编译与诊断，环境、API、服务状态与协作流程只部分或未覆盖",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# PyPTO 性能调优方法论：从证据采集到可复现收益"
+      },
+      {
+        "line": 9,
+        "heading": "## 1. 方法论概览"
+      },
+      {
+        "line": 32,
+        "heading": "## 2. 证据层与工具分工"
+      },
+      {
+        "line": 48,
+        "heading": "### 2.1 推荐的产物目录"
+      },
+      {
+        "line": 72,
+        "heading": "## 3. 标准调优流程"
+      },
+      {
+        "line": 74,
+        "heading": "### 步骤 0：冻结目标与测量契约"
+      },
+      {
+        "line": 96,
+        "heading": "### 步骤 1：先把问题定界到 Serving、Host 或 Device"
+      },
+      {
+        "line": 118,
+        "heading": "### 步骤 2：用函数性能表筛选候选，而不是直接下结论"
+      },
+      {
+        "line": 139,
+        "heading": "### 步骤 3：在 Chip Swimlane 中还原“实际发生了什么”"
+      },
+      {
+        "line": 166,
+        "heading": "### 步骤 4：以关键路径决定优化优先级"
+      },
+      {
+        "line": 192,
+        "heading": "### 步骤 5：审计依赖，解除伪串行但不破坏正确性"
+      },
+      {
+        "line": 220,
+        "heading": "### 步骤 6：把核内热点拆成硬件 pipe 问题"
+      },
+      {
+        "line": 243,
+        "heading": "### 步骤 7：用 IR Pass Trace 与 Memory Map 验证“意图是否生效”"
+      },
+      {
+        "line": 264,
+        "heading": "### 步骤 8：测量资源上限并谨慎调容量"
+      },
+      {
+        "line": 285,
+        "heading": "### 步骤 9：以成对实验完成验证与交付"
+      },
+      {
+        "line": 308,
+        "heading": "## 4. 常见症状到行动的速查表"
+      },
+      {
+        "line": 323,
+        "heading": "## 5. 案例提炼出的规则"
+      },
+      {
+        "line": 325,
+        "heading": "### 5.1 HCA `softmax_pool`：热点必须先成为路径热点"
+      },
+      {
+        "line": 331,
+        "heading": "### 5.2 Softmax mask lifting：收益必须带 shape 条件"
+      },
+      {
+        "line": 337,
+        "heading": "### 5.3 “2.3× 差距”校准：比较资格先于结论"
+      },
+      {
+        "line": 343,
+        "heading": "### 5.4 依赖删除与提前派发：结构资格不等于实测收益"
+      },
+      {
+        "line": 351,
+        "heading": "## 6. 每轮调优的最小交付模板"
+      },
+      {
+        "line": 354,
+        "heading": "### 调优轮次：<名称>"
+      },
+      {
+        "line": 370,
+        "heading": "## 7. 资料依据"
+      },
+      {
+        "line": 372,
+        "heading": "### PyPTO3 Toolkit 中文文档"
+      },
+      {
+        "line": 383,
+        "heading": "### Runtime 文档、技能与案例"
+      }
+    ]
+  },
+  {
+    "path": "Insight/UX_Insight_Report（pypto仓）.md",
+    "sha256": "2df4b71036a283ec5e0f046e7f8186589c5900785bff6e67710fd37243d6cfc4",
+    "bytes": 11434,
+    "classification": "DX/生态/工具工作流；01–06 覆盖编译与诊断，环境、API、服务状态与协作流程只部分或未覆盖",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# PyPTO 开发者体验（DX）洞察报告"
+      },
+      {
+        "line": 9,
+        "heading": "## 摘要（Executive Summary）"
+      },
+      {
+        "line": 24,
+        "heading": "## 一、方法与数据画像"
+      },
+      {
+        "line": 26,
+        "heading": "### 分析方法"
+      },
+      {
+        "line": 32,
+        "heading": "### 问题主题分布（关键词命中数）"
+      },
+      {
+        "line": 45,
+        "heading": "### 结构性观察"
+      },
+      {
+        "line": 52,
+        "heading": "## 二、开发者全流程 · 痛点 / 期望 / 机会点"
+      },
+      {
+        "line": 54,
+        "heading": "### 阶段 0 — 环境搭建与上手（Onboarding）"
+      },
+      {
+        "line": 66,
+        "heading": "### 阶段 1 — 编写 Kernel（前端 DSL / 类型标注）"
+      },
+      {
+        "line": 79,
+        "heading": "### 阶段 2 — 编译 / IR Passes / 编排（Lowering）"
+      },
+      {
+        "line": 94,
+        "heading": "### 阶段 3 — 代码生成（Codegen）"
+      },
+      {
+        "line": 105,
+        "heading": "### 阶段 4 — 运行与验证（Runtime / Correctness）"
+      },
+      {
+        "line": 116,
+        "heading": "### 阶段 5 — 调试与定位（Debug）"
+      },
+      {
+        "line": 125,
+        "heading": "### 阶段 6 — 学习与文档"
+      },
+      {
+        "line": 134,
+        "heading": "## 三、贯穿全流程的核心洞察"
+      },
+      {
+        "line": 147,
+        "heading": "## 四、优先级建议（按投入产出比）"
+      }
+    ]
+  },
+  {
+    "path": "Insight/_jit_decode_fwd_layers_20260625_184941_实际检测报告.md",
+    "sha256": "c242502b77ee8a0c1399981a2dd37a91f8c94fc6dfd5331992d02b5f0d03037c",
+    "bytes": 11932,
+    "classification": "案例材料；05 覆盖证据方法，未复述原案例的全部融合与实测结论",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# `_jit_decode_fwd_layers_20260625_184941` 实际检测报告"
+      },
+      {
+        "line": 3,
+        "heading": "## 1. 报告范围"
+      },
+      {
+        "line": 18,
+        "heading": "## 2. 结论摘要"
+      },
+      {
+        "line": 29,
+        "heading": "## 3. 数据清单"
+      },
+      {
+        "line": 44,
+        "heading": "## 4. 运行输入与目标"
+      },
+      {
+        "line": 48,
+        "heading": "### 4.1 运行配置"
+      },
+      {
+        "line": 59,
+        "heading": "### 4.2 关键输入形状"
+      },
+      {
+        "line": 72,
+        "heading": "### 4.3 数值验证状态"
+      },
+      {
+        "line": 78,
+        "heading": "## 5. IR lowering 分析"
+      },
+      {
+        "line": 91,
+        "heading": "## 6. 依赖图分析"
+      },
+      {
+        "line": 95,
+        "heading": "### 6.1 图规模"
+      },
+      {
+        "line": 105,
+        "heading": "### 6.2 Edge source"
+      },
+      {
+        "line": 113,
+        "heading": "### 6.3 静态观察"
+      },
+      {
+        "line": 138,
+        "heading": "## 7. AICore 执行时间分析"
+      },
+      {
+        "line": 142,
+        "heading": "### 7.1 时间窗口"
+      },
+      {
+        "line": 156,
+        "heading": "### 7.2 Kernel family 累计时间 Top 10"
+      },
+      {
+        "line": 173,
+        "heading": "## 8. 性能提示分析"
+      },
+      {
+        "line": 177,
+        "heading": "### 8.1 总体情况"
+      },
+      {
+        "line": 184,
+        "heading": "### 8.2 主要问题"
+      },
+      {
+        "line": 195,
+        "heading": "### 8.3 建议"
+      },
+      {
+        "line": 202,
+        "heading": "## 9. 内存分配分析"
+      },
+      {
+        "line": 206,
+        "heading": "### 9.1 观察到的峰值"
+      },
+      {
+        "line": 218,
+        "heading": "### 9.2 建议检查"
+      },
+      {
+        "line": 225,
+        "heading": "## 10. 当前不能确认的事项"
+      },
+      {
+        "line": 236,
+        "heading": "## 11. 推荐下一步"
+      },
+      {
+        "line": 238,
+        "heading": "### 优先级 P0：补齐正确性证据"
+      },
+      {
+        "line": 242,
+        "heading": "### 优先级 P1：运行官方图分析"
+      },
+      {
+        "line": 257,
+        "heading": "### 优先级 P1：运行官方关键路径分析"
+      },
+      {
+        "line": 267,
+        "heading": "### 优先级 P2：围绕 PH001 做小范围实验"
+      },
+      {
+        "line": 277,
+        "heading": "## 12. 证据路径"
+      }
+    ]
+  },
+  {
+    "path": "Insight/_jit_l3_decode_csa_20260903_010617_融合推荐报告.md",
+    "sha256": "b7f307c7e4a46e950fb06a91b85d982417e794a38d8dcd9a5ab0a44072dad6e5",
+    "bytes": 16370,
+    "classification": "案例材料；05 覆盖证据方法，未复述原案例的全部融合与实测结论",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# `_jit_l3_decode_csa_20260903_010617` 融合推荐报告"
+      },
+      {
+        "line": 3,
+        "heading": "## 1. 分析范围与结论"
+      },
+      {
+        "line": 22,
+        "heading": "## 2. 输入与产物证据"
+      },
+      {
+        "line": 24,
+        "heading": "### 2.1 工作负载"
+      },
+      {
+        "line": 33,
+        "heading": "### 2.2 编译图规模"
+      },
+      {
+        "line": 43,
+        "heading": "### 2.3 运行窗口"
+      },
+      {
+        "line": 51,
+        "heading": "### 2.4 编译器提示"
+      },
+      {
+        "line": 58,
+        "heading": "## 3. 当前数据流与瓶颈位置"
+      },
+      {
+        "line": 96,
+        "heading": "## 4. CSA-FUS-01：主压缩器 Vector 尾链"
+      },
+      {
+        "line": 100,
+        "heading": "### 4.1 具体融合什么"
+      },
+      {
+        "line": 116,
+        "heading": "### 4.2 融合前后数据流"
+      },
+      {
+        "line": 141,
+        "heading": "### 4.3 Buffer 生命周期"
+      },
+      {
+        "line": 162,
+        "heading": "### 4.4 调度与同步变化"
+      },
+      {
+        "line": 176,
+        "heading": "### 4.5 必须保持的语义"
+      },
+      {
+        "line": 184,
+        "heading": "## 5. CSA-FUS-02：Q Projection Cube→Vector 分块流水"
+      },
+      {
+        "line": 188,
+        "heading": "### 5.1 具体融合什么"
+      },
+      {
+        "line": 201,
+        "heading": "### 5.2 数据流与 Buffer"
+      },
+      {
+        "line": 217,
+        "heading": "### 5.3 调度证据"
+      },
+      {
+        "line": 223,
+        "heading": "### 5.4 风险门禁"
+      },
+      {
+        "line": 230,
+        "heading": "## 6. CSA-FUS-03：Indexer 内压缩器 Pool + RMSNorm"
+      },
+      {
+        "line": 234,
+        "heading": "### 6.1 融合边界"
+      },
+      {
+        "line": 248,
+        "heading": "### 6.2 搬运与调度变化"
+      },
+      {
+        "line": 255,
+        "heading": "## 7. CSA-FUS-04：ReduceScatter Reduce + HC Post"
+      },
+      {
+        "line": 276,
+        "heading": "## 8. 已融合或不建议继续扩大的边界"
+      },
+      {
+        "line": 278,
+        "heading": "### 8.1 已有覆盖"
+      },
+      {
+        "line": 285,
+        "heading": "### 8.2 当前拒绝"
+      },
+      {
+        "line": 292,
+        "heading": "## 9. 先于融合的调度修复"
+      },
+      {
+        "line": 294,
+        "heading": "### 9.1 CP all-gather 偏斜"
+      },
+      {
+        "line": 309,
+        "heading": "### 9.2 O-group all-to-all 偏斜"
+      },
+      {
+        "line": 318,
+        "heading": "## 10. 验证方案"
+      },
+      {
+        "line": 320,
+        "heading": "### 10.1 编译门禁"
+      },
+      {
+        "line": 330,
+        "heading": "### 10.2 数值门禁"
+      },
+      {
+        "line": 352,
+        "heading": "### 10.3 性能门禁"
+      },
+      {
+        "line": 361,
+        "heading": "## 11. 证据入口"
+      }
+    ]
+  },
+  {
+    "path": "Insight/dpsk开源.md",
+    "sha256": "44a0b207c7591b7b4a43bb65c24bd94f820a0f5a7eec8cb12ef2720f00ab152c",
+    "bytes": 9714,
+    "classification": "模型迁移/推理；06 种编译机制之外仍有数值、通信、Serving 概念",
+    "headings": []
+  },
+  {
+    "path": "Insight/dpsk模型迁移-whitepaper/index.html",
+    "sha256": "891de58fe3b043d51eda6547187e1a58a805147f1c758b6ee5d2568f647a2e2e",
+    "bytes": 131271,
+    "classification": "模型迁移/推理；06 种编译机制之外仍有数值、通信、Serving 概念",
+    "headings": [
+      {
+        "heading": "DeepSeek-V3.2 从 GPU迁移到昇腾 NPU"
+      },
+      {
+        "heading": "DeepSeek-V3.2 从 GPU 到 Ascend NPU 的推理迁移"
+      },
+      {
+        "heading": "摘要"
+      },
+      {
+        "heading": "模型已经开源，为什么 DeepSeek 仍然有信心？"
+      },
+      {
+        "heading": "从 Hugging Face 下载到的开源模型具体是什么内容？"
+      },
+      {
+        "heading": "部署开源模型，不等于获得 DeepSeek 的低成本推理能力"
+      },
+      {
+        "heading": "DeepSeek 围绕 V2、V3 和 V3.2 的模型结构与真实生产负载，形成了一组以降低推理成本、提高吞吐和降低时延为目标的官方自研优化技术"
+      },
+      {
+        "heading": "迁移 DeepSeek：哪些内容保持不变，哪些必须重新适配"
+      },
+      {
+        "heading": "1. 为什么迁移 DeepSeek 不能只复制模型文件"
+      },
+      {
+        "heading": "1.1 模型开源不等于推理性能可以直接迁移"
+      },
+      {
+        "heading": "模型结构与计算逻辑"
+      },
+      {
+        "heading": "推理执行与硬件优化"
+      },
+      {
+        "heading": "1.2 TileLang、PTO 等高层编程方式为什么能支撑 NPU 迁移"
+      },
+      {
+        "heading": "DeepSeek 迁移要改哪些层：从模型到集群的十层清单"
+      },
+      {
+        "heading": "2. DeepSeek 迁移覆盖的十个技术层"
+      },
+      {
+        "heading": "DeepSeek 迁移怎么做：七个阶段与十个技术层"
+      },
+      {
+        "heading": "3. DeepSeek 从 GPU 迁移到昇腾的七个实施阶段"
+      },
+      {
+        "heading": "3.1 第一阶段：固定 GPU 参考结果与性能基线"
+      },
+      {
+        "heading": "3.2 第二阶段：让模型在昇腾上完整运行"
+      },
+      {
+        "heading": "3.3 第三阶段：补齐并核对昇腾算子执行路径"
+      },
+      {
+        "heading": "3.4 第四阶段：优化昇腾关键计算内核"
+      },
+      {
+        "heading": "3.5 第五阶段：验证低精度计算与输出精度"
+      },
+      {
+        "heading": "3.6 第六阶段：优化专家并行与跨卡通信"
+      },
+      {
+        "heading": "3.7 第七阶段：优化在线推理服务与集群配置"
+      },
+      {
+        "heading": "DeepSeek 性能迁移的五个关键环节"
+      },
+      {
+        "heading": "昇腾软件栈如何承接 DeepSeek 迁移问题"
+      },
+      {
+        "heading": "4. 昇腾软件栈分别负责哪些迁移工作"
+      },
+      {
+        "heading": "如何定位 DeepSeek 迁移中的精度与性能问题"
+      },
+      {
+        "heading": "5. 用户在 DeepSeek 迁移各阶段需要解决什么问题"
+      },
+      {
+        "heading": "5.1 迁移准备检查：开始前识别兼容性和资源风险"
+      },
+      {
+        "heading": "5.2 模型到 NPU 执行映射：看清每段模型计算如何落到硬件"
+      },
+      {
+        "heading": "5.3 精度差异定位：找到 GPU 与 NPU 首次偏离的位置"
+      },
+      {
+        "heading": "5.4 MoE 运行诊断：同时观察专家路由、计算负载与跨卡通信"
+      },
+      {
+        "heading": "5.5 性能瓶颈归因：把“模型很慢”定位到可处理的具体原因"
+      },
+      {
+        "heading": "如何判断 DeepSeek 模型迁移达到生产标准"
+      },
+      {
+        "heading": "6. DeepSeek 迁移完成需要满足哪些标准"
+      },
+      {
+        "heading": "6.1 功能完整：模型与关键特性可以稳定运行"
+      },
+      {
+        "heading": "6.2 精度正确：输出质量满足参考基线"
+      },
+      {
+        "heading": "6.3 性能达标：时延与吞吐满足目标负载"
+      },
+      {
+        "heading": "6.4 扩展有效：增加设备能够带来预期收益"
+      },
+      {
+        "heading": "6.5 生产可用：真实流量下保持稳定服务"
+      },
+      {
+        "heading": "6.6 成本可接受：资源与运维投入符合业务目标"
+      },
+      {
+        "heading": "把 DeepSeek 模型迁移变成可定位、可验证的流程"
+      },
+      {
+        "heading": "结论：DeepSeek 模型迁移必须同时完成运行适配与性能优化"
+      },
+      {
+        "heading": "主要资料来源与证据范围"
+      },
+      {
+        "heading": "资料来源与结论适用范围"
+      }
+    ]
+  },
+  {
+    "path": "Insight/dpsk模型迁移.md",
+    "sha256": "ee8175b837d17d703cab3b167ed918b76c890017a5d6dc50e8431ec44077394e",
+    "bytes": 55098,
+    "classification": "模型迁移/推理；06 种编译机制之外仍有数值、通信、Serving 概念",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# DeepSeek-V3.2 从 GPU 到 Ascend NPU 的推理迁移"
+      },
+      {
+        "line": 3,
+        "heading": "## 摘要"
+      },
+      {
+        "line": 17,
+        "heading": "# 背景：模型已经开源，为什么 DeepSeek 仍然有信心？"
+      },
+      {
+        "line": 21,
+        "heading": "## 从 Hugging Face 下载到的是什么"
+      },
+      {
+        "line": 39,
+        "heading": "## 一台华为服务器能让第三方开始卖 token，但不能复制 DeepSeek 的成本曲线"
+      },
+      {
+        "line": 70,
+        "heading": "## DeepSeek 围绕 V2、V3 和 V3.2 的模型结构与真实生产负载，形成了一组以降低推理成本、提高吞吐和降低时延为目标的官方自研优化技术"
+      },
+      {
+        "line": 106,
+        "heading": "### 本节可靠来源"
+      },
+      {
+        "line": 116,
+        "heading": "# 1. DeepSeek 的效率竞争力与硬件迁移"
+      },
+      {
+        "line": 118,
+        "heading": "## 1.1 模型开源之后，系统工程仍然决定推理效率"
+      },
+      {
+        "line": 160,
+        "heading": "## 1.2 高层编程抽象正在改变硬件迁移的边界"
+      },
+      {
+        "line": 222,
+        "heading": "# 2. DeepSeek-V3.2 推理迁移的技术对象"
+      },
+      {
+        "line": 251,
+        "heading": "# 3. DeepSeek-V3.2 的迁移过程"
+      },
+      {
+        "line": 253,
+        "heading": "## 3.1 第一阶段：建立 GPU Reference"
+      },
+      {
+        "line": 265,
+        "heading": "## 3.2 第二阶段：模型运行与框架适配"
+      },
+      {
+        "line": 285,
+        "heading": "## 3.3 第三阶段：算子覆盖与执行路径映射"
+      },
+      {
+        "line": 299,
+        "heading": "## 3.4 第四阶段：Kernel 优化"
+      },
+      {
+        "line": 303,
+        "heading": "### DSA / MLA"
+      },
+      {
+        "line": 313,
+        "heading": "### MoE 与 Grouped GEMM"
+      },
+      {
+        "line": 327,
+        "heading": "## 3.5 第五阶段：低精度计算与数值验证"
+      },
+      {
+        "line": 343,
+        "heading": "## 3.6 第六阶段：Expert Parallel 与通信优化"
+      },
+      {
+        "line": 366,
+        "heading": "## 3.7 第七阶段：Serving 与集群调优"
+      },
+      {
+        "line": 380,
+        "heading": "# 4. Ascend 在迁移过程中的能力分工"
+      },
+      {
+        "line": 407,
+        "heading": "# 5. 推理迁移中的客户体验问题"
+      },
+      {
+        "line": 435,
+        "heading": "## 5.1 Migration Readiness：迁移前识别风险"
+      },
+      {
+        "line": 453,
+        "heading": "## 5.2 Model-to-Device Execution Map：解释模型怎样落到 NPU"
+      },
+      {
+        "line": 471,
+        "heading": "## 5.3 Correctness Diff：定位首次数值分歧"
+      },
+      {
+        "line": 485,
+        "heading": "## 5.4 MoE Observatory：把 Expert Parallel 从通信 Trace 还原成模型行为"
+      },
+      {
+        "line": 506,
+        "heading": "## 5.5 Performance Attribution：从“慢”定位到可行动原因"
+      },
+      {
+        "line": 525,
+        "heading": "# 6. 迁移完成的判定"
+      },
+      {
+        "line": 529,
+        "heading": "## 6.1 Functional"
+      },
+      {
+        "line": 535,
+        "heading": "## 6.2 Correctness"
+      },
+      {
+        "line": 543,
+        "heading": "## 6.3 Performance"
+      },
+      {
+        "line": 556,
+        "heading": "## 6.4 Scale"
+      },
+      {
+        "line": 564,
+        "heading": "## 6.5 Production"
+      },
+      {
+        "line": 572,
+        "heading": "## 6.6 Economics"
+      },
+      {
+        "line": 580,
+        "heading": "# 结语：从模型兼容走向系统效率迁移"
+      },
+      {
+        "line": 606,
+        "heading": "## 主要资料与证据范围"
+      }
+    ]
+  },
+  {
+    "path": "Insight/hw-native-sys-仓库功能洞察报告.md",
+    "sha256": "26068c9360ed0784604a6de2e4d97c8a6f17e53798104bee5fd44eb3b62bdbf4",
+    "bytes": 23980,
+    "classification": "DX/生态/工具工作流；01–06 覆盖编译与诊断，环境、API、服务状态与协作流程只部分或未覆盖",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# hw-native-sys 组织仓库功能洞察报告"
+      },
+      {
+        "line": 9,
+        "heading": "## 一、核心结论"
+      },
+      {
+        "line": 25,
+        "heading": "## 二、分层架构总览"
+      },
+      {
+        "line": 57,
+        "heading": "## 三、逐仓库解析"
+      },
+      {
+        "line": 59,
+        "heading": "### 1. `pto-isa` — 地基：PTO Tile 虚拟指令集"
+      },
+      {
+        "line": 78,
+        "heading": "### 2. `PTOAS` — 编译后端：PTO 汇编器与优化器"
+      },
+      {
+        "line": 103,
+        "heading": "### 3. `simpler` — 运行时：任务图执行框架"
+      },
+      {
+        "line": 133,
+        "heading": "### 4. `pypto` — 中枢：Tile 编程框架与多级 IR 编译器"
+      },
+      {
+        "line": 164,
+        "heading": "### 5. `pypto-lib` — 算子与模型库"
+      },
+      {
+        "line": 186,
+        "heading": "### 6. `pypto-serving` — 应用层：LLM 推理服务"
+      },
+      {
+        "line": 211,
+        "heading": "### 7. `pypto_top_level_documents` — 横切：跨仓库顶层设计文档"
+      },
+      {
+        "line": 239,
+        "heading": "## 四、仓库关系图谱"
+      },
+      {
+        "line": 241,
+        "heading": "### 4.1 硬依赖（代码级，Git submodule）"
+      },
+      {
+        "line": 250,
+        "heading": "### 4.2 软依赖（构建/运行时，版本 pin 在 CI）"
+      },
+      {
+        "line": 259,
+        "heading": "### 4.3 三种关系类型"
+      },
+      {
+        "line": 267,
+        "heading": "### 4.4 依赖密度排名"
+      },
+      {
+        "line": 280,
+        "heading": "## 五、活跃度与健康度观察"
+      },
+      {
+        "line": 302,
+        "heading": "## 六、战略解读与洞察"
+      },
+      {
+        "line": 304,
+        "heading": "### 洞察 1：这是华为对 CUDA 编程生态的完整回应"
+      },
+      {
+        "line": 319,
+        "heading": "### 洞察 2：抽象分层是它最核心的产品差异化"
+      },
+      {
+        "line": 323,
+        "heading": "### 洞察 3：全栈\"无硬件可用\"是一个被反复强化的设计原则"
+      },
+      {
+        "line": 332,
+        "heading": "### 洞察 4：水面下至少还有 4 个未开源组件"
+      },
+      {
+        "line": 345,
+        "heading": "### 洞察 5：GitHub 是镜像，不是主战场"
+      },
+      {
+        "line": 355,
+        "heading": "## 七、给不同读者的行动建议"
+      }
+    ]
+  },
+  {
+    "path": "Insight/knowledge-map-whitepaper/ds32_residual_architecture_v19_shape_in_legend.html",
+    "sha256": "ce1b44a8d12cd5241785cf1d36c2bae7d3be1ada63e2b53212959ecf08f26374",
+    "bytes": 24731,
+    "classification": "模型结构；Attention、MLA、MoE、KV 未作为本系列专题解释",
+    "headings": [
+      {
+        "heading": "DeepSeek V3.2 · Residual Architecture"
+      },
+      {
+        "heading": "标准残差连接"
+      },
+      {
+        "heading": "mHC 概念示意"
+      }
+    ]
+  },
+  {
+    "path": "Insight/knowledge-map-whitepaper/index.html",
+    "sha256": "14f70571f653ad10dc98ad70b848fde282469c053a4c0a8c3f3de9758ead5f3d",
+    "bytes": 212593,
+    "classification": "总体知识体系；编译是其中一部分，Serving/分布式/集群仍未覆盖",
+    "headings": [
+      {
+        "heading": "大模型推理Knowledge Map"
+      },
+      {
+        "heading": "为什么需要残差连接"
+      },
+      {
+        "heading": "图例"
+      },
+      {
+        "heading": "DeepSeek V3.2 的残差主干"
+      },
+      {
+        "heading": "残差连接机制"
+      },
+      {
+        "heading": "训练 vs 推理｜本章差异"
+      },
+      {
+        "heading": "${inline(line.slice(4))}"
+      },
+      {
+        "heading": "${inline(s.title)}"
+      }
+    ]
+  },
+  {
+    "path": "Insight/knowledge-map.md",
+    "sha256": "c8743861b0a437e41d0fb3ae1363e72d0cb3ae1eaf167abffacf51ceeb6f90ed",
+    "bytes": 22105,
+    "classification": "总体知识体系；编译是其中一部分，Serving/分布式/集群仍未覆盖",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# 大模型推理 Knowledge Map"
+      },
+      {
+        "line": 3,
+        "heading": "## 0. Knowledge Map 的组织原则"
+      },
+      {
+        "line": 29,
+        "heading": "# Part I｜技术执行主干"
+      },
+      {
+        "line": 31,
+        "heading": "## 01. Scenario & Core Objects：先定义“我们到底在研究哪一次推理”"
+      },
+      {
+        "line": 52,
+        "heading": "## 02. Model Architecture & Inference Semantics：模型结构为什么会改变推理行为"
+      },
+      {
+        "line": 68,
+        "heading": "## 03. Inference Adaptation：训练模型如何成为可部署的推理模型"
+      },
+      {
+        "line": 100,
+        "heading": "## 04. Engine / Compiler / Runtime：谁把模型计算真正组织起来"
+      },
+      {
+        "line": 128,
+        "heading": "## 05. Operator / Kernel / Hardware：一次模型计算最终怎样在设备上执行"
+      },
+      {
+        "line": 156,
+        "heading": "## 06. Distributed Model Execution：一个 Request 如何跨多个计算设备执行"
+      },
+      {
+        "line": 186,
+        "heading": "## 07. Serving Runtime：从“执行模型”进入“调度请求”"
+      },
+      {
+        "line": 214,
+        "heading": "## 08. Production / Distributed Serving：从一个 Model Instance 到在线推理系统"
+      },
+      {
+        "line": 241,
+        "heading": "## 09. Cluster / Topology / Infrastructure：生产推理最终运行在哪里"
+      },
+      {
+        "line": 267,
+        "heading": "# Part II｜横向工程能力"
+      },
+      {
+        "line": 271,
+        "heading": "## A. Correctness & Quality"
+      },
+      {
+        "line": 285,
+        "heading": "## B. Performance & Trade-off"
+      },
+      {
+        "line": 291,
+        "heading": "## C. Observability & Evidence"
+      },
+      {
+        "line": 317,
+        "heading": "## D. Benchmark & Experiment"
+      },
+      {
+        "line": 339,
+        "heading": "## E. Reliability & Operations"
+      },
+      {
+        "line": 345,
+        "heading": "## F. Capacity & Cost"
+      },
+      {
+        "line": 386,
+        "heading": "# Part III｜产品与工程应用层"
+      },
+      {
+        "line": 388,
+        "heading": "## 10. Roles / Tasks / Decisions"
+      },
+      {
+        "line": 398,
+        "heading": "## 11. Tool Ecosystem"
+      },
+      {
+        "line": 408,
+        "heading": "# Part IV｜Case Study：用真实模型贯穿整套 Knowledge Map"
+      },
+      {
+        "line": 412,
+        "heading": "## Case A｜Qwen3-32B：Dense 基础主 Case"
+      },
+      {
+        "line": 436,
+        "heading": "## Case B｜DeepSeek V3.2：大型 MoE 工程主 Case"
+      },
+      {
+        "line": 461,
+        "heading": "## Case C｜Qwen3-32B vs Qwen3-235B-A22B：Dense → MoE 控制变量专题"
+      },
+      {
+        "line": 500,
+        "heading": "# 最终 Knowledge Map"
+      }
+    ]
+  },
+  {
+    "path": "Insight/nvidia_dynamo_ux_product_analysis.html",
+    "sha256": "57a5478aa7dcb9d1650c51cf72fe9770c27b4baacd1902edc13e465e21bd950f",
+    "bytes": 35185,
+    "classification": "Serving 产品分析；部署、调度与 KV 管理未解释",
+    "headings": [
+      {
+        "heading": "Dynamo 的核心产品价值，正在从“部署框架”走向“意图驱动的推理系统优化闭环”。"
+      },
+      {
+        "heading": "一页结论"
+      },
+      {
+        "heading": "Dynamo 是什么产品？"
+      },
+      {
+        "heading": "部署层"
+      },
+      {
+        "heading": "优化层"
+      },
+      {
+        "heading": "运营层"
+      },
+      {
+        "heading": "更适合 UX 的产品对象模型"
+      },
+      {
+        "heading": "当前主要产品触点"
+      },
+      {
+        "heading": "当前 Dynamo 的端到端产品旅程"
+      },
+      {
+        "heading": "DGDR / Auto Deployment：把用户输入从 Configuration 上移到 Intent"
+      },
+      {
+        "heading": "Profiler：当前更像自动化 Configuration Search Engine，而不是可视配置比较器"
+      },
+      {
+        "heading": "Rapid vs Thorough：本质是 Evidence Quality 的选择"
+      },
+      {
+        "heading": "Profiler 的“选择”当前主要由系统完成"
+      },
+      {
+        "heading": "AIPerf：真实 Deployment 的实验执行与结果分析层"
+      },
+      {
+        "heading": "Profile / Load"
+      },
+      {
+        "heading": "Sweep / Multi-run"
+      },
+      {
+        "heading": "Plot / Dashboard"
+      },
+      {
+        "heading": "AIPerf Web Dashboard 当前能做什么"
+      },
+      {
+        "heading": "两个工具为什么看起来重叠？因为 Thorough 已经把 AIPerf 编排进了 Profiler"
+      },
+      {
+        "heading": "如果按产品任务而不是工具名看"
+      },
+      {
+        "heading": "NVIDIA 当前实际上已经形成“两层实验空间”"
+      },
+      {
+        "heading": "Configuration Space"
+      },
+      {
+        "heading": "Workload Space"
+      },
+      {
+        "heading": "Observability 与 Planner：部署后的运行时闭环"
+      },
+      {
+        "heading": "Observability"
+      },
+      {
+        "heading": "Planner"
+      },
+      {
+        "heading": "Operator"
+      },
+      {
+        "heading": "如果按用户任务重新理解当前 NVIDIA / Dynamo 工具组合"
+      },
+      {
+        "heading": "Dynamo 当前最值得关注的产品体验缺口"
+      },
+      {
+        "heading": "1. Search 与 Compare 之间缺少统一决策层"
+      },
+      {
+        "heading": "2. Estimated 与 Measured 证据分散"
+      },
+      {
+        "heading": "3. Profiler 自动化强于解释"
+      },
+      {
+        "heading": "4. AIPerf 强分析、弱决策"
+      },
+      {
+        "heading": "5. Runtime decision history 不完整"
+      },
+      {
+        "heading": "6. 工具间 context switching 高"
+      },
+      {
+        "heading": "从当前产品可以看到的几个明确演进方向"
+      },
+      {
+        "heading": "从 Configure 到 Intent"
+      },
+      {
+        "heading": "从 Estimate 到 Evidence"
+      },
+      {
+        "heading": "从单点 Benchmark 到 Experiment"
+      },
+      {
+        "heading": "从人工配置到自动决策"
+      },
+      {
+        "heading": "从独立工具到编排"
+      },
+      {
+        "heading": "下一阶段可能是统一 Decision Experience"
+      },
+      {
+        "heading": "最终判断"
+      },
+      {
+        "heading": "主要一手资料"
+      }
+    ]
+  },
+  {
+    "path": "Insight/pypto-lib_开发者真实流程与体验机会分析_20260904.md",
+    "sha256": "895f565b6e35ac4fbe155d4eee43729ecba5a92cad94bb508718cd9205080332",
+    "bytes": 39768,
+    "classification": "DX/生态/工具工作流；01–06 覆盖编译与诊断，环境、API、服务状态与协作流程只部分或未覆盖",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# 从“能跑”到“可信迭代”"
+      },
+      {
+        "line": 10,
+        "heading": "## 0. 执行摘要"
+      },
+      {
+        "line": 26,
+        "heading": "## 1. 研究范围与证据可信度"
+      },
+      {
+        "line": 28,
+        "heading": "### 1.1 数据范围"
+      },
+      {
+        "line": 44,
+        "heading": "### 1.2 分析方法"
+      },
+      {
+        "line": 53,
+        "heading": "### 1.3 事实、推断与建议的边界"
+      },
+      {
+        "line": 59,
+        "heading": "### 1.4 重要限制"
+      },
+      {
+        "line": 65,
+        "heading": "## 2. 数据告诉我们的五个核心事实"
+      },
+      {
+        "line": 67,
+        "heading": "### 事实一：仓库交付速度很快，但正确性风险会延迟暴露"
+      },
+      {
+        "line": 82,
+        "heading": "### 事实二：真实工作不是单层 API 使用，而是跨 5 层归因"
+      },
+      {
+        "line": 94,
+        "heading": "### 事实三：性能优化已有大量测量，但“可比性”本身仍需人工辩论"
+      },
+      {
+        "line": 102,
+        "heading": "### 事实四：服务化改造的主要难点是契约漂移，而不是单个 Kernel"
+      },
+      {
+        "line": 115,
+        "heading": "### 事实五：自动化评审提升了吞吐，也制造了新的信号管理问题"
+      },
+      {
+        "line": 128,
+        "heading": "## 3. 核心用户与真实工作目标"
+      },
+      {
+        "line": 144,
+        "heading": "## 4. 开发者真实使用流程与逐环节痛点"
+      },
+      {
+        "line": 150,
+        "heading": "### 4.1 旅程全景"
+      },
+      {
+        "line": 165,
+        "heading": "### 4.2 环节一：定义任务与契约"
+      },
+      {
+        "line": 171,
+        "heading": "### 4.3 环节二：准备环境与建立基线"
+      },
+      {
+        "line": 177,
+        "heading": "### 4.4 环节三：编写 Kernel 与表达意图"
+      },
+      {
+        "line": 183,
+        "heading": "### 4.5 环节四：编译与生成"
+      },
+      {
+        "line": 189,
+        "heading": "### 4.6 环节五：仿真、Golden 与正确性判断"
+      },
+      {
+        "line": 195,
+        "heading": "### 4.7 环节六：真机、分布式与异常恢复"
+      },
+      {
+        "line": 201,
+        "heading": "### 4.8 环节七：精度定位与确定性"
+      },
+      {
+        "line": 213,
+        "heading": "### 4.9 环节八：性能调优与归因"
+      },
+      {
+        "line": 219,
+        "heading": "### 4.10 环节九：Serving 集成与状态机验证"
+      },
+      {
+        "line": 225,
+        "heading": "### 4.11 环节十：PR、CI 与知识沉淀"
+      },
+      {
+        "line": 233,
+        "heading": "## 5. TOP 产品体验问题"
+      },
+      {
+        "line": 248,
+        "heading": "### 5.1 问题背后的共同结构"
+      },
+      {
+        "line": 258,
+        "heading": "## 6. 体验设计机会地图"
+      },
+      {
+        "line": 260,
+        "heading": "### O1. 可信运行包 Run Capsule"
+      },
+      {
+        "line": 275,
+        "heading": "### O2. 首次偏离定位器 First Divergence Navigator"
+      },
+      {
+        "line": 289,
+        "heading": "### O3. 服务化契约中心 Contract Studio"
+      },
+      {
+        "line": 305,
+        "heading": "### O4. Failure-first 可观测性"
+      },
+      {
+        "line": 315,
+        "heading": "### O5. 状态场景回归矩阵"
+      },
+      {
+        "line": 333,
+        "heading": "### O6. 性能实验工作台"
+      },
+      {
+        "line": 343,
+        "heading": "### O7. 约束感知的编写与编译反馈"
+      },
+      {
+        "line": 358,
+        "heading": "### O8. 评审信号中心"
+      },
+      {
+        "line": 371,
+        "heading": "## 7. 机会优先级与业务价值"
+      },
+      {
+        "line": 373,
+        "heading": "### 7.1 建议优先级"
+      },
+      {
+        "line": 386,
+        "heading": "### 7.2 建议 North Star"
+      },
+      {
+        "line": 403,
+        "heading": "## 8. 共创工作坊材料"
+      },
+      {
+        "line": 405,
+        "heading": "### 8.1 建议形式"
+      },
+      {
+        "line": 409,
+        "heading": "### 8.2 三张事实卡"
+      },
+      {
+        "line": 423,
+        "heading": "### 8.3 议程"
+      },
+      {
+        "line": 435,
+        "heading": "### 8.4 共创问题"
+      },
+      {
+        "line": 446,
+        "heading": "### 8.5 优先级评分模板"
+      },
+      {
+        "line": 459,
+        "heading": "## 9. 建议的概念验证"
+      },
+      {
+        "line": 461,
+        "heading": "### MVP A：可信运行包"
+      },
+      {
+        "line": 465,
+        "heading": "### MVP B：首次偏离定位"
+      },
+      {
+        "line": 469,
+        "heading": "### MVP C：Failure-first 泳道"
+      },
+      {
+        "line": 473,
+        "heading": "### MVP D：服务化契约 Diff"
+      },
+      {
+        "line": 479,
+        "heading": "## 10. 证据索引"
+      },
+      {
+        "line": 481,
+        "heading": "### 正确性与确定性"
+      },
+      {
+        "line": 494,
+        "heading": "### 编译、运行时与观测"
+      },
+      {
+        "line": 505,
+        "heading": "### 服务化契约与性能知识"
+      },
+      {
+        "line": 518,
+        "heading": "### 真实 PR 工作方式"
+      },
+      {
+        "line": 531,
+        "heading": "## 11. 最终判断"
+      }
+    ]
+  },
+  {
+    "path": "Insight/pypto-skills检测报告样例.md",
+    "sha256": "848261b7978f5ef385b5858cf23cb62a385b5cb4d63f4832840d792d1449109f",
+    "bytes": 15494,
+    "classification": "DX/生态/工具工作流；01–06 覆盖编译与诊断，环境、API、服务状态与协作流程只部分或未覆盖",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# PyPTO User Skills 深度洞察报告"
+      },
+      {
+        "line": 6,
+        "heading": "## 1. 执行摘要"
+      },
+      {
+        "line": 29,
+        "heading": "## 2. 研究范围与证据边界"
+      },
+      {
+        "line": 31,
+        "heading": "### 2.1 直接证据"
+      },
+      {
+        "line": 42,
+        "heading": "### 2.2 分析边界"
+      },
+      {
+        "line": 51,
+        "heading": "## 3. 用户侧产品模型"
+      },
+      {
+        "line": 53,
+        "heading": "### 3.1 用户真正要解决的不是“怎么运行”，而是“我能不能相信结果”"
+      },
+      {
+        "line": 66,
+        "heading": "### 3.2 统一工作范式"
+      },
+      {
+        "line": 81,
+        "heading": "## 4. 五个 Skills 的角色分析"
+      },
+      {
+        "line": 83,
+        "heading": "### 4.1 `setup-and-run`：运行准入和故障归因层"
+      },
+      {
+        "line": 107,
+        "heading": "### 4.2 `generate-ir-trace`：编译过程的来源证明层"
+      },
+      {
+        "line": 126,
+        "heading": "### 4.3 `incore-profiling`：防止“成功采集、错误解释”"
+      },
+      {
+        "line": 145,
+        "heading": "### 4.4 `dependency-redundancy`：从图论约简走向数据流证明"
+      },
+      {
+        "line": 161,
+        "heading": "### 4.5 `critical-path-analysis`：把耗时变成因果解释"
+      },
+      {
+        "line": 192,
+        "heading": "## 5. 五个 Skills 的关系与使用顺序"
+      },
+      {
+        "line": 220,
+        "heading": "## 6. 设计优势"
+      },
+      {
+        "line": 222,
+        "heading": "### 6.1 对误报的防御强"
+      },
+      {
+        "line": 234,
+        "heading": "### 6.2 适合 Agent 执行"
+      },
+      {
+        "line": 245,
+        "heading": "### 6.3 把 repository-specific 信息留在消费者仓库"
+      },
+      {
+        "line": 249,
+        "heading": "## 7. 主要风险与改进机会"
+      },
+      {
+        "line": 251,
+        "heading": "### 7.1 “五个 skill”之间还缺少机器可读的编排协议"
+      },
+      {
+        "line": 265,
+        "heading": "### 7.2 报告字段可以进一步统一"
+      },
+      {
+        "line": 280,
+        "heading": "### 7.3 profiling helper 需要更多契约测试"
+      },
+      {
+        "line": 290,
+        "heading": "### 7.4 `setup-and-run` 的安全性可能带来较高交互成本"
+      },
+      {
+        "line": 300,
+        "heading": "### 7.5 需要明确“分析证据”与“优化决策”的分界"
+      },
+      {
+        "line": 310,
+        "heading": "## 8. 推荐的用户体验闭环"
+      },
+      {
+        "line": 314,
+        "heading": "### 环境面板"
+      },
+      {
+        "line": 318,
+        "heading": "### 运行面板"
+      },
+      {
+        "line": 322,
+        "heading": "### 证据面板"
+      },
+      {
+        "line": 326,
+        "heading": "### 解释面板"
+      },
+      {
+        "line": 330,
+        "heading": "## 9. 最终判断"
+      },
+      {
+        "line": 344,
+        "heading": "## 10. 交付检查清单"
+      }
+    ]
+  },
+  {
+    "path": "Insight/pypto_training_中文深度解析报告_20260915.md",
+    "sha256": "78f16ab46f2a03283da1c889b8546c21e0de8e7f031111bd7b0964112c02beed",
+    "bytes": 48453,
+    "classification": "训练扩展；自动求导、保存值、优化器和回放未解释",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# PyPTO Training 中文深度解析报告"
+      },
+      {
+        "line": 13,
+        "heading": "## 0. 执行摘要"
+      },
+      {
+        "line": 15,
+        "heading": "### 0.1 一句话理解"
+      },
+      {
+        "line": 21,
+        "heading": "### 0.2 五个核心判断"
+      },
+      {
+        "line": 29,
+        "heading": "### 0.3 如何使用本文"
+      },
+      {
+        "line": 40,
+        "heading": "## 1. 文档定位：六部分构成三条工作线"
+      },
+      {
+        "line": 50,
+        "heading": "### 1.1 关联文档暴露出的成熟度边界"
+      },
+      {
+        "line": 66,
+        "heading": "## 2. 总体架构：先分清三个层次、两类图、两种 AOT"
+      },
+      {
+        "line": 68,
+        "heading": "### 2.1 三个层次"
+      },
+      {
+        "line": 90,
+        "heading": "### 2.2 两类图不能互相替代"
+      },
+      {
+        "line": 99,
+        "heading": "### 2.3 两种 AOT 优化不同成本"
+      },
+      {
+        "line": 112,
+        "heading": "## 3. Part 1：自动求导应该定义在哪里"
+      },
+      {
+        "line": 114,
+        "heading": "### 3.1 为什么前向和反向 InCore 不能强制一一配对"
+      },
+      {
+        "line": 130,
+        "heading": "### 3.2 DSL 实际新增了三类契约"
+      },
+      {
+        "line": 142,
+        "heading": "### 3.3 保存上下文是在声明反向依赖"
+      },
+      {
+        "line": 156,
+        "heading": "### 3.4 Tape 的逆序是提交顺序，梯度完成仍需独立判定"
+      },
+      {
+        "line": 179,
+        "heading": "### 3.5 Checkpoint：用额外前向换取较少长期保存"
+      },
+      {
+        "line": 200,
+        "heading": "## 4. Part 2：训练内存的价值与隐藏前提"
+      },
+      {
+        "line": 202,
+        "heading": "### 4.1 寿命分类是对的，物理布局是可选择的"
+      },
+      {
+        "line": 215,
+        "heading": "### 4.2 为什么把 SAVED 固定在短寿命 ring 中会造成压力"
+      },
+      {
+        "line": 221,
+        "heading": "### 4.3 “已知要保存，直接分配到 SAVED”需要编译分析支持"
+      },
+      {
+        "line": 236,
+        "heading": "### 4.4 LIFO 是局部规律，不能直接推出碎片很小"
+      },
+      {
+        "line": 250,
+        "heading": "### 4.5 双端布局的准确峰值公式"
+      },
+      {
+        "line": 272,
+        "heading": "## 5. Part 3：完整训练 step 的关键是梯度何时真正完成"
+      },
+      {
+        "line": 274,
+        "heading": "### 5.1 两种累加，两种寿命"
+      },
+      {
+        "line": 299,
+        "heading": "### 5.2 梯度求和与梯度平均必须显式定义"
+      },
+      {
+        "line": 307,
+        "heading": "### 5.3 “AdamW 占参数字节 4 倍”只对特定 dtype 组合成立"
+      },
+      {
+        "line": 328,
+        "heading": "## 6. Part 4：分布式训练不能只靠一张通信反向表"
+      },
+      {
+        "line": 330,
+        "heading": "### 6.1 原文思路的价值"
+      },
+      {
+        "line": 347,
+        "heading": "### 6.2 最需要澄清：一般 all-reduce 求导与 Megatron TP 映射"
+      },
+      {
+        "line": 372,
+        "heading": "### 6.3 ZeRO 的预算应逐项分片"
+      },
+      {
+        "line": 387,
+        "heading": "### 6.4 PP、EP 和通信重叠的真实边界"
+      },
+      {
+        "line": 399,
+        "heading": "## 7. Part 5：缓存构图结果，而不是每轮重新发现依赖"
+      },
+      {
+        "line": 401,
+        "heading": "### 7.1 为什么 C++ 编排仍然有动态成本"
+      },
+      {
+        "line": 411,
+        "heading": "### 7.2 回放收益应按摊销计算"
+      },
+      {
+        "line": 429,
+        "heading": "### 7.3 静态计划的三个正确性条件"
+      },
+      {
+        "line": 439,
+        "heading": "### 7.4 动态 hole 最重要的是入口与出口解耦"
+      },
+      {
+        "line": 466,
+        "heading": "### 7.5 Host 构图、Device 执行的前提是明确的一致性协议"
+      },
+      {
+        "line": 474,
+        "heading": "### 7.6 模板压缩减少描述，不消除执行状态"
+      },
+      {
+        "line": 482,
+        "heading": "## 8. Part 6：把调度分散到 worker，并不意味着调度消失"
+      },
+      {
+        "line": 484,
+        "heading": "### 8.1 原文提出了一个可测量的瓶颈假设"
+      },
+      {
+        "line": 494,
+        "heading": "### 8.2 核心转换：将依赖关系表示成函数"
+      },
+      {
+        "line": 509,
+        "heading": "### 8.3 四个不能从方案直接推出的结论"
+      },
+      {
+        "line": 519,
+        "heading": "### 8.4 正确性最难的是发布、复用和终止"
+      },
+      {
+        "line": 532,
+        "heading": "### 8.5 路线判断"
+      },
+      {
+        "line": 540,
+        "heading": "## 9. 关键示例核查：公式主线可取，代码和图不能直接照用"
+      },
+      {
+        "line": 542,
+        "heading": "### 9.1 FlashAttention：保存统计量的方向正确，causal mask 未实现完整"
+      },
+      {
+        "line": 561,
+        "heading": "### 9.2 附录残差图多画了一条输入梯度路径"
+      },
+      {
+        "line": 581,
+        "heading": "### 9.3 其他容易误导实现的细节"
+      },
+      {
+        "line": 591,
+        "heading": "### 9.4 本次已执行的独立验证"
+      },
+      {
+        "line": 608,
+        "heading": "## 10. 评审优先级与验收清单"
+      },
+      {
+        "line": 610,
+        "heading": "### 10.1 优先处理什么"
+      },
+      {
+        "line": 628,
+        "heading": "### 10.2 建议拆成可独立验收的阶段"
+      },
+      {
+        "line": 644,
+        "heading": "## 11. 对 PyPTO 产品与工具设计的启示"
+      },
+      {
+        "line": 648,
+        "heading": "### 11.1 让用户看到逻辑函数与硬件任务的对应关系"
+      },
+      {
+        "line": 652,
+        "heading": "### 11.2 提供“为何还活着”的内存解释"
+      },
+      {
+        "line": 656,
+        "heading": "### 11.3 把梯度 ready 变成可追踪事件"
+      },
+      {
+        "line": 660,
+        "heading": "### 11.4 为 capture/replay 建立可审查的运行证据"
+      },
+      {
+        "line": 664,
+        "heading": "### 11.5 SPMD 应提供全局视图重建能力"
+      },
+      {
+        "line": 672,
+        "heading": "## 12. 来源与可追溯性"
+      }
+    ]
+  },
+  {
+    "path": "Insight/pypto_ux_insights.md",
+    "sha256": "7e0689960f232ef84878860bd5236b110b5d2431cd1e74647113a18665f0a335",
+    "bytes": 12423,
+    "classification": "DX/生态/工具工作流；01–06 覆盖编译与诊断，环境、API、服务状态与协作流程只部分或未覆盖",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# PyPTO Issues UX Insights"
+      },
+      {
+        "line": 13,
+        "heading": "## Executive Summary"
+      },
+      {
+        "line": 19,
+        "heading": "## Developer Journey"
+      },
+      {
+        "line": 21,
+        "heading": "### 1. Setup, Run, And Validate"
+      },
+      {
+        "line": 40,
+        "heading": "### 2. Model Intent In The DSL"
+      },
+      {
+        "line": 62,
+        "heading": "### 3. Compile With Trust"
+      },
+      {
+        "line": 83,
+        "heading": "### 4. Run, Debug, And Reproduce"
+      },
+      {
+        "line": 102,
+        "heading": "### 5. Optimize Performance"
+      },
+      {
+        "line": 122,
+        "heading": "### 6. Build Distributed And MoE Workloads"
+      },
+      {
+        "line": 141,
+        "heading": "## Cross-Cutting UX Themes"
+      },
+      {
+        "line": 143,
+        "heading": "### Silent Failure Is The Highest-Risk UX Problem"
+      },
+      {
+        "line": 152,
+        "heading": "### Users Need Progressive Disclosure, Not A Fully Hidden System"
+      },
+      {
+        "line": 160,
+        "heading": "### API Ergonomics Matter Most Where Code Is Rewritten Often"
+      },
+      {
+        "line": 168,
+        "heading": "## Prioritized Design Opportunities"
+      },
+      {
+        "line": 200,
+        "heading": "## Suggested Product Artifacts"
+      }
+    ]
+  },
+  {
+    "path": "Insight/pypto_ux_insights_zh（pypto仓）.md",
+    "sha256": "0fddf8f44d53caab5763673db0d839e40deccf107156e6f970f2a49154609776",
+    "bytes": 12169,
+    "classification": "DX/生态/工具工作流；01–06 覆盖编译与诊断，环境、API、服务状态与协作流程只部分或未覆盖",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# PyPTO Issues UX 洞察报告"
+      },
+      {
+        "line": 13,
+        "heading": "## 核心摘要"
+      },
+      {
+        "line": 19,
+        "heading": "## 开发者使用全流程"
+      },
+      {
+        "line": 21,
+        "heading": "### 1. 环境搭建、运行与验证"
+      },
+      {
+        "line": 40,
+        "heading": "### 2. 用 DSL 表达开发意图"
+      },
+      {
+        "line": 62,
+        "heading": "### 3. 编译阶段的可信度与诊断"
+      },
+      {
+        "line": 83,
+        "heading": "### 4. 运行、调试与复现"
+      },
+      {
+        "line": 102,
+        "heading": "### 5. 性能优化"
+      },
+      {
+        "line": 122,
+        "heading": "### 6. 构建分布式与 MoE 工作负载"
+      },
+      {
+        "line": 141,
+        "heading": "## 跨流程 UX 主题"
+      },
+      {
+        "line": 143,
+        "heading": "### 1. 静默失败是最高风险的 UX 问题"
+      },
+      {
+        "line": 152,
+        "heading": "### 2. 用户需要渐进披露，而不是完全隐藏系统细节"
+      },
+      {
+        "line": 160,
+        "heading": "### 3. API 人机工程在频繁改写代码的地方最关键"
+      },
+      {
+        "line": 168,
+        "heading": "## 优先级设计机会点"
+      },
+      {
+        "line": 170,
+        "heading": "### 1. 面向静默正确性风险的诊断升级"
+      },
+      {
+        "line": 176,
+        "heading": "### 2. Developer doctor 与测试工作流地图"
+      },
+      {
+        "line": 182,
+        "heading": "### 3. Source-to-IR-to-runtime 可追踪性"
+      },
+      {
+        "line": 188,
+        "heading": "### 4. 更安全的高层 DSL 设计"
+      },
+      {
+        "line": 194,
+        "heading": "### 5. 分布式编程指南与 validators"
+      },
+      {
+        "line": 200,
+        "heading": "### 6. 性能可解释性工具"
+      },
+      {
+        "line": 206,
+        "heading": "## 建议产品化产物"
+      }
+    ]
+  },
+  {
+    "path": "Insight/pypto_开发者体验UX洞察报告_基于issues.md",
+    "sha256": "151fcf858c2fe6394838025e50a37e111974fb61deb48b5564638688a221f106",
+    "bytes": 16756,
+    "classification": "DX/生态/工具工作流；01–06 覆盖编译与诊断，环境、API、服务状态与协作流程只部分或未覆盖",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# PyPTO 生态开发者体验 UX 洞察报告"
+      },
+      {
+        "line": 5,
+        "heading": "## 1. Executive read"
+      },
+      {
+        "line": 13,
+        "heading": "## 2. 数据范围与方法"
+      },
+      {
+        "line": 15,
+        "heading": "### 数据概况"
+      },
+      {
+        "line": 30,
+        "heading": "## 3. 开发者旅程中的体验断点"
+      },
+      {
+        "line": 32,
+        "heading": "### 3.1 环境搭建：开发者无法快速判断“我是否具备可运行条件”"
+      },
+      {
+        "line": 40,
+        "heading": "### 3.2 学习与编写：抽象层级太多，示例没有形成最短成功路径"
+      },
+      {
+        "line": 48,
+        "heading": "### 3.3 编译与生成：开发者难以建立“源代码—IR—生成代码”的因果关系"
+      },
+      {
+        "line": 56,
+        "heading": "### 3.4 仿真与真机验证：结果可信度不足"
+      },
+      {
+        "line": 64,
+        "heading": "### 3.5 运行时调试：错误码和卡死状态不可理解"
+      },
+      {
+        "line": 72,
+        "heading": "### 3.6 性能优化：开发者看到结果，却看不到成本结构"
+      },
+      {
+        "line": 80,
+        "heading": "### 3.7 协作与提交：安全边界没有被产品化"
+      },
+      {
+        "line": 88,
+        "heading": "## 4. 跨问题的核心 UX 洞察"
+      },
+      {
+        "line": 90,
+        "heading": "### 洞察一：产品的核心价值应从“生成代码”升级为“建立信任”"
+      },
+      {
+        "line": 94,
+        "heading": "### 洞察二：渐进披露比完全隐藏复杂度更适合专家工具"
+      },
+      {
+        "line": 98,
+        "heading": "### 洞察三：静默错误应被当作 P0 级体验风险"
+      },
+      {
+        "line": 102,
+        "heading": "### 洞察四：跨仓库一致性本身就是产品功能"
+      },
+      {
+        "line": 106,
+        "heading": "## 5. 可以由产品 UX 解决的重点问题"
+      },
+      {
+        "line": 119,
+        "heading": "## 6. 可能形成产品体验突破的场景"
+      },
+      {
+        "line": 121,
+        "heading": "### 场景 A：从“写 kernel”变成“可验证的 kernel 工作台”"
+      },
+      {
+        "line": 125,
+        "heading": "### 场景 B：仿真与真机的“可信度分级”"
+      },
+      {
+        "line": 129,
+        "heading": "### 场景 C：自动优化的可解释协作"
+      },
+      {
+        "line": 133,
+        "heading": "### 场景 D：模型迁移的“能力差距地图”"
+      },
+      {
+        "line": 137,
+        "heading": "### 场景 E：安全的端到端提交流水线"
+      },
+      {
+        "line": 141,
+        "heading": "## 7. 建议的落地顺序与验证指标"
+      },
+      {
+        "line": 143,
+        "heading": "### 近期：先消除不可解释和不可复现"
+      },
+      {
+        "line": 150,
+        "heading": "### 中期：把跨层信息串起来"
+      },
+      {
+        "line": 156,
+        "heading": "### 验证指标"
+      },
+      {
+        "line": 166,
+        "heading": "## 8. 证据索引"
+      }
+    ]
+  },
+  {
+    "path": "Insight/remaining_repos_ux_insights（剩余6个仓）.md",
+    "sha256": "c2de79b2b093a824e5cddd27e440dff2ab3791ca69e32104acca2151ec09ca79",
+    "bytes": 18829,
+    "classification": "DX/生态/工具工作流；01–06 覆盖编译与诊断，环境、API、服务状态与协作流程只部分或未覆盖",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# hw-native-sys 剩余 6 个仓库 Issues UX 洞察报告"
+      },
+      {
+        "line": 14,
+        "heading": "## 总览"
+      },
+      {
+        "line": 25,
+        "heading": "## 跨仓库开发者旅程"
+      },
+      {
+        "line": 40,
+        "heading": "# 1. simpler"
+      },
+      {
+        "line": 42,
+        "heading": "## 仓库角色"
+      },
+      {
+        "line": 56,
+        "heading": "## 开发者全流程痛点"
+      },
+      {
+        "line": 58,
+        "heading": "### 环境与版本阶段"
+      },
+      {
+        "line": 74,
+        "heading": "### 运行与调度阶段"
+      },
+      {
+        "line": 90,
+        "heading": "### 调试与复现阶段"
+      },
+      {
+        "line": 107,
+        "heading": "# 2. PTOAS"
+      },
+      {
+        "line": 109,
+        "heading": "## 仓库角色"
+      },
+      {
+        "line": 123,
+        "heading": "## 开发者全流程痛点"
+      },
+      {
+        "line": 125,
+        "heading": "### 学习与编写阶段"
+      },
+      {
+        "line": 141,
+        "heading": "### 编译与代码生成阶段"
+      },
+      {
+        "line": 157,
+        "heading": "### 性能调优阶段"
+      },
+      {
+        "line": 172,
+        "heading": "# 3. pto-isa"
+      },
+      {
+        "line": 174,
+        "heading": "## 仓库角色"
+      },
+      {
+        "line": 187,
+        "heading": "## 开发者全流程痛点"
+      },
+      {
+        "line": 189,
+        "heading": "### 理解语义阶段"
+      },
+      {
+        "line": 202,
+        "heading": "### 正确性与硬件限制阶段"
+      },
+      {
+        "line": 216,
+        "heading": "### 仿真与真实设备一致性阶段"
+      },
+      {
+        "line": 230,
+        "heading": "# 4. pypto-lib"
+      },
+      {
+        "line": 232,
+        "heading": "## 仓库角色"
+      },
+      {
+        "line": 246,
+        "heading": "## 开发者全流程痛点"
+      },
+      {
+        "line": 248,
+        "heading": "### 模型迁移阶段"
+      },
+      {
+        "line": 262,
+        "heading": "### 正确性验证阶段"
+      },
+      {
+        "line": 276,
+        "heading": "### 性能分析阶段"
+      },
+      {
+        "line": 291,
+        "heading": "# 5. pypto_top_level_documents"
+      },
+      {
+        "line": 293,
+        "heading": "## 仓库角色"
+      },
+      {
+        "line": 297,
+        "heading": "## 开发者全流程痛点"
+      },
+      {
+        "line": 316,
+        "heading": "# 6. pypto-serving"
+      },
+      {
+        "line": 318,
+        "heading": "## 仓库角色"
+      },
+      {
+        "line": 334,
+        "heading": "## 开发者全流程痛点"
+      },
+      {
+        "line": 336,
+        "heading": "### 产品能力理解阶段"
+      },
+      {
+        "line": 349,
+        "heading": "### 部署与资源管理阶段"
+      },
+      {
+        "line": 363,
+        "heading": "### 性能与服务质量阶段"
+      },
+      {
+        "line": 379,
+        "heading": "# 跨仓库系统级机会"
+      },
+      {
+        "line": 381,
+        "heading": "## 1. 统一 `doctor`：把环境、版本、硬件能力前置"
+      },
+      {
+        "line": 396,
+        "heading": "## 2. 统一 `explain`：从源码一路解释到 runtime"
+      },
+      {
+        "line": 411,
+        "heading": "## 3. 统一错误码和诊断词典"
+      },
+      {
+        "line": 424,
+        "heading": "## 4. 统一性能报告"
+      },
+      {
+        "line": 439,
+        "heading": "## 5. 统一跨仓库 issue 路由与模板"
+      },
+      {
+        "line": 456,
+        "heading": "## 优先级建议"
+      }
+    ]
+  },
+  {
+    "path": "Insight/ub-reference_1.html",
+    "sha256": "5bf4ec056ba4800a22f5de2df1f291aa54ebbb65470922378d9683f9553a09de",
+    "bytes": 342818,
+    "classification": "部分覆盖片上存储；布局坐标、通信工作区和 runtime ring 未深入解释",
+    "headings": [
+      {
+        "heading": "灵衢 UnifiedBus 参考手册"
+      },
+      {
+        "heading": "灵衢 UnifiedBus (UB) 参考手册"
+      },
+      {
+        "heading": "§00阅读指南"
+      },
+      {
+        "heading": "三处必须先纠正的认知"
+      },
+      {
+        "heading": "0.1 角色地图：谁买、谁装、谁用、谁运维"
+      },
+      {
+        "heading": "0.2 术语速查 · 按类别"
+      },
+      {
+        "heading": "§01预备知识：报文、报文头与分层"
+      },
+      {
+        "heading": "1.1 什么是报文"
+      },
+      {
+        "heading": "1.2 什么是封装"
+      },
+      {
+        "heading": "1.3 逐层封装：一次完整的演示"
+      },
+      {
+        "heading": "1.4 为什么头的大小很关键"
+      },
+      {
+        "heading": "1.5 三个反复出现的动作"
+      },
+      {
+        "heading": "1.6 两组容易混的概念"
+      },
+      {
+        "heading": "1.7 这一节和后面通信的关系"
+      },
+      {
+        "heading": "§02灵衢是什么：它填的是哪个空"
+      },
+      {
+        "heading": "2.1 先看全景：这东西在 AI 基础设施的哪一层"
+      },
+      {
+        "heading": "2.2 先看问题：算力堆上去了，为什么还是慢"
+      },
+      {
+        "heading": "2.3 断裂在哪：两套互不相通的体系"
+      },
+      {
+        "heading": "2.4 断裂具体断在哪：三个\"做不到\""
+      },
+      {
+        "heading": "2.5 那为什么不直接改现有协议"
+      },
+      {
+        "heading": "2.6 两个必须澄清的名词"
+      },
+      {
+        "heading": "2.7 UB、昇腾、鲲鹏、超节点：四者什么关系"
+      },
+      {
+        "heading": "2.8 边界：UB 不解决什么"
+      },
+      {
+        "heading": "§03协议栈分层"
+      },
+      {
+        "heading": "3.1 协议层和报文头是对应的吗"
+      },
+      {
+        "heading": "3.2 报文是怎么套起来的"
+      },
+      {
+        "heading": "3.3 TP Bypass：为什么 Load/Store 不走完整封装"
+      },
+      {
+        "heading": "3.4 重传、流控与拥塞控制"
+      },
+      {
+        "heading": "3.5 弱事务序：UB 的设计哲学"
+      },
+      {
+        "heading": "3.6 UBoE：跑在以太网上的 UB"
+      },
+      {
+        "heading": "§04Jetty 与 TP Channel：UB 最重要的两个抽象"
+      },
+      {
+        "heading": "4.1 先说结论：两者分别是什么"
+      },
+      {
+        "heading": "4.2 对照表"
+      },
+      {
+        "heading": "4.3 问题：RDMA 的 QP 为什么撑不住"
+      },
+      {
+        "heading": "§05硬件层级：机柜 / 计算节点 / L1 / L2 分别是什么"
+      },
+      {
+        "heading": "5.1 L1 与 L2 长什么样"
+      },
+      {
+        "heading": "5.2 层级树：从超节点一路拆到芯片"
+      },
+      {
+        "heading": "5.3 L1 与 L2 的完整对照"
+      },
+      {
+        "heading": "5.4 计算节点内部：芯片与互联"
+      },
+      {
+        "heading": "5.5 灵衢交换设备的管理模型"
+      },
+      {
+        "heading": "5.6 三层设备模型（工具链的对象模型基础）"
+      },
+      {
+        "heading": "§06\"平面\"是什么"
+      },
+      {
+        "heading": "6.1 概念"
+      },
+      {
+        "heading": "6.2 澄清：平面之间\"不通\"，到底是什么不通"
+      },
+      {
+        "heading": "6.3 为什么要这样设计"
+      },
+      {
+        "heading": "6.4 交付时最容易踩的坑：接错平面"
+      },
+      {
+        "heading": "§07六大特征：分别是怎么做到的"
+      },
+      {
+        "heading": "7.1 特征不是并列的，是分工的"
+      },
+      {
+        "heading": "7.2 为什么「对等协同」是胜负手"
+      },
+      {
+        "heading": "§08拓扑与链路状态 · 故障定位"
+      },
+      {
+        "heading": "8.1 什么是\"亚健康\""
+      },
+      {
+        "heading": "8.2 四类链路问题的定位链条"
+      },
+      {
+        "heading": "8.3 可靠性做在哪里 · 对应的可观测抓手"
+      },
+      {
+        "heading": "8.4 UB-Mesh 拓扑的学术依据"
+      },
+      {
+        "heading": "§09软件栈全景"
+      },
+      {
+        "heading": "9.1 先做个减法：45 个组件里，跟交付有关的只有 8 个"
+      },
+      {
+        "heading": "9.2 UBS Core 五大服务"
+      },
+      {
+        "heading": "9.3 管理面：openUBMC 与灵衢的结合点"
+      },
+      {
+        "heading": "9.4 没有硬件也能开发：openFuyao 仿真"
+      },
+      {
+        "heading": "§10资源池化"
+      },
+      {
+        "heading": "10.1 四类资源的池化成熟度（按公开资料证据强度）"
+      },
+      {
+        "heading": "10.2 四种池化之间是什么关系"
+      },
+      {
+        "heading": "10.3 池化到底是怎么做到的"
+      },
+      {
+        "heading": "10.4 跨节点访存的完整路径"
+      },
+      {
+        "heading": "§11数据流与通信路径"
+      },
+      {
+        "heading": "11.1 三个不同口径的\"时延\"，别混用"
+      },
+      {
+        "heading": "11.2 Load/Store 与 URMA：到底有什么不同"
+      },
+      {
+        "heading": "11.3 什么场景用哪个"
+      },
+      {
+        "heading": "11.4 谁来选？运维要不要切换？"
+      },
+      {
+        "heading": "11.5 集合通信库：HCCL 与 NCCL 在哪一层"
+      },
+      {
+        "heading": "11.6 四种通信语义速查"
+      },
+      {
+        "heading": "§12关键指标与产品谱"
+      },
+      {
+        "heading": "12.1 吞吐与业务收益"
+      },
+      {
+        "heading": "12.2 开放与开源承诺"
+      },
+      {
+        "heading": "12.3 怎么衡量\"交付得好不好\""
+      },
+      {
+        "heading": "§13横向对比"
+      },
+      {
+        "heading": "13.1 实测数字（第三方，非厂商自述）"
+      },
+      {
+        "heading": "13.2 同期国内外超节点方案"
+      },
+      {
+        "heading": "§14交付用户旅程 · 23 步"
+      },
+      {
+        "heading": "14.1 五条贯穿全程的硬约束"
+      },
+      {
+        "heading": "14.2 as-is：现在他们到底怎么干待现场补齐"
+      },
+      {
+        "heading": "§15工具链形态草案"
+      },
+      {
+        "heading": "15.1 六个模块"
+      },
+      {
+        "heading": "15.2 建议的分期"
+      },
+      {
+        "heading": "15.3 下一轮要一起定的四件事"
+      },
+      {
+        "heading": "§16待核实清单"
+      },
+      {
+        "heading": "16.1 协议与架构侧"
+      },
+      {
+        "heading": "16.2 交付流程侧"
+      },
+      {
+        "heading": "§17参考来源"
+      },
+      {
+        "heading": "17.1 官方一手"
+      },
+      {
+        "heading": "17.2 第三方研究与技术解读"
+      },
+      {
+        "heading": "§18附录：内部口径核对记录（刀片 / David / Union）"
+      },
+      {
+        "heading": "18.1 刀片构成：内部口径 vs 公开数据"
+      },
+      {
+        "heading": "18.2 芯片种类与 \"David\""
+      },
+      {
+        "heading": "18.3 交换板形态：Union、FM 全连接、SFU 板"
+      }
+    ]
+  },
+  {
+    "path": "Insight/梁文锋投资者交流会 · 录音文字稿.md",
+    "sha256": "80715066526ccb75ae2dc2f4c3a7765931f395baaf6fdfddfa05ee50d57e3215",
+    "bytes": 103642,
+    "classification": "访谈与产业背景；六篇编译专题范围外",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# 梁文锋投资者交流会 · 录音文字稿"
+      },
+      {
+        "line": 7,
+        "heading": "## 愿景、开源与克制"
+      },
+      {
+        "line": 11,
+        "heading": "### 第 2 页"
+      },
+      {
+        "line": 19,
+        "heading": "### 第 3 页"
+      },
+      {
+        "line": 23,
+        "heading": "### 第 4 页"
+      },
+      {
+        "line": 31,
+        "heading": "### 第 5 页"
+      },
+      {
+        "line": 35,
+        "heading": "### 第 6 页"
+      },
+      {
+        "line": 43,
+        "heading": "### 第 7 页"
+      },
+      {
+        "line": 47,
+        "heading": "### 第 8 页"
+      },
+      {
+        "line": 55,
+        "heading": "### 第 9 页"
+      },
+      {
+        "line": 59,
+        "heading": "## AGI 的路线图"
+      },
+      {
+        "line": 63,
+        "heading": "### 第 10 页"
+      },
+      {
+        "line": 71,
+        "heading": "### 第 11 页"
+      },
+      {
+        "line": 75,
+        "heading": "### 第 12 页"
+      },
+      {
+        "line": 83,
+        "heading": "### 第 13 页"
+      },
+      {
+        "line": 87,
+        "heading": "## 团队稳定性与 AGI 主线"
+      },
+      {
+        "line": 91,
+        "heading": "### 第 14 页"
+      },
+      {
+        "line": 99,
+        "heading": "### 第 15 页"
+      },
+      {
+        "line": 103,
+        "heading": "### 第 16 页"
+      },
+      {
+        "line": 111,
+        "heading": "## 算力、模型竞争与中美差距"
+      },
+      {
+        "line": 115,
+        "heading": "### 第 17 页"
+      },
+      {
+        "line": 119,
+        "heading": "### 第 18 页"
+      },
+      {
+        "line": 123,
+        "heading": "### 第 19 页"
+      },
+      {
+        "line": 129,
+        "heading": "### 第 20 页"
+      },
+      {
+        "line": 133,
+        "heading": "### 第 21 页"
+      },
+      {
+        "line": 141,
+        "heading": "### 第 22 页"
+      },
+      {
+        "line": 145,
+        "heading": "### 第 23 页"
+      },
+      {
+        "line": 153,
+        "heading": "### 第 24 页"
+      },
+      {
+        "line": 157,
+        "heading": "## 成本、组织与生态"
+      },
+      {
+        "line": 161,
+        "heading": "### 第 25 页"
+      },
+      {
+        "line": 169,
+        "heading": "### 第 26 页"
+      },
+      {
+        "line": 173,
+        "heading": "### 第 27 页"
+      },
+      {
+        "line": 181,
+        "heading": "### 第 28 页"
+      },
+      {
+        "line": 185,
+        "heading": "### 第 29 页"
+      },
+      {
+        "line": 193,
+        "heading": "### 第 30 页"
+      },
+      {
+        "line": 197,
+        "heading": "## 国产芯片与下一代模型"
+      },
+      {
+        "line": 201,
+        "heading": "### 第 31 页"
+      },
+      {
+        "line": 209,
+        "heading": "### 第 32 页"
+      },
+      {
+        "line": 213,
+        "heading": "### 第 33 页"
+      },
+      {
+        "line": 217,
+        "heading": "### 第 34 页"
+      },
+      {
+        "line": 225,
+        "heading": "### 第 35 页"
+      },
+      {
+        "line": 229,
+        "heading": "## 问答：从具身智能到商业化"
+      },
+      {
+        "line": 233,
+        "heading": "### 第 36 页"
+      },
+      {
+        "line": 241,
+        "heading": "### 第 37 页"
+      },
+      {
+        "line": 245,
+        "heading": "### 第 38 页"
+      },
+      {
+        "line": 249,
+        "heading": "### 第 39 页"
+      },
+      {
+        "line": 257,
+        "heading": "### 第 40 页"
+      },
+      {
+        "line": 261,
+        "heading": "### 第 41 页"
+      },
+      {
+        "line": 269,
+        "heading": "### 第 42 页"
+      }
+    ]
+  },
+  {
+    "path": "Insight/模型推理洞察报告_hw-native-sys_20260923.md",
+    "sha256": "55fb0bd2809f013ad102c384213ad70e55efdc3d04946a5e1d3352ab32daec95",
+    "bytes": 28789,
+    "classification": "模型迁移/推理；06 种编译机制之外仍有数值、通信、Serving 概念",
+    "headings": [
+      {
+        "line": 1,
+        "heading": "# hw-native-sys 模型推理洞察报告"
+      },
+      {
+        "line": 10,
+        "heading": "## 一、结论摘要"
+      },
+      {
+        "line": 26,
+        "heading": "## 二、资料来源与方法"
+      },
+      {
+        "line": 45,
+        "heading": "## 三、推理议题全景"
+      },
+      {
+        "line": 47,
+        "heading": "### 3.1 分布"
+      },
+      {
+        "line": 58,
+        "heading": "### 3.2 推理问题的五个层级"
+      },
+      {
+        "line": 74,
+        "heading": "## 四、实践案例"
+      },
+      {
+        "line": 76,
+        "heading": "### 4.1 端到端打通（bring-up tracking）"
+      },
+      {
+        "line": 89,
+        "heading": "### 4.2 外部基线复现：`pypto-lib#1054`（本报告重点）"
+      },
+      {
+        "line": 128,
+        "heading": "### 4.3 自研性能验证报告"
+      },
+      {
+        "line": 137,
+        "heading": "### 4.4 serving 能力建设"
+      },
+      {
+        "line": 148,
+        "heading": "### 4.5 调优方法论沉淀"
+      },
+      {
+        "line": 154,
+        "heading": "## 五、使用者问题图谱"
+      },
+      {
+        "line": 156,
+        "heading": "### 5.1 输出非确定性（8-17 后的头号问题）"
+      },
+      {
+        "line": 168,
+        "heading": "### 5.2 Host 侧开销成为 decode 瓶颈"
+      },
+      {
+        "line": 180,
+        "heading": "### 5.3 挂死、死锁与超时"
+      },
+      {
+        "line": 184,
+        "heading": "### 5.4 平台与规模泛化"
+      },
+      {
+        "line": 190,
+        "heading": "### 5.5 容量"
+      },
+      {
+        "line": 194,
+        "heading": "### 5.6 可观测性自身不稳"
+      },
+      {
+        "line": 202,
+        "heading": "## 六、一个被反复修正的结论：「2.3 倍差距」事件"
+      },
+      {
+        "line": 221,
+        "heading": "## 七、两条路线级动向"
+      },
+      {
+        "line": 223,
+        "heading": "### 7.1 执行模型：从 eager 派发走向图捕获"
+      },
+      {
+        "line": 231,
+        "heading": "### 7.2 生态位：同时向上接 vLLM、向下出 OM"
+      },
+      {
+        "line": 240,
+        "heading": "## 八、8-17 前后的变化"
+      },
+      {
+        "line": 255,
+        "heading": "## 九、对产品与体验的启示【推断，供规划参考】"
+      },
+      {
+        "line": 269,
+        "heading": "## 附录 A：推理相关条目索引"
+      },
+      {
+        "line": 295,
+        "heading": "## 附录 B：增量抓取复现方法"
+      }
+    ]
+  }
+]

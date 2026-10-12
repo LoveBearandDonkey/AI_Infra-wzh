@@ -1,0 +1,228 @@
+[
+  {
+    "id": "cover",
+    "nav": "封面"
+  },
+  {
+    "id": "objects",
+    "nav": "对象层级",
+    "en": "01 / CALLABLE EVOLUTION",
+    "title": "先区分函数定义、调用点和执行实例",
+    "sub": "Callable 在本报告中是阅读视角，不是新增的 IR 节点类型。",
+    "h": "同一函数可以有多个调用点",
+    "p": [
+      "Function 定义参数、函数体、返回值与函数类型；Call 是函数体中引用被调用函数的表达式。Scope 表示结构化的计算范围，可能在后续 Pass 中被提取为独立 Function。",
+      "Kernel 指面向设备核生成代码的函数。Task 是运行时调度的工作实例；普通函数调用、核函数定义和任务提交不能仅按数量直接等同。追踪时先标明当前观察层。"
+    ],
+    "f": "Function 定义 ≠ Call 调用点\nKernel 定义 ≠ Task 执行实例",
+    "g": "identity",
+    "refs": [
+      "inline",
+      "outline",
+      "explorer"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。"
+  },
+  {
+    "id": "calls",
+    "nav": "两个调用点",
+    "en": "02 / CALLABLE EVOLUTION",
+    "title": "一个 Inline helper 被两处调用",
+    "sub": "教学例：square(x) 的函数体为 y = mul(x, x)。",
+    "h": "先确定调用点，再追踪展开结果",
+    "p": [
+      "主函数分别调用 square(a) 和 square(b)。两处 Call 引用同一个定义，却传入不同实参。函数名只能标识被调用定义，不能区分调用位置。",
+      "下一页展示 InlineFunctions 如何为每个调用点生成独立的局部变量。此处的乘法是概念运算；尚未指定 Tensor→Tile 或设备指令层级。"
+    ],
+    "f": "c0: square(a)\nc1: square(b)\n两个调用点，共用一个定义",
+    "g": "callsite",
+    "refs": [
+      "inline"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。",
+    "modes": [
+      "调用 a",
+      "调用 b"
+    ]
+  },
+  {
+    "id": "inline",
+    "nav": "内联展开",
+    "en": "03 / CALLABLE EVOLUTION",
+    "title": "调用点被替换为各自的函数体副本",
+    "sub": "展开后 Inline 定义及对它的调用应被消除。",
+    "h": "计算保留，函数边界消失",
+    "p": [
+      "InlineFunctions 将形参替换为调用点实参，并为各副本的局部变量生成新名字，避免多个展开结果发生命名冲突。图中 a² 和 b² 分别来自两个调用点。",
+      "不应把函数定义从列表消失解释为计算被删除。对应依据应包含调用点、实参替换与复制后的语句。当前文档列出的不支持嵌套调用表达式由后置性质验证器捕获，不能默认为所有语法都已展开。"
+    ],
+    "f": "形参 x → 实参 a / b\n局部 y → y_inline0 / y_inline1",
+    "g": "inline",
+    "refs": [
+      "inline"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。",
+    "modes": [
+      "展开前",
+      "展开后"
+    ]
+  },
+  {
+    "id": "outline",
+    "nav": "区域提取",
+    "en": "04 / CALLABLE EVOLUTION",
+    "title": "计算区域变成函数，边界值形成接口",
+    "sub": "这是 outlining：提取定义并在原位置建立调用。",
+    "h": "输入看外部定义，输出看区域外使用",
+    "p": [
+      "OutlineIncoreScopes 在 Opaque 函数中寻找 InCoreScopeStmt。区域外定义、区域内使用的值形成输入；区域内定义、区域外使用的值需要通过返回接口传出。输入 IR 要满足 SSA 约束。",
+      "若输出通过参数写入，提取后的返回值按 ReturnParamsExplicit 约束对应参数；核内分配的输出仍保留其 SSA 值。图中用 y 表示抽象结果，不给实际参数方向或存储别名作额外假设。"
+    ],
+    "f": "区域：输入 x → 计算 → 输出 y\n提取：y = region_fn(x)",
+    "g": "outline",
+    "refs": [
+      "outline"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。",
+    "modes": [
+      "区域内嵌",
+      "独立函数"
+    ]
+  },
+  {
+    "id": "signature",
+    "nav": "接口联动",
+    "en": "05 / CALLABLE EVOLUTION",
+    "title": "Tensor→Tile 变换可能同时改变调用接口",
+    "sub": "只看被调用函数的函数体，会漏掉调用方更新。",
+    "h": "局部值与外部 Tensor 分别处理",
+    "p": [
+      "ConvertTensorToTileOps 将 InCore 内的 Tensor 运算降为 Tile 运算，并插入必要的加载与存储。对转成 Tile 的返回值，可能新增 Out 参数并写回相应 Tensor。",
+      "新增输出参数需要调用方创建输出 Tensor 并传入；透明的 Spmd / Group 包装函数也要同步接口。具体签名以实际前后 IR 为准，不能将这个示例推广为所有 Tensor 参数都会被加载。"
+    ],
+    "f": "抽象前：y = f(x)\n抽象后：out = tensor.create(...)\nf(x, out) → tile.store(..., out)",
+    "g": "signature",
+    "refs": [
+      "tile"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。",
+    "modes": [
+      "原接口",
+      "输出参数"
+    ]
+  },
+  {
+    "id": "mixed",
+    "nav": "混合拆核",
+    "en": "06 / CALLABLE EVOLUTION",
+    "title": "混合 InCore 被分解为 AIC 与 AIV",
+    "sub": "仅讨论包含 Cube 和 Vector 操作的情况。",
+    "h": "计算归属与跨核交接需要一起检查",
+    "p": [
+      "ExpandMixedKernel 将混合 InCore 的计算分别放入 AIC 与 AIV 函数，并由 Group 协调调用。若已有适用的 Group 包装，Pass 可直接改写它；存在 Spmd 包装时还需保留其启动语义。",
+      "显式 tile.move 的跨核边界可降为 tpush/tpop 配对。图中交接是这种数据传递的概念示意；Group 中的调用排列并不单独证明设备上完全串行执行。同步正确性仍需具体生成代码和后端语义。"
+    ],
+    "f": "混合计算范围 → Group + AIC + AIV\n跨核值 → 传输操作与相应同步",
+    "g": "split",
+    "refs": [
+      "mixed",
+      "transport"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。",
+    "modes": [
+      "混合 InCore",
+      "AIC / AIV"
+    ]
+  },
+  {
+    "id": "pure",
+    "nav": "纯核分支",
+    "en": "07 / CALLABLE EVOLUTION",
+    "title": "纯 Cube 或纯 Vector 不必拆成两个函数",
+    "sub": "函数类型改变与函数体分解是两种不同变化。",
+    "h": "不能由 Pass 名推断所有输入的结果",
+    "p": [
+      "ExpandMixedKernel 将纯 Cube 的 InCore 改为 AIC；纯 Vector 或仅含共享操作的 InCore 改为 AIV。这类输入不采用上一页的混合核分解。",
+      "当前 SplitVectorKernel 的主要分支是为已经降为 per-lane 形式的 split_aiv 函数写入属性，另有特定后端的双 AIV 调度处理；它已不再承担函数体减半。应根据版本、函数类型、属性和前后 IR 判断具体变化。"
+    ],
+    "f": "纯 Cube：InCore → AIC\n纯 Vector / shared-only：InCore → AIV",
+    "g": "pure",
+    "refs": [
+      "mixed",
+      "vector"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。",
+    "modes": [
+      "纯 Cube",
+      "纯 Vector"
+    ]
+  },
+  {
+    "id": "control",
+    "nav": "控制流",
+    "en": "08 / CALLABLE EVOLUTION",
+    "title": "相同操作名可以出现在不同控制范围",
+    "sub": "调用图、控制流结构和 def-use 关系应配合阅读。",
+    "h": "循环次数不等于函数定义数量",
+    "p": [
+      "循环中的调用点可能在运行时执行多次；条件分支中的调用是否执行取决于条件。仅按源代码里出现几次 Call，无法直接得到任务实例数或动态执行次数。",
+      "跨 Pass 对应还需检查循环边界、分支路径、归约携带值和返回值。展开或复制会让一个原始范围对应多个后继区域；图中 i 和条件均为教学标记，不是设备时间轴。"
+    ],
+    "f": "结构路径：main / for i / if cond / Call\n调用点数量与动态执行次数分别统计",
+    "g": "control",
+    "refs": [
+      "explorer",
+      "inline"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。",
+    "modes": [
+      "循环调用",
+      "条件调用"
+    ]
+  },
+  {
+    "id": "identity",
+    "nav": "对应证据",
+    "en": "09 / CALLABLE EVOLUTION",
+    "title": "函数名是定位线索，不能独立证明来源",
+    "sub": "同一 run 内先关联快照，再核对具体变换。",
+    "h": "把已确认、规则识别和未知分开",
+    "p": [
+      "Transform Explorer 将每个 Pass 的 functions / changedFunctions 按名称转置，形成 Callable 主线。混合拆核识别还要求同一步原函数类型改为 Group，并新增对应 _aic / _aiv 名称；单纯同名前缀不满足条件。",
+      "这是一套有适用范围的识别规则，不是编译器导出的通用 provenance。名字冲突可产生后缀，重命名或其他包装方式也可能无法被该规则关联。缺少可靠证据时应保留“对应未确认”，而不是自动归入同一对象。"
+    ],
+    "f": "定位：run + Pass 序号 + 函数名\n核对：类型 / 调用 / 参数 / 语句 / 变换规则",
+    "g": "identity",
+    "refs": [
+      "explorer",
+      "outline"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。",
+    "modes": [
+      "仅名称相似",
+      "结构证据"
+    ]
+  },
+  {
+    "id": "overview",
+    "nav": "完整追踪",
+    "en": "10 / CALLABLE EVOLUTION",
+    "title": "沿计算范围追踪，同时保留每次边界变化",
+    "sub": "先确认是哪次编译，再解释这一阶段的对应关系。",
+    "h": "不要求每一阶段仍有同名 Callable",
+    "p": [
+      "内联可能消除函数边界；提取可能新增函数；Tensor→Tile 可能改变接口；混合拆核可能将计算分散到不同核函数。追踪对象是经证据确认的计算对应关系，不能要求六个阶段始终共用一个名称。",
+      "实际使用时先固定源码、编译版本、目标和配置，再比较相邻快照。记录确认依据与缺口，并用适合的调用、控制流或数据流视角检查。此图总结关系，不代表所有程序都会经过全部分支，也不替代完整 Pass 序列。"
+    ],
+    "f": "输入身份 → 相邻快照 → 结构差异\n→ 对应证据 → 已确认 / 待确认",
+    "g": "identity",
+    "refs": [
+      "inline",
+      "outline",
+      "tile",
+      "mixed",
+      "explorer"
+    ],
+    "note": "结构教学案例；各页用于说明变换规则，不是一次真实编译的连续快照。连线不表示设备耗时。"
+  }
+]

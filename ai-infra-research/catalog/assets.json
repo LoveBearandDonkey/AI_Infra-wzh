@@ -218,14 +218,14 @@
       "sources": [
         {
           "repository": "ai-infra",
-          "url": "http://127.0.0.1:8769/variants/index_comm.html",
+          "url": null,
           "path": "ai-infra-research/patterns/npu-memory-atlas/variants/index_comm.html",
           "revision": null,
           "sha256": "896519ed0c36ea87d02f0053a77f41f1658ec0289662bc7f46797e3e2ec88edf"
         }
       ],
       "validation": [
-        "2026-10-10：按用户指定将卡片入口切换到本地 8769 端口的 index_comm 页面，更新标题与摘要；入口依赖本地预览服务运行，历史 UI 评审仅适用于原快照。",
+        "2026-10-10：卡片指向 index_comm 页面，使用站点相对路径兼容 Pages 和本地预览；历史 UI 评审仅适用于原快照。",
         "2026-09-24：按用户要求收录 v10 页面并使用指定截图作为封面；已核对页面入口与交互控件。数据与时间过程为教学模拟，未进行技术事实复审或浏览器视觉验收。",
         "2026-09-28：用户明确确认当前版本已评审、所有 UI 样式 approved。已保存完整快照与 SHA256；后续仅接入并行关系逻辑，保留既有样式。新增关系功能不自动视为已获用户评审。"
       ],

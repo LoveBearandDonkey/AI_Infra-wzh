@@ -120,12 +120,13 @@ const glossary={...P.glossary,
  B:['B · 同时存活的 Tile','教学值：[32,64] FP16，4 KiB。S2 定义，S6 最后一次使用。B 与 A、C 都有生命期重叠，需要独立缓冲区。'],
  C:['C · 后出现的 Tile 值','教学值：[32,64] FP16，4 KiB。S4 定义，S7 最后一次使用。A 的最后一次使用位于 S3；在满足其他复用条件时，C 可以复用 A 的缓冲区。'],
  life:['生命周期 · 定义与最后一次使用','本图用定义位置与最后一次使用位置表示静态生命周期。编译器还需分析控制流和别名，并检查流水并发约束。横轴采用语句序号，不表示设备运行时间。'],
- conflict:['生命周期干涉（Interference）','本教学示例中的 A、B、C 为不同值。两值的生命周期重叠时，必须使用互不覆盖的地址区间。无向边表示这一对称的干涉关系；此图由示例生命周期构造，并非编译器导出的图。'],
+ conflict:['生命周期干涉（Interference）','本教学示例中的 A、B、C 为不同值，且排除语义别名与允许的原地更新。两值的生命周期重叠时，本例要求使用互不覆盖的地址区间。无向边表示这一对称的干涉关系；此图由示例生命周期构造，并非编译器导出的图。'],
  slot:['缓冲区 · 底层分配','本报告以缓冲区表示底层分配占据的存储空间。MemoryReuse 可使多个值共享 MemRef；底层分配大小由该共享组的最大成员决定。'],
  safety:['读写安全 · 原地操作条件','值在某语句最后一次使用、结果也在该语句定义时，仍需检查操作是否允许输入输出别名。升精度 cast 的输出可能覆盖尚未读到的输入。'],
  pipeline:['流水 stage 的缓冲区约束','不同流水 stage 可能并发执行，因此其操作数可能需要独立缓冲区。静态语句顺序不足以证明可以复用。图中条带仅示意并发关系，不包含实际调度或耗时数据。'],
  evidence:['真实导出 · 静态检查证据','来自 32_after_AllocateMemoryAddr.memory_map.json 的两个函数。start/end 是源码行，不是运行时；aliases 是查看器合并结果。backend.detected=false，不把 limit 当作本机探测值。'],
  view:['视图 · 共享来源分配','slice / reshape 等视图可能沿用来源的 base，并保留相对偏移。查看器中的同 base 重叠可以是合法别名，不能只凭矩形相交断言覆盖错误。']};
+Object.assign(P.glossary,glossary); // Keep shared primitive accessibility labels aligned with this report.
 const refs={
  reuse:['本地 MemoryReuse 文档','../../repo/pto/docs/en/dev/passes/30-memory_reuse.md'],
  impl:['本地 MemoryReuse 实现','../../repo/pto/src/ir/transforms/memory_reuse_pass.cpp'],

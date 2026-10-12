@@ -1,0 +1,97 @@
+{
+  "requirements": [
+    {
+      "requirement": "计划报告 01",
+      "status": "complete",
+      "artifact": "llm-compute/pypto-compilation-guide/index.html",
+      "evidence": {
+        "pages": 12,
+        "states": 20,
+        "sha256": "5e7b49f20da962aede72d8aa92c98363eaaace67139ed984261f3f89675da6e0"
+      }
+    },
+    {
+      "requirement": "计划报告 02",
+      "status": "complete",
+      "artifact": "llm-compute/pypto-memory-reuse-guide/index.html",
+      "evidence": {
+        "pages": 11,
+        "states": 18,
+        "sha256": "0b56a76d0e8758af9c9d0daec8b36e707a04cbc3188f4cd257e311ed35a9dad7"
+      }
+    },
+    {
+      "requirement": "计划报告 03",
+      "status": "complete",
+      "artifact": "llm-compute/pypto-compiler-decisions-guide/index.html",
+      "evidence": {
+        "pages": 11,
+        "states": 19,
+        "sha256": "604e9c9c18c201fa368b6c6b096c0c99da84bf4c51e5c6f065746833e4fe1592"
+      }
+    },
+    {
+      "requirement": "计划报告 04",
+      "status": "complete",
+      "artifact": "llm-compute/pypto-callable-evolution-guide/index.html",
+      "evidence": {
+        "pages": 11,
+        "states": 18,
+        "sha256": "b4da55bda2cf0cf83af7000353d71539c10dc6cbbe9bd00e0a0b790b4a3009ff"
+      }
+    },
+    {
+      "requirement": "计划报告 05",
+      "status": "complete",
+      "artifact": "llm-compute/pypto-runtime-evidence-guide/index.html",
+      "evidence": {
+        "pages": 11,
+        "states": 19,
+        "sha256": "b30878de47a7594d596f0e402ab55581720c4e41722ef5b43a767e55364007a1"
+      }
+    },
+    {
+      "requirement": "计划报告 06",
+      "status": "complete",
+      "artifact": "llm-compute/pypto-pass-contracts-guide/index.html",
+      "evidence": {
+        "pages": 11,
+        "states": 17,
+        "sha256": "c453ac2ddeb77f80dd4f349dcf397c1276417bb7dd99a2eab220e68661919552"
+      }
+    },
+    {
+      "requirement": "哪些可以收录成新的图元",
+      "status": "complete",
+      "artifact": "llm-compute/pypto-series-audit/README.md",
+      "section": 1
+    },
+    {
+      "requirement": "报告之间是否有前后不一的概念",
+      "status": "complete",
+      "artifact": "llm-compute/pypto-series-audit/README.md",
+      "section": 2
+    },
+    {
+      "requirement": "Insight 是否仍有未解释概念",
+      "status": "complete",
+      "artifact": "llm-compute/pypto-series-audit/README.md",
+      "section": 3
+    },
+    {
+      "requirement": "可以 self-improve 的地方",
+      "status": "complete",
+      "artifact": "llm-compute/pypto-series-audit/README.md",
+      "section": 4
+    }
+  ],
+  "validation": "validation.json",
+  "limitations": [
+    "Browser rendering and interaction not tested: destination AGENTS assigns visual acceptance to user by default.",
+    "No compiler, simulator, or device performance experiment executed.",
+    "Primitive candidates identified, not promoted as visually accepted skill assets.",
+    "Insight coverage is a concept gap audit, not a verification of every historical claim."
+  ],
+  "catalogValidation": "Catalog OK: 29 curated assets",
+  "diffCheck": "passed"
+}

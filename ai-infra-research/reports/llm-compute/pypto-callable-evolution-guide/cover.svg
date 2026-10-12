@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 540"><rect width="800" height="540" fill="#131313"/><style>svg text{font-family:Inter,"PingFang SC",system-ui,sans-serif;fill:#e8e8e8;font-size:18px}
+svg .small{font-size:14px;fill:#ababab}
+svg .tiny{font-size:12px;fill:#ababab}
+svg .op-label{font-size:18px;font-weight:650;fill:#fff;dominant-baseline:middle}
+svg .hit{cursor:pointer}
+svg .hit .outline{transition:stroke .12s}
+svg .hit:hover .outline,svg .hit.selected .outline,svg .hit:focus .outline{stroke:#fff;stroke-width:2.5}
+svg .hit.selected text{fill:#fff}
+svg .hit:focus{outline:none}
+svg .data-label{paint-order:stroke;stroke:#131313;stroke-width:2.5px;stroke-linejoin:round}
+svg .grid-label{font-size:14px;fill:var(--tensor-color);font-weight:400}
+svg .grid-detail{font-size:12px;fill:var(--tensor-color);font-weight:400}
+svg .hit.selected .data-label text{fill:var(--tensor-color)}
+svg .edge-label{font-size:12px;fill:#ccc;paint-order:stroke;stroke:#131313;stroke-width:5px}
+svg .soft{opacity:.24}
+svg .hit.selected{opacity:1}
+svg .hit[data-key="task"]{--object-color:#685CF0}
+svg .hit[data-key="loop"]{--object-color:#685CF0}
+svg .hit[data-key="loop"]>path{stroke:#685CF0}
+svg .hit[data-key="loop"]>text{fill:#685CF0}
+svg .hit[data-key="buffer"],svg .hit[data-key="address"]{--object-color:#C7AD88}
+svg .hit[data-key="pass"],svg .hit[data-key="snapshot"]{--object-color:#aaa}
+svg .hit[data-key="callable"]>.outline,svg .hit[data-key="loop"]>.outline,svg .hit[data-key="task"]>.outline,svg .hit[data-key="buffer"]>.outline,svg .hit[data-key="address"]>.outline,svg .hit[data-key="pass"]>.outline,svg .hit[data-key="snapshot"]>.outline{stroke:var(--object-color);stroke-width:1.3}
+svg .hit[data-key="callable"]>text,svg .hit[data-key="loop"]>text,svg .hit[data-key="task"]>text,svg .hit[data-key="buffer"]>text,svg .hit[data-key="address"]>text,svg .hit[data-key="pass"]>text,svg .hit[data-key="snapshot"]>text{fill:var(--object-color)}
+svg .hit[data-key="task"]>.outline{fill:#211C3C}
+svg .hit[data-key="buffer"]>.outline{fill:#25221D}
+svg .hit[data-key="pass"]>.outline,svg .hit[data-key="snapshot"]>.outline{fill:#202020}
+svg .hit[data-key="callable"]>path{stroke:#8EAED0;stroke-opacity:.3}
+svg .hit[data-key="buffer"]>path{stroke:#C7AD88;stroke-opacity:.45}
+svg .hit[data-key="address"]>rect{fill:#C7AD88;fill-opacity:.17;stroke:#C7AD88;stroke-width:1.2}
+svg .hit:hover>.outline,svg .hit.selected>.outline,svg .hit:focus>.outline{stroke-width:2;stroke:var(--object-color,#fff)}
+svg .symbol .outline{stroke:#B9C2CD;stroke-width:1.5;fill:#1A1E23}
+svg .symbol.selected .outline,svg .symbol:hover .outline,svg .symbol:focus .outline{stroke:#fff;stroke-width:2}
+svg .hit[data-key="kernel"]{--object-color:#685CF0}
+svg .hit[data-key="kernel"]>text{fill:#CEC4F9}
+svg .hit[data-key="op"]{--object-color:#685CF0}
+svg .cell-title{font-size:16px;font-weight:600;fill:#eee}</style><defs><linearGradient id="op-purple" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#4D3BC9"/><stop offset="1" stop-color="#3D2DC0"/></linearGradient><marker id="arrow" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="10" markerHeight="10" orient="auto"><path d="M8 7 H12" stroke="#131313" stroke-width="2.5"/><path d="M3 2 L8 7 L3 12 M7 2 L12 7 L7 12" stroke="#E8E8E8" stroke-width="1.4" stroke-linejoin="miter" fill="none"/></marker><marker id="open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1 L9 5 L1 9" stroke="#ccc" stroke-width="1.5" fill="none"/></marker><marker id="diamond" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto"><path d="M1 6 L6 1 L11 6 L6 11Z" fill="#131313" stroke="#aaa"/></marker><marker id="circle" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><circle cx="5" cy="5" r="3" fill="#131313" stroke="#aaa"/></marker></defs><g class="hit" tabindex="0" role="button" aria-label="Callable · 可调用函数（图解统称）" data-key="callable" data-layer="program"><rect class="outline" x="70" y="70" width="270" height="220" rx="5" fill="none" stroke="#6b6b6b"/><path d="M70 101 H340" stroke="#444"/><text x="84" y="92" class="small" text-anchor="start">源码计算范围</text></g><g class="hit" tabindex="0" role="button" aria-label="IR 操作 · OP" data-key="op" data-layer="data"><rect class="op outline" x="120" y="150" width="170" height="48" rx="24" fill="#685CF0" stroke="#685CF0" stroke-width="1"/><circle cx="145" cy="174" r="12" fill="#211391"/><text x="145" y="175" text-anchor="middle" dominant-baseline="middle" style="font-size:15px;font-style:italic;fill:#A58BFF">ƒₓ</text><text x="219" y="174" class="op-label" text-anchor="middle">compute</text></g><g class="hit" tabindex="0" role="button" aria-label="Kernel · 设备端执行入口" data-key="kernel" data-layer="program"><rect class="outline" x="480" y="80" width="260" height="150" rx="8" fill="#171422" stroke="#685CF0" stroke-width="1.5"/><path d="M481 115 H739" stroke="#685CF0"/><rect x="686" y="89" width="42" height="19" rx="4" fill="#392A7C"/><text x="493" y="104" class="small" text-anchor="start">计算后继 A</text><text x="707" y="103" text-anchor="middle" style="font-size:11px;fill:#DFD7FF">AIC</text></g><g class="hit" tabindex="0" role="button" aria-label="Kernel · 设备端执行入口" data-key="kernel" data-layer="program"><rect class="outline" x="480" y="290" width="260" height="150" rx="8" fill="#171422" stroke="#685CF0" stroke-width="1.5"/><path d="M481 325 H739" stroke="#685CF0"/><rect x="686" y="299" width="42" height="19" rx="4" fill="#392A7C"/><text x="493" y="314" class="small" text-anchor="start">计算后继 B</text><text x="707" y="313" text-anchor="middle" style="font-size:11px;fill:#DFD7FF">AIV</text></g><g class="hit" tabindex="0" role="button" aria-label="跨阶段 IR 对应 ⋯◇" data-key="mapping" data-layer=""><path class="outline edge" d="M340 170 L410 170 L410 155 L480 155" fill="none" stroke="#aaa" stroke-width="1.7" stroke-linejoin="round" stroke-dasharray="3 6" marker-end="url(#diamond)"/><path d="M340 170 L410 170 L410 155 L480 155" fill="none" stroke="transparent" stroke-width="12"/></g><g class="hit" tabindex="0" role="button" aria-label="跨阶段 IR 对应 ⋯◇" data-key="mapping" data-layer=""><path class="outline edge" d="M340 220 L390 220 L390 365 L480 365" fill="none" stroke="#aaa" stroke-width="1.7" stroke-linejoin="round" stroke-dasharray="3 6" marker-end="url(#diamond)"/><path d="M340 220 L390 220 L390 365 L480 365" fill="none" stroke="transparent" stroke-width="12"/></g><text x="400" y="495" class="small" text-anchor="middle">边界与名称可以改变；对应关系必须有依据</text></svg>

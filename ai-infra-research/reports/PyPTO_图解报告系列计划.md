@@ -8,10 +8,10 @@
 | --- | --- | --- | --- | --- | --- |
 | 01 | P0 | 一个算子如何经过 PyPTO 编译流水线 | 从 Tensor 表达到 Tile、循环、核函数、任务和内存地址，各阶段改变了什么 | Pass Atlas、Transform Explorer、Control Flow Explorer | 已完成，沿用现有报告 |
 | 02 | P0 | 片上内存复用：从张量生命期到地址分配 | 不同值如何共享存储，哪些约束阻止共享，怎样检查最终地址布局 | Atlas、Memory Inspector、Transform Explorer | 已完成；用户已指示继续下一篇 |
-| 03 | P0 | 编译器自动决策如何影响并行与流水 | 分块、流水深度、内存复用、依赖和同步为何需要一起看 | Decision Studio、调优工作台、Insight 调优方法论 | 已生成；全系列统一自查待完成 |
-| 04 | P1 | 沿一个 Callable 追踪计算结构的演变 | 一个源码计算范围如何被内联、提取为独立函数、拆核，以及如何保持对象对应 | Transform Explorer 的 Callable 主线、Control Flow Explorer | 待开始 |
-| 05 | P1 | 从运行异常反向追踪编译证据 | 如何从等待或性能下降，逐步建立可验证的编译假设 | Gap Investigator、Tuning Console、编译失败诊断、Insight | 待开始 |
-| 06 | P2 | Pass 之间的契约与首次偏离定位 | Pass 的前置条件、后置性质和验证器如何帮助缩小错误范围 | Atlas 属性依赖、Insight 开发者体验报告、UX Report | 待开始 |
+| 03 | P0 | 编译器自动决策如何影响并行与流水 | 分块、流水深度、内存复用、依赖和同步为何需要一起看 | Decision Studio、调优工作台、Insight 调优方法论 | 已完成内容与静态自查；视觉待验收 |
+| 04 | P1 | 沿一个 Callable 追踪计算结构的演变 | 一个源码计算范围如何被内联、提取为独立函数、拆核，以及如何保持对象对应 | Transform Explorer 的 Callable 主线、Control Flow Explorer | 已完成内容与静态自查；视觉待验收 |
+| 05 | P1 | 从运行异常反向追踪编译证据 | 如何从等待或性能下降，逐步建立可验证的编译假设 | Gap Investigator、Tuning Console、编译失败诊断、Insight | 已完成内容与静态自查；视觉待验收 |
+| 06 | P2 | Pass 之间的契约与首次偏离定位 | Pass 的前置条件、后置性质和验证器如何帮助缩小错误范围 | Atlas 属性依赖、Insight 开发者体验报告、UX Report | 已完成内容与静态自查；视觉待验收 |
 
 ## 本轮范围与审批节奏
 
@@ -44,7 +44,7 @@
 
 第一份入口：[编译流水线图解](llm-compute/pypto-compilation-guide/index.html)。
 
-第二份入口：[片上内存复用图解](llm-compute/pypto-memory-reuse-guide/index.html)。共 11 节；详细来源与验证见[交付说明](llm-compute/pypto-memory-reuse-guide/README.md)。第三份已获继续制作授权。
+第二份入口：[片上内存复用图解](llm-compute/pypto-memory-reuse-guide/index.html)。共 11 节；详细来源与验证见[交付说明](llm-compute/pypto-memory-reuse-guide/README.md)。第三至第六份均已生成。
 
 ## 第三份的讲解计划
 
@@ -65,7 +65,7 @@
 
 导航、正文、图注和释义按 skill 的技术概念规范统一校对。遵循目标仓库 AGENTS，本轮执行结构与脚本检查，视觉验收交由用户；两者分别记录。
 
-第三份入口：[编译器自动决策如何影响并行与流水](llm-compute/pypto-compiler-decisions-guide/index.html)。共 11 节、19 种正文图示状态；[来源与验证记录](llm-compute/pypto-compiler-decisions-guide/README.md)。已完成文案、结构与脚本检查；进入全系列统一自查范围；第四至第六篇继续制作。
+第三份入口：[编译器自动决策如何影响并行与流水](llm-compute/pypto-compiler-decisions-guide/index.html)。共 11 节、19 种正文图示状态；[来源与验证记录](llm-compute/pypto-compiler-decisions-guide/README.md)。已完成文案、结构与脚本检查；已纳入全系列统一自查。
 
 
 ## 全系列完成与统一自查（新增授权）
@@ -77,3 +77,30 @@
 固定同一份编译输入与配置，依次区分 Function / Call / Scope / Kernel / Task，说明 InlineFunctions 的多调用点展开、OutlineIncoreScopes 的自由变量与输出分析、Tensor→Tile 后的签名联动、ExpandMixedKernel 的混合与纯核分支，以及循环与分支内的数据对应。最后解释 Transform Explorer 按名称索引与有限拆核规则的适用边界，避免把名字相似当成完整 provenance。
 
 章节：对象层级 → 两个调用点 → 内联展开 → 区域提取 → 接口联动 → 混合拆核 → 纯核分支 → 控制流 → 对应证据 → 完整追踪。图示均为明确标注的结构教学案例，不冒充一次真实编译的连续快照。
+
+
+第四份入口：[Callable 结构演变](llm-compute/pypto-callable-evolution-guide/index.html)。11 节、18 种正文状态；脚本、来源链接与 SVG 结构检查已通过，未进行浏览器视觉验收。
+
+### 第五份讲解计划
+
+围绕明确标注的构造等待案例：测量契约 → 具体任务实例 → 等待区间 → 多种假设 → 依赖与关键路径 → 运行到编译的关联 → 相邻 IR 与地址证据 → 编译失败分支 → 成对实验 → 证据结论。以 Gap Investigator 当前 README 的缺失字段与未接通能力为边界，不把原型候选、模拟数据或相似函数名作为根因证明。
+
+### 第六份讲解计划
+
+围绕 required / produced / invalidated 的性质追踪，区分声明与实际 verifier，解释验证开关、验证范围和性质失效；以相邻快照中同一谓词的通过/失败定位首次可观测偏离，再说明非单调性质无法直接二分、规则盲区与最小复现。现有文档与源码若不一致，以源码为准并记录差异。
+
+
+## 全系列交付与自查结果
+
+2026-10-10：全部六篇内容已完成，67 节（含封面）、111 种正文图示状态。统一检查了脚本、全部模式、释义键、来源锚点、SVG 结构与文本锚点；33 条材料摘录和哈希逐项匹配，第二篇两份内存函数导出与原数据一致。没有执行真实编译或设备实验。按目标仓库约定，浏览器布局与视觉验收保留为未执行，不将静态校验等同于视觉通过。
+
+| 报告 | 入口 | 本次正文状态检查 |
+| --- | --- | --- |
+| 01 编译流水线 | [阅读](llm-compute/pypto-compilation-guide/index.html) | 20 |
+| 02 片上内存复用 | [阅读](llm-compute/pypto-memory-reuse-guide/index.html) | 18 |
+| 03 自动决策 | [阅读](llm-compute/pypto-compiler-decisions-guide/index.html) | 19 |
+| 04 Callable 结构演变 | [阅读](llm-compute/pypto-callable-evolution-guide/index.html) | 18 |
+| 05 运行异常与编译证据 | [阅读](llm-compute/pypto-runtime-evidence-guide/index.html) | 19 |
+| 06 Pass 契约与首次偏离 | [阅读](llm-compute/pypto-pass-contracts-guide/index.html) | 17 |
+
+[统一自查](PyPTO_图解报告系列自查.md)记录七类图元组合候选、已修正的跨篇概念问题、Insight 34 个内容文件与 12 组尚未解释的概念，以及已实施和后续可沉淀的方法改进。候选图元尚未正式收录到 skill，不将未验证的视觉方案标为通用资产。
