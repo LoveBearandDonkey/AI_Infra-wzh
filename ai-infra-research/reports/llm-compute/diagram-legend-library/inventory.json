@@ -1,0 +1,1605 @@
+{
+  "sources": [
+    {
+      "id": "pypto-compilation-guide",
+      "title": "PyPTO 编译流水线图解",
+      "file": "reports/llm-compute/pypto-compilation-guide/index.html",
+      "sha256": "5e7b49f20da962aede72d8aa92c98363eaaace67139ed984261f3f89675da6e0"
+    },
+    {
+      "id": "pypto-guides",
+      "title": "PyPTO 函数变换、内存复用与问题定位",
+      "file": "reports/llm-compute/pypto-guides/index.html",
+      "sha256": "25498cc6d10e1314ad543e3351b3f7afb6ea1e4a04ca4c19ab6266915408456e"
+    },
+    {
+      "id": "llm-inference-dense-to-clusters",
+      "title": "LLM 推理全流程：从单卡到集群",
+      "file": "reports/llm-compute/llm-inference-dense-to-clusters-v1.html",
+      "sha256": "17e11e0a2eec5e4746628da0080c73d813aad381f18eb08d5a5e3a0d991cd692"
+    },
+    {
+      "id": "training-parallel-communication",
+      "title": "多卡并行配置与通信图解",
+      "file": "reports/llm-compute/training-parallel-communication-v1.html",
+      "sha256": "5153c90d6513249ea4e47068f5d43bc7b283cec89967d83fba72b2410a85f00d"
+    },
+    {
+      "id": "dense-ffn-to-moe",
+      "title": "从 Dense FFN 到 MoE",
+      "file": "reports/llm-compute/dense-ffn-to-moe-v1.html",
+      "sha256": "dd84b450f56cec6311c3e5a6e66e32844f7d6d023dc55e46d669753b5e0d2cc6"
+    },
+    {
+      "id": "transformer-layer-guide",
+      "title": "Transformer 层内图解：从 Token 到残差",
+      "file": "reports/llm-compute/transformer-layer-guide-v3.html",
+      "sha256": "a56e481ccd6a63fdbdf268bf09f88b7437b6fbb556531e5575cb8398661d8a45"
+    },
+    {
+      "id": "layer-stack-demo",
+      "title": "Layer Stack · 正式 Demo",
+      "file": "../layer_stack/pangu-layer-stack_2.html",
+      "url": "../../../../layer_stack/pangu-layer-stack_2.html",
+      "sha256": "4f67a132107c1eed53204b1ab7f17d97d00d53e3e414e1fe642cfc89b4fefdd2",
+      "kind": "demo"
+    }
+  ],
+  "items": [
+    {
+      "id": "system-value",
+      "cat": "对象",
+      "title": "数据",
+      "desc": "同一个值通过稳定 ID 关联折叠表示、矩阵展开与数值向量。参数、激活、聚合结果和梯度是数据角色；shape 是对象元数据。",
+      "refs": [
+        {
+          "id": "pypto-compilation-guide"
+        },
+        {
+          "id": "training-parallel-communication"
+        },
+        {
+          "id": "transformer-layer-guide",
+          "anchor": "step-2"
+        },
+        {
+          "id": "dense-ffn-to-moe",
+          "anchor": ""
+        },
+        {
+          "id": "training-parallel-communication",
+          "anchor": "vocab"
+        },
+        {
+          "id": "llm-inference-dense-to-clusters",
+          "anchor": ""
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "tile"
+        },
+        {
+          "id": "pypto-guides",
+          "anchor": "memory-objects"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "inherited"
+        },
+        {
+          "id": "transformer-layer-guide",
+          "anchor": ""
+        },
+        {
+          "id": "transformer-layer-guide",
+          "anchor": "step-12"
+        },
+        {
+          "id": "training-parallel-communication",
+          "anchor": "ring"
+        },
+        {
+          "id": "training-parallel-communication",
+          "anchor": ""
+        },
+        {
+          "id": "layer-stack-demo"
+        }
+      ],
+      "legacy": [
+        "matrix",
+        "vector",
+        "tile",
+        "activation",
+        "weight",
+        "aggregate",
+        "gradient",
+        "optimizer",
+        "kv",
+        "completed-block",
+        "pending-block"
+      ],
+      "layer": "system",
+      "note": "同一数据对象的表示与角色集中展示；Tile 的形状和类型属于值的元数据。角色网格不编码元素数量；展开矩阵与数值向量保留各自尺度。采样示例不代表完整张量或实测数据。",
+      "variants": [
+        {
+          "id": "matrix",
+          "title": "展开矩阵",
+          "desc": "方格按行列排列；标签解释序列长度、隐藏维度等轴的含义。未标数值的格子是结构示意。"
+        },
+        {
+          "id": "vector",
+          "title": "数值向量",
+          "desc": "显式数值示例中，一格对应一个元素，固定格宽使长度与元素数量成比例。"
+        },
+        {
+          "id": "tile",
+          "title": "Tile 值",
+          "desc": "小圆角网格块可携带形状、类型和内存空间信息；Tile 值与其引用的存储分别表示。"
+        },
+        {
+          "id": "activation",
+          "title": "输入与中间值",
+          "desc": "绿色网格表示输入、激活和计算中间值。形状由标签说明，底纹格数不表示实际元素数量。"
+        },
+        {
+          "id": "weight",
+          "title": "模型参数",
+          "desc": "蓝紫色网格表示权重与偏置。路由参数属于这一类，动态路由系数属于中间值。"
+        },
+        {
+          "id": "aggregate",
+          "title": "聚合结果",
+          "desc": "黄色网格表示均值、最大值、指数和等聚合数据；具体含义与归约维度需在图中标明。"
+        },
+        {
+          "id": "gradient",
+          "title": "梯度",
+          "desc": "青色网格表示损失对参数或激活的导数；应标明被求导的对象。"
+        },
+        {
+          "id": "optimizer",
+          "title": "优化器状态",
+          "desc": "灰色数据块表示优化器维护的状态，例如 Adam 的一阶矩，与梯度分别保存。"
+        },
+        {
+          "id": "kv",
+          "title": "KV cache",
+          "desc": "绿色数据节点表示推理过程中缓存的 K、V 状态；普通 KV 与 MLA 的存储结构应结合具体报告区分。"
+        },
+        {
+          "id": "completed-block",
+          "title": "已完成归约的分块",
+          "desc": "训练通信示例通过加粗边框与底色强调已完成归约的分块；颜色仍表示所承载的数据。"
+        },
+        {
+          "id": "pending-block",
+          "title": "未完成归约的分块",
+          "desc": "与完成态使用相同颜色、尺寸与元素数量；细边框与较浅底色表示尚未完成归约。示例值为本地贡献或部分和，不能等同于未参与或未选中。"
+        },
+        {
+          "id": "layer-sample",
+          "title": "局部异常采样",
+          "desc": "直接调用 Query 张量绘制函数；橙红只标采样异常。这里注入一个演示采样点，不代表真实运行异常。"
+        },
+        {
+          "id": "layer-sample-gray",
+          "title": "表示变体 · 灰度采样矩阵",
+          "desc": "复用原灰度映射；缩减为 8×12 演示网格并注入一个异常点，非原始样本。亮度对应归一化绝对值，不表达正负；橙红仅标异常。未声称格数等于逻辑张量尺寸。"
+        }
+      ],
+      "tiles": [
+        {
+          "id": "data-1",
+          "title": "折叠值 / Tile",
+          "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 420 280\" role=\"img\" aria-label=\"对象与关系示例\"><style>text{font-family:Inter,'PingFang SC',system-ui,sans-serif}path,rect,circle{stroke-width:1.5}</style><defs><marker id=\"arrow\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto\"><path d=\"M1 1L9 5L1 9\" stroke=\"#aaa\" fill=\"none\"/></marker><marker id=\"bind\" viewBox=\"0 0 10 10\" refX=\"5\" refY=\"5\" markerWidth=\"7\" markerHeight=\"7\"><circle cx=\"5\" cy=\"5\" r=\"3\" stroke=\"#aaa\" fill=\"#202020\"/></marker><marker id=\"map\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"8\" markerHeight=\"8\"><path d=\"M1 5L5 1L9 5L5 9Z\" stroke=\"#aaa\" fill=\"#202020\"/></marker></defs><g data-object=\"value-0\" data-kind=\"value\" data-role=\"activation\" data-representation=\"collapsed\"><rect x=\"80\" y=\"65\" width=\"160\" height=\"64\" rx=\"4\" stroke=\"#888\" fill=\"#202020\" /><rect x=\"90\" y=\"77\" width=\"4\" height=\"40\" rx=\"1\" stroke=\"none\" fill=\"#B1EF6B\" /><text x=\"104\" y=\"89\" font-size=\"14\" fill=\"#E8E8E8\" text-anchor=\"start\" dominant-baseline=\"middle\">X</text><text x=\"104\" y=\"111\" font-size=\"12\" fill=\"#ababab\" text-anchor=\"start\" dominant-baseline=\"middle\">[2,4] · FP16</text></g></svg>"
+        },
+        {
+          "id": "data-2",
+          "title": "展开矩阵",
+          "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 320 180\" role=\"img\" aria-label=\"展开矩阵\"><style>\nsvg{color-scheme:dark;--bg:#111;--panel:#171717;--line:#353535;--text:#e8e8e8;--muted:#ababab;--blue:#8cbdff;--gold:#BCA0F3;--purple:#79D4F2}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,\"PingFang SC\",\"Microsoft YaHei\",system-ui,sans-serif}button,a,input{touch-action:manipulation}button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--blue);outline-offset:4px}button:disabled{opacity:.3;cursor:default}header{height:78px;border-bottom:1px solid var(--line);padding:0 3.2vw;display:flex;align-items:center;gap:40px}.brand{font-size:18px;font-weight:550;white-space:nowrap;display:flex;align-items:center;gap:12px}.brand-mark{display:grid;grid-template-columns:repeat(3,5px);gap:3px}.brand-mark i{height:5px;background:var(--blue)}.brand-mark i:nth-child(3n){opacity:.45}nav{display:flex;gap:8px;margin-left:auto}nav button{font-size:14px;padding:11px 14px;border-radius:5px;color:var(--muted)}nav button.active{background:#252525;color:var(--text)}.top-count{font:13px ui-monospace,monospace;color:var(--muted);border-left:1px solid var(--line);padding-left:22px;white-space:nowrap}main{max-width:1640px;margin:auto;padding:33px 3.2vw 0}.heading{display:flex;align-items:flex-start;gap:20px;margin-bottom:25px}.eyebrow{font:12px ui-monospace,monospace;letter-spacing:2px;color:var(--blue);margin:0 0 10px}.heading h1{font-size:clamp(25px,2.5vw,38px);line-height:1.35;font-weight:450;margin:0}.heading p{font-size:15px;line-height:1.65;color:var(--muted);margin:10px 0 0}.step-num{margin-left:auto;font:52px ui-monospace,monospace;color:#454545;letter-spacing:-4px}.workspace{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(345px,1fr);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-height:600px}.visual{display:flex;flex-direction:column;min-width:0;background:#131313;position:relative}.legend{display:flex;gap:20px;flex-wrap:wrap;font-size:13px;padding:19px 24px;border-bottom:1px solid #282828;color:var(--muted)}.legend span{display:flex;align-items:center;gap:7px}.legend i{width:8px;height:8px;background:var(--blue)}.legend span:nth-child(2) i{background:var(--gold)}.legend span:nth-child(3) i{background:var(--purple)}#diagram{flex:1;display:flex;align-items:center;justify-content:center;padding:15px 18px;min-height:425px}svg{display:block;width:100%;max-height:600px;overflow:visible}svg text{font-family:inherit;font-size:18px;fill:var(--text)}svg .small{font-size:14px;fill:var(--muted)}svg .tiny{font-size:12px;fill:var(--muted)}svg .blue{fill:var(--blue)}svg .gold{fill:var(--gold)}svg .purple{fill:var(--purple)}svg .hit{cursor:pointer}svg .hit:hover>rect:first-child,svg .hit:focus>rect:first-child{stroke:#e8e8e8;stroke-width:2}svg .token-box{fill:#1b1b1b;stroke:#414141}svg .op{fill:#505050;stroke:#858585;stroke-width:1.5}svg .op-label{fill:#fff;font-size:18px;font-weight:650;dominant-baseline:middle}.complete svg .op-label{font-size:18px}svg .wire{fill:none;stroke:var(--blue);stroke-width:2;marker-end:url(#blueArrow)}svg .gradient{fill:none;stroke:var(--purple);stroke-width:2;stroke-dasharray:6 6;marker-end:url(#purpleArrow)}.visual-caption{font-size:12px;line-height:1.7;color:var(--muted);padding:14px 24px;border-top:1px solid #282828;display:flex;justify-content:space-between;gap:15px}.explanation{padding:28px 30px;border-left:1px solid var(--line);background:#171717;display:flex;flex-direction:column}.section-label{color:var(--muted);font-size:12px;letter-spacing:2px;margin-bottom:18px}.explanation h2{font-size:23px;font-weight:500;line-height:1.45;margin:0 0 16px}.explanation p{font-size:16px;line-height:1.9;color:#c8c8c8;margin:0 0 17px}.explanation strong{font-weight:500;color:#f0f0f0}.formula{border-left:2px solid var(--blue);padding:12px 15px;background:#1e2227;margin:5px 0 22px;font:15px/1.75 ui-monospace,monospace;color:#b5d4ff;overflow-wrap:anywhere}.inspector{margin-top:auto;padding-top:20px;border-top:1px solid var(--line)}.inspector-label{font-size:12px;color:var(--blue);letter-spacing:1px;display:block;margin-bottom:9px}.inspector h3{font-size:16px;font-weight:500;margin:0 0 8px}.inspector p{font-size:14px;line-height:1.8;color:var(--muted);margin:0}.source{margin-top:16px;font-size:12px;line-height:1.65;color:#aaa}.source a{color:#aaa;text-underline-offset:3px}.controls{padding:0 25px 18px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}.controls button{padding:8px 14px;border:1px solid #484848;border-radius:5px;font-size:14px}.controls button.selected{color:var(--blue);border-color:var(--blue);background:#202936}.controls label{font-size:14px;color:var(--muted)}.controls input{accent-color:var(--blue);width:170px}.bottom{display:flex;align-items:center;gap:26px;padding:20px 0 25px}.bottom button{padding:10px 18px;border:1px solid #444;border-radius:5px;font-size:14px;white-space:nowrap}.bottom .next{background:#e8e8e8;color:#111;border-color:#e8e8e8}.progress{display:flex;gap:6px;flex:1}.progress button{height:25px;flex:1;padding:10px 0;border:0;border-radius:0;position:relative}.progress button:after{content:\"\";position:absolute;left:0;right:0;top:11px;height:3px;background:#363636}.progress button.done:after{background:#566a84}.progress button.current:after{background:var(--blue)}.keyboard{font-size:12px;color:var(--muted);white-space:nowrap}.original-wrap{width:100%;height:540px;overflow:auto;scrollbar-color:#555 #171717;text-align:center}.original-wrap img{width:100%;height:auto;display:block}.original-wrap.fit img{height:100%;width:auto;max-width:100%;object-fit:contain;margin:auto}.original-wrap button{padding:0;display:block;margin:auto;height:100%}.modal{display:none;position:fixed;inset:0;background:#111f;z-index:20;overflow:auto;padding:75px 20px 30px}.modal.open{display:block}.modal img{display:block;width:min(100%,1100px);margin:auto}.modal .close{position:fixed;right:30px;top:20px;padding:10px 20px;border:1px solid #666;background:#222;border-radius:5px}.screen-enter{animation:enter .23s ease-out}@keyframes enter{from{opacity:.25;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}@media(prefers-reduced-motion:reduce){.screen-enter{animation:none}}@media(min-width:1600px){#diagram svg{max-height:660px}.workspace{min-height:690px}}@media(max-width:1100px){header{gap:15px;padding:0 24px}nav{gap:0}nav button{padding:10px}.top-count{display:none}main{padding:25px 24px 0}.workspace{grid-template-columns:minmax(0,1.2fr) minmax(320px,1fr)}.explanation{padding:24px}.legend{gap:12px;padding:16px}.keyboard{display:none}}@media(max-width:780px){header{height:auto;min-height:100px;display:block;padding:18px 18px 0}.brand{font-size:16px}nav{overflow:auto;margin-top:12px;padding-bottom:8px}nav button{white-space:nowrap;padding:8px 13px}main{padding:25px 16px 0}.heading{margin-bottom:20px}.heading p{font-size:14px}.step-num{font-size:38px}.workspace{grid-template-columns:1fr}.explanation{border-left:0;border-top:1px solid var(--line);padding:24px}.legend{font-size:12px;justify-content:space-between;gap:5px}#diagram{padding:15px 8px;min-height:0}svg{max-height:none}.visual-caption{padding:12px 16px}.visual-caption span:last-child{display:none}.bottom{gap:14px}.bottom button{padding:9px 12px}.progress{gap:4px}.progress button{padding:0}.explanation h2{font-size:22px}.original-wrap{height:560px}}@media print{header,.bottom,.controls{display:none}.workspace{display:block}.explanation{border:0}.original-wrap{height:auto}.original-wrap.fit img{width:100%;height:auto}}\n[hidden]{display:none!important}main{padding-top:34px;min-height:100svh;display:flex;flex-direction:column}.heading{margin-bottom:24px}.workspace{min-height:590px}.visual{position:relative}.controls:empty{display:none}#diagram{padding:25px 18px 15px}.info-wrap{position:absolute;top:15px;right:15px;z-index:5}.info-toggle{display:grid;place-items:center;width:28px;height:28px;border:1px solid #696969;border-radius:50%;font:italic 18px Georgia,serif;color:#bbb;background:#191919}.info-toggle:hover,.info-toggle[aria-expanded=true]{border-color:var(--blue);color:var(--blue)}.info-panel{position:absolute;right:0;top:39px;width:320px;padding:21px 22px;border:1px solid #494949;border-radius:9px;background:#202020;box-shadow:0 14px 45px #0009}.info-panel h3{font-size:15px;font-weight:500;margin:0 0 15px}.info-panel .legend{display:grid;padding:0 0 15px;gap:13px;border-bottom:1px solid #414141;font-size:14px}.info-panel p{font-size:13px;line-height:1.8;color:#bababa;margin:14px 0 0}.bottom{position:sticky;bottom:0;z-index:8;background:#111f;padding:22px 0 18px;margin-top:auto;gap:22px;align-items:center}.progress{gap:8px;overflow:auto;padding:3px 2px 5px}.progress button{min-width:64px;flex:1 0 64px;height:48px;padding:0 0 13px;font-size:12px;color:#aaa}.progress button:after{top:auto;bottom:3px;height:2px}.progress button.current{color:#c8dfff}.progress button:hover{color:#eee}.bottom>button{font-size:13px;padding:10px 14px}.cover{min-height:calc(100svh - 140px);display:grid;grid-template-columns:1.1fr 1fr;align-items:center;gap:70px;padding:25px 5vw 50px}.cover-mark{grid-template-columns:repeat(3,10px);gap:5px;margin-bottom:50px;width:max-content}.cover-mark i{height:10px}.cover h1{font-size:clamp(42px,5vw,76px);font-weight:450;line-height:1.3;letter-spacing:-1.5px;margin:15px 0 25px}.cover p{max-width:490px;font-size:18px;line-height:1.9;color:#bdbdbd;margin:0}.cover-note{font-size:13px;line-height:2;color:#959595;margin-top:43px}.cover-visual svg{max-height:620px;opacity:.88}.cover-visual{border-left:1px solid #333;padding-left:30px}.complete #diagram{max-height:760px;overflow:auto;align-items:flex-start;padding:25px 18px}.complete #diagram svg{max-height:none;height:auto}.complete svg text{font-size:23px}.complete svg .small{font-size:20px}.complete .explanation{justify-content:flex-start}.hit.selected>rect:first-child,.hit.selected>circle{stroke:#fff;stroke-width:2.5}.hit.selected>.wire,.hit.selected>.gradient{stroke:#fff}.cover .hit{cursor:default}.cover .hit:hover>rect:first-child{stroke:inherit}.cover .eyebrow{font-size:12px;line-height:1.6;letter-spacing:1.6px}\n@media(min-width:1600px){.workspace{min-height:650px}.complete #diagram{max-height:850px}}\n@media(max-width:1100px){.bottom{gap:13px}.progress button{min-width:62px;flex-basis:62px}.cover{gap:35px;padding-left:20px;padding-right:20px}.cover h1{font-size:50px}.cover-visual{padding-left:15px}.cover p{font-size:16px}}\n@media(max-width:780px){main{padding-top:24px}.cover{grid-template-columns:1fr;gap:20px;padding:12px 15px 25px;min-height:0}.cover-mark{margin-bottom:30px}.cover h1{font-size:43px}.cover p{font-size:16px}.cover-note{margin-top:22px}.cover-visual{border-left:0;border-top:1px solid #333;padding:20px 0 0}.cover-visual svg{height:350px}.bottom{gap:10px;padding:14px 0 10px}.bottom>button{padding:9px 10px;font-size:12px}.progress{gap:8px}.progress button{flex-basis:65px;font-size:12px}.workspace{min-height:0}#diagram{padding:40px 8px 12px}.info-panel{width:min(310px,calc(100vw - 65px))}.complete #diagram{max-height:none;padding:44px 5px 15px}.complete svg text{font-size:24px}.complete svg .small{font-size:21px}}\n\n.complete .visual{min-height:0;overflow:hidden}.complete #diagram{overflow:hidden;max-height:none;min-height:0;padding:18px 12px 4px;touch-action:none}.complete #diagram svg{width:100%;height:100%;max-height:none;overflow:hidden;flex:none}.complete #diagram.zoomed{cursor:grab}.complete #diagram.dragging,.complete #diagram.dragging *{cursor:grabbing;user-select:none}.complete .controls{flex-shrink:0;padding:12px 18px 18px}.zoom-toolbar{display:flex;align-items:center;gap:4px;padding:3px;border:1px solid #3b3b3b;border-radius:7px;background:#1b1b1b}.controls .zoom-toolbar button{border:0;margin:0;padding:7px 12px;min-width:36px}.zoom-toolbar output{font:13px ui-monospace,monospace;min-width:52px;text-align:center;color:#bcbcbc}.controls .zoom-toolbar #zoom-fit{border-left:1px solid #414141;border-radius:0;font-size:13px;margin-left:5px}.controls .zoom-toolbar button:hover:not(:disabled){background:#303030}\n@media(min-width:781px){body.overview{overflow:hidden}body.overview main{height:100svh;min-height:0}body.overview .heading,body.overview .bottom{flex-shrink:0}body.overview .bottom{position:static}.workspace.complete{flex:1;min-height:0;height:0}.complete #diagram{flex:1;height:0}.complete .explanation{overflow-y:auto;min-height:0;scrollbar-color:#555 #171717}.complete .inspector{margin-top:auto}}\n@media(max-width:780px){.complete #diagram{flex:none;height:70svh;min-height:360px;max-height:740px;padding:35px 8px 4px}.complete .controls{padding:10px 18px 16px}.complete .explanation{overflow:visible}}\n\n\nsvg{--tensor-w:#BCA0F3;--tensor-i:#B1EF6B;--tensor-a:#F2C45F;--tensor-grad:#79D4F2}\nsvg .blue{fill:var(--tensor-i)}svg .wire{stroke:var(--tensor-i)}\n.semantic-legend{display:grid;gap:9px;font-size:12px;line-height:1.7;margin:12px 0}\n svg{--text:#e8e8e8;--muted:#ababab;font-family:Inter,\"PingFang SC\",system-ui,sans-serif} svg text{font-family:inherit} .hit{cursor:default}</style><defs><marker id=\"blueArrow\" markerWidth=\"10\" markerHeight=\"10\" refX=\"8\" refY=\"5\" orient=\"auto\"><path d=\"M1 1 L8 5 L1 9\" fill=\"none\" stroke=\"#B1EF6B\" stroke-width=\"1.3\"/></marker><marker id=\"purpleArrow\" markerWidth=\"10\" markerHeight=\"10\" refX=\"8\" refY=\"5\" orient=\"auto\"><path d=\"M1 1 L8 5 L1 9\" fill=\"none\" stroke=\"#79D4F2\" stroke-width=\"1.3\"/></marker><marker id=\"goldArrow\" markerWidth=\"10\" markerHeight=\"10\" refX=\"8\" refY=\"5\" orient=\"auto\"><path d=\"M1 1 L8 5 L1 9\" fill=\"none\" stroke=\"#BCA0F3\" stroke-width=\"1.3\"/></marker></defs><g class=\"hit\" data-node=\"x\" role=\"button\" tabindex=\"0\" aria-label=\"激活 X · 当前输入的数据表示\"><rect x=\"67\" y=\"42\" width=\"186\" height=\"96\" fill=\"#111\" stroke=\"#B1EF6B\" stroke-opacity=\".5\"/><rect class=\"grid-cell\" x=\"70\" y=\"45\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.22\"/><rect class=\"grid-cell\" x=\"92.5\" y=\"45\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.6866666666666666\"/><rect class=\"grid-cell\" x=\"115\" y=\"45\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.42000000000000004\"/><rect class=\"grid-cell\" x=\"137.5\" y=\"45\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.8866666666666666\"/><rect class=\"grid-cell\" x=\"160\" y=\"45\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.62\"/><rect class=\"grid-cell\" x=\"182.5\" y=\"45\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.35333333333333333\"/><rect class=\"grid-cell\" x=\"205\" y=\"45\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.82\"/><rect class=\"grid-cell\" x=\"227.5\" y=\"45\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.5533333333333333\"/><rect class=\"grid-cell\" x=\"70\" y=\"67.5\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.62\"/><rect class=\"grid-cell\" x=\"92.5\" y=\"67.5\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.35333333333333333\"/><rect class=\"grid-cell\" x=\"115\" y=\"67.5\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.82\"/><rect class=\"grid-cell\" x=\"137.5\" y=\"67.5\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.5533333333333333\"/><rect class=\"grid-cell\" x=\"160\" y=\"67.5\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.2866666666666667\"/><rect class=\"grid-cell\" x=\"182.5\" y=\"67.5\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.7533333333333333\"/><rect class=\"grid-cell\" x=\"205\" y=\"67.5\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.4866666666666667\"/><rect class=\"grid-cell\" x=\"227.5\" y=\"67.5\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.22\"/><rect class=\"grid-cell\" x=\"70\" y=\"90\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.2866666666666667\"/><rect class=\"grid-cell\" x=\"92.5\" y=\"90\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.7533333333333333\"/><rect class=\"grid-cell\" x=\"115\" y=\"90\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.4866666666666667\"/><rect class=\"grid-cell\" x=\"137.5\" y=\"90\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.22\"/><rect class=\"grid-cell\" x=\"160\" y=\"90\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.6866666666666666\"/><rect class=\"grid-cell\" x=\"182.5\" y=\"90\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.42000000000000004\"/><rect class=\"grid-cell\" x=\"205\" y=\"90\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.8866666666666666\"/><rect class=\"grid-cell\" x=\"227.5\" y=\"90\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.62\"/><rect class=\"grid-cell\" x=\"70\" y=\"112.5\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.6866666666666666\"/><rect class=\"grid-cell\" x=\"92.5\" y=\"112.5\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.42000000000000004\"/><rect class=\"grid-cell\" x=\"115\" y=\"112.5\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.8866666666666666\"/><rect class=\"grid-cell\" x=\"137.5\" y=\"112.5\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.62\"/><rect class=\"grid-cell\" x=\"160\" y=\"112.5\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.35333333333333333\"/><rect class=\"grid-cell\" x=\"182.5\" y=\"112.5\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.82\"/><rect class=\"grid-cell\" x=\"205\" y=\"112.5\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.5533333333333333\"/><rect class=\"grid-cell\" x=\"227.5\" y=\"112.5\" width=\"20.5\" height=\"20.5\" fill=\"#B1EF6B\" opacity=\"0.2866666666666667\"/></g></svg>"
+        },
+        {
+          "id": "data-3",
+          "title": "数值向量",
+          "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 320 180\" role=\"img\" aria-label=\"数值向量\"><style>\nsvg{color-scheme:dark;--bg:#111;--fg:#e8e8e8;--muted:#ababab;--blue:#8cbdff;--gold:#BCA0F3;--green:#79D4F2;--line:#353535}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,\"PingFang SC\",\"Microsoft YaHei\",system-ui,sans-serif}button,select,input{font:inherit;color:inherit}button,select{background:#202020;border:1px solid #555;border-radius:5px;padding:8px 12px}button{cursor:pointer}button:hover{border-color:#aaa}button:disabled{opacity:.35;cursor:default}button:focus-visible,select:focus-visible,[tabindex]:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offset:3px}button.active{border-color:var(--blue);color:var(--blue);background:#202832}a{color:#b8cce4;text-underline-offset:4px}main{max-width:1700px;margin:auto;padding:32px 3vw 0;min-height:100svh;display:flex;flex-direction:column}.heading{display:flex;justify-content:space-between;gap:20px;margin-bottom:24px}.eyebrow{font:12px/1.5 ui-monospace,monospace;letter-spacing:2px;color:var(--blue);margin-bottom:10px}h1{font-size:clamp(26px,2.5vw,38px);font-weight:500;margin:0;line-height:1.4}.sub{font-size:15px;color:var(--muted);line-height:1.75;margin:8px 0 0}.counter{font:48px ui-monospace,monospace;color:#777}.workspace{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(350px,1fr);border:1px solid var(--line);border-radius:10px;overflow:hidden;flex:1;min-height:620px}.visual{background:#131313;position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}.canvas{height:540px;flex:1;min-height:430px;overflow:hidden;touch-action:none;display:flex;align-items:center;justify-content:center;padding:45px 14px 12px}.canvas svg{display:block;width:100%;height:100%;min-height:0;min-width:0;flex:none;overflow:hidden}.canvas.zoomed{cursor:grab}.controls{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 18px 22px;min-height:60px}.controls label{font-size:13px;color:#bbb}.controls button,.controls select{font-size:13px}.controls input{accent-color:var(--blue);width:180px}.zoom{display:flex;gap:4px;padding:0 18px 10px;justify-content:flex-end}.zoom button{font-size:12px;padding:5px 10px;background:transparent}.info-wrap{position:absolute;right:16px;top:16px;z-index:3}.info{border-radius:50%;padding:0;width:28px;height:28px;font:italic 18px Georgia}.info-panel{position:absolute;right:0;top:38px;width:300px;border:1px solid #555;border-radius:8px;padding:20px;background:#202020;box-shadow:0 12px 40px #0009;font-size:13px;line-height:1.85}.info-panel p{margin:9px 0}.explanation{padding:28px 30px;background:#171717;border-left:1px solid var(--line);display:flex;flex-direction:column}.section-label{font:12px ui-monospace,monospace;letter-spacing:2px;color:var(--muted);margin-bottom:16px}h2{font-size:23px;line-height:1.5;font-weight:550;margin:0 0 18px}.copy p{font-size:16px;line-height:1.9;color:#c8c8c8;margin:0 0 18px}strong{color:#eee;font-weight:550}.formula{background:#1c222a;border-left:2px solid var(--blue);padding:13px 15px;font:14px/1.9 ui-monospace,monospace;color:#c1d9f8;white-space:pre-wrap;overflow-wrap:anywhere;margin:4px 0 22px}.inspector{border-top:1px solid var(--line);margin-top:auto;padding-top:18px}.inspector h3{font-size:16px;font-weight:550;margin:8px 0}.inspector p{font-size:14px;color:var(--muted);line-height:1.8;margin:0}.source{font-size:12px;line-height:1.9;color:#aaa;margin-top:18px}.bottom{position:sticky;bottom:0;z-index:5;background:#111f;display:flex;gap:16px;align-items:center;padding:18px 0;margin-top:12px}.steps{display:flex;flex:1;min-width:0;overflow:auto;gap:9px;scrollbar-width:thin}.steps button{flex:0 0 auto;background:none;border:0;border-bottom:2px solid #3b3b3b;border-radius:0;white-space:nowrap;font-size:12px;padding:9px 8px;min-width:70px;color:#aaa}.steps button.active{border-color:var(--blue);color:var(--blue)}.bottom>button{white-space:nowrap;font-size:13px}.cover{display:grid;grid-template-columns:1.05fr 1fr;align-items:center;gap:50px;min-height:calc(100svh - 125px);padding:30px 3vw 55px}.cover h1{font-size:clamp(42px,5vw,72px);line-height:1.3;letter-spacing:-1px;margin:20px 0 25px}.cover p{font-size:18px;color:#bdbdbd;line-height:1.9;max-width:540px}.cover-note{font-size:13px;color:#aaa;line-height:2;margin-top:35px}.cover-visual{height:540px;border-left:1px solid #333;padding-left:24px}.cover-visual svg{width:100%;height:100%}svg text{font-family:inherit;fill:#e8e8e8;font-size:18px}svg .small{font-size:14px;fill:#ababab}svg .tiny{font-size:12px;fill:#ababab}svg .op{fill:#505050;stroke:#858585;stroke-width:1.5}svg .op-label{font-size:18px;font-weight:650;fill:#fff;dominant-baseline:middle}svg .hit{cursor:pointer}svg .hit:hover>.outline,svg .hit.selected>.outline,svg .hit:focus>.outline{stroke:#fff;stroke-width:2.5}svg .comm{stroke:#fff;stroke-width:2;stroke-dasharray:6 5;fill:none}svg .rank{fill:#191919;stroke:#545454;stroke-width:1.2}svg .wire{fill:none;stroke-width:2}svg .grid-cell{shape-rendering:geometricPrecision}[hidden]{display:none!important}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}@media(min-width:1000px){body.overview{overflow:hidden}.overview main{height:100svh;min-height:0}.overview .workspace{min-height:0;height:0}.overview .canvas{height:0;min-height:0}.overview .explanation{overflow-y:auto}.overview .heading,.overview .bottom{flex-shrink:0}}@media(max-width:1000px){main{padding:24px 20px 0}.workspace{grid-template-columns:minmax(0,1.3fr) minmax(310px,1fr)}.explanation{padding:24px}.cover{gap:22px;padding:20px}.cover h1{font-size:48px}}@media(max-width:760px){main{padding:22px 14px 0}.workspace{grid-template-columns:1fr;min-height:0}.canvas{height:440px;min-height:0;flex:none;padding-top:48px}.explanation{border-left:0;border-top:1px solid #353535;padding:24px}.cover{grid-template-columns:1fr;min-height:0;padding:25px 12px;gap:15px}.cover-visual{height:340px;border-left:0;border-top:1px solid #333;padding:15px 0 0}.cover h1{font-size:43px}.cover p{font-size:16px}.counter{font-size:34px}.bottom{gap:7px;padding:12px 0}.bottom>button{font-size:12px;padding:8px}.info-panel{width:min(300px,calc(100vw - 66px))}.controls{padding:8px 12px 18px}.copy p{font-size:15px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}\n\nsvg{--tensor-w:#BCA0F3;--tensor-i:#B1EF6B;--tensor-a:#F2C45F;--tensor-grad:#79D4F2}\nsvg .blue{fill:var(--tensor-i)}svg .wire{stroke:var(--tensor-i)}\n.semantic-legend{display:grid;gap:9px;font-size:12px;line-height:1.7;margin:12px 0}\n svg{--text:#e8e8e8;--muted:#ababab;font-family:Inter,\"PingFang SC\",system-ui,sans-serif} svg text{font-family:inherit} .hit{cursor:default}</style><defs><marker id=\"ba\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto-start-reverse\"><path d=\"M0 0L10 5L0 10Z\" fill=\"#B1EF6B\"/></marker><marker id=\"ga\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto-start-reverse\"><path d=\"M0 0L10 5L0 10Z\" fill=\"#BCA0F3\"/></marker><marker id=\"pa\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto-start-reverse\"><path d=\"M0 0L10 5L0 10Z\" fill=\"#79D4F2\"/></marker><marker id=\"ca\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto-start-reverse\"><path d=\"M0 0L10 5L0 10Z\" fill=\"#d6d6d6\"/></marker></defs><g class=\"hit\" tabindex=\"0\" role=\"button\" data-node=\"sample\" aria-label=\"数值向量\"><rect class=\"outline data-block vector-outline\" data-length=\"6\" x=\"82\" y=\"77\" width=\"156\" height=\"26\" rx=\"4\" fill=\"#131313\" stroke=\"#B1EF6B\" stroke-width=\"1.2\"/><rect class=\"vector-cell\" x=\"84\" y=\"79\" width=\"22\" height=\"22\" fill=\"#B1EF6B\" opacity=\"0.22\"/><text x=\"95\" y=\"95\" class=\"small\" text-anchor=\"middle\" style=\"fill:#B1EF6B\">1</text><rect class=\"vector-cell\" x=\"110\" y=\"79\" width=\"22\" height=\"22\" fill=\"#B1EF6B\" opacity=\"0.22\"/><text x=\"121\" y=\"95\" class=\"small\" text-anchor=\"middle\" style=\"fill:#B1EF6B\">2</text><rect class=\"vector-cell\" x=\"136\" y=\"79\" width=\"22\" height=\"22\" fill=\"#B1EF6B\" opacity=\"0.22\"/><text x=\"147\" y=\"95\" class=\"small\" text-anchor=\"middle\" style=\"fill:#B1EF6B\">3</text><rect class=\"vector-cell\" x=\"162\" y=\"79\" width=\"22\" height=\"22\" fill=\"#B1EF6B\" opacity=\"0.22\"/><text x=\"173\" y=\"95\" class=\"small\" text-anchor=\"middle\" style=\"fill:#B1EF6B\">4</text><rect class=\"vector-cell\" x=\"188\" y=\"79\" width=\"22\" height=\"22\" fill=\"#B1EF6B\" opacity=\"0.22\"/><text x=\"199\" y=\"95\" class=\"small\" text-anchor=\"middle\" style=\"fill:#B1EF6B\">5</text><rect class=\"vector-cell\" x=\"214\" y=\"79\" width=\"22\" height=\"22\" fill=\"#B1EF6B\" opacity=\"0.22\"/><text x=\"225\" y=\"95\" class=\"small\" text-anchor=\"middle\" style=\"fill:#B1EF6B\">6</text></g></svg>"
+        },
+        {
+          "id": "data-4",
+          "title": "数据角色",
+          "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 480 180\"><g transform=\"translate(6 55)\"><rect width=\"84\" height=\"48\" rx=\"4\" fill=\"#111\" stroke=\"#B1EF6B\"/><rect x=\"6\" y=\"6\" width=\"15\" height=\"15\" fill=\"#B1EF6B\" fill-opacity=\".25\"/><rect x=\"25\" y=\"6\" width=\"15\" height=\"15\" fill=\"#B1EF6B\" fill-opacity=\".25\"/><rect x=\"44\" y=\"6\" width=\"15\" height=\"15\" fill=\"#B1EF6B\" fill-opacity=\".25\"/><rect x=\"63\" y=\"6\" width=\"15\" height=\"15\" fill=\"#B1EF6B\" fill-opacity=\".25\"/><rect x=\"6\" y=\"25\" width=\"15\" height=\"15\" fill=\"#B1EF6B\" fill-opacity=\".25\"/><rect x=\"25\" y=\"25\" width=\"15\" height=\"15\" fill=\"#B1EF6B\" fill-opacity=\".25\"/><rect x=\"44\" y=\"25\" width=\"15\" height=\"15\" fill=\"#B1EF6B\" fill-opacity=\".25\"/><rect x=\"63\" y=\"25\" width=\"15\" height=\"15\" fill=\"#B1EF6B\" fill-opacity=\".25\"/><text x=\"42\" y=\"76\" text-anchor=\"middle\" fill=\"#B1EF6B\" font-size=\"13\" font-family=\"system-ui\">激活</text></g><g transform=\"translate(102 55)\"><rect width=\"84\" height=\"48\" rx=\"4\" fill=\"#111\" stroke=\"#BCA0F3\"/><rect x=\"6\" y=\"6\" width=\"15\" height=\"15\" fill=\"#BCA0F3\" fill-opacity=\".25\"/><rect x=\"25\" y=\"6\" width=\"15\" height=\"15\" fill=\"#BCA0F3\" fill-opacity=\".25\"/><rect x=\"44\" y=\"6\" width=\"15\" height=\"15\" fill=\"#BCA0F3\" fill-opacity=\".25\"/><rect x=\"63\" y=\"6\" width=\"15\" height=\"15\" fill=\"#BCA0F3\" fill-opacity=\".25\"/><rect x=\"6\" y=\"25\" width=\"15\" height=\"15\" fill=\"#BCA0F3\" fill-opacity=\".25\"/><rect x=\"25\" y=\"25\" width=\"15\" height=\"15\" fill=\"#BCA0F3\" fill-opacity=\".25\"/><rect x=\"44\" y=\"25\" width=\"15\" height=\"15\" fill=\"#BCA0F3\" fill-opacity=\".25\"/><rect x=\"63\" y=\"25\" width=\"15\" height=\"15\" fill=\"#BCA0F3\" fill-opacity=\".25\"/><text x=\"42\" y=\"76\" text-anchor=\"middle\" fill=\"#BCA0F3\" font-size=\"13\" font-family=\"system-ui\">参数</text></g><g transform=\"translate(198 55)\"><rect width=\"84\" height=\"48\" rx=\"4\" fill=\"#111\" stroke=\"#F2C45F\"/><rect x=\"6\" y=\"6\" width=\"15\" height=\"15\" fill=\"#F2C45F\" fill-opacity=\".25\"/><rect x=\"25\" y=\"6\" width=\"15\" height=\"15\" fill=\"#F2C45F\" fill-opacity=\".25\"/><rect x=\"44\" y=\"6\" width=\"15\" height=\"15\" fill=\"#F2C45F\" fill-opacity=\".25\"/><rect x=\"63\" y=\"6\" width=\"15\" height=\"15\" fill=\"#F2C45F\" fill-opacity=\".25\"/><rect x=\"6\" y=\"25\" width=\"15\" height=\"15\" fill=\"#F2C45F\" fill-opacity=\".25\"/><rect x=\"25\" y=\"25\" width=\"15\" height=\"15\" fill=\"#F2C45F\" fill-opacity=\".25\"/><rect x=\"44\" y=\"25\" width=\"15\" height=\"15\" fill=\"#F2C45F\" fill-opacity=\".25\"/><rect x=\"63\" y=\"25\" width=\"15\" height=\"15\" fill=\"#F2C45F\" fill-opacity=\".25\"/><text x=\"42\" y=\"76\" text-anchor=\"middle\" fill=\"#F2C45F\" font-size=\"13\" font-family=\"system-ui\">聚合</text></g><g transform=\"translate(294 55)\"><rect width=\"84\" height=\"48\" rx=\"4\" fill=\"#111\" stroke=\"#79D4F2\"/><rect x=\"6\" y=\"6\" width=\"15\" height=\"15\" fill=\"#79D4F2\" fill-opacity=\".25\"/><rect x=\"25\" y=\"6\" width=\"15\" height=\"15\" fill=\"#79D4F2\" fill-opacity=\".25\"/><rect x=\"44\" y=\"6\" width=\"15\" height=\"15\" fill=\"#79D4F2\" fill-opacity=\".25\"/><rect x=\"63\" y=\"6\" width=\"15\" height=\"15\" fill=\"#79D4F2\" fill-opacity=\".25\"/><rect x=\"6\" y=\"25\" width=\"15\" height=\"15\" fill=\"#79D4F2\" fill-opacity=\".25\"/><rect x=\"25\" y=\"25\" width=\"15\" height=\"15\" fill=\"#79D4F2\" fill-opacity=\".25\"/><rect x=\"44\" y=\"25\" width=\"15\" height=\"15\" fill=\"#79D4F2\" fill-opacity=\".25\"/><rect x=\"63\" y=\"25\" width=\"15\" height=\"15\" fill=\"#79D4F2\" fill-opacity=\".25\"/><text x=\"42\" y=\"76\" text-anchor=\"middle\" fill=\"#79D4F2\" font-size=\"13\" font-family=\"system-ui\">梯度</text></g><g transform=\"translate(390 55)\"><rect width=\"84\" height=\"48\" rx=\"4\" fill=\"#111\" stroke=\"#B0B0B0\"/><rect x=\"6\" y=\"6\" width=\"15\" height=\"15\" fill=\"#B0B0B0\" fill-opacity=\".25\"/><rect x=\"25\" y=\"6\" width=\"15\" height=\"15\" fill=\"#B0B0B0\" fill-opacity=\".25\"/><rect x=\"44\" y=\"6\" width=\"15\" height=\"15\" fill=\"#B0B0B0\" fill-opacity=\".25\"/><rect x=\"63\" y=\"6\" width=\"15\" height=\"15\" fill=\"#B0B0B0\" fill-opacity=\".25\"/><rect x=\"6\" y=\"25\" width=\"15\" height=\"15\" fill=\"#B0B0B0\" fill-opacity=\".25\"/><rect x=\"25\" y=\"25\" width=\"15\" height=\"15\" fill=\"#B0B0B0\" fill-opacity=\".25\"/><rect x=\"44\" y=\"25\" width=\"15\" height=\"15\" fill=\"#B0B0B0\" fill-opacity=\".25\"/><rect x=\"63\" y=\"25\" width=\"15\" height=\"15\" fill=\"#B0B0B0\" fill-opacity=\".25\"/><text x=\"42\" y=\"76\" text-anchor=\"middle\" fill=\"#B0B0B0\" font-size=\"13\" font-family=\"system-ui\">优化器</text></g></svg>"
+        },
+        {
+          "id": "data-5",
+          "title": "KV cache",
+          "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 320 180\" role=\"img\" aria-label=\"KV cache\"><style>\nsvg{--bg:#111;--panel:#171717;--text:#e8e8e8;--muted:#ababab;--blue:#8cbdff;--gold:#BCA0F3}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,\"PingFang SC\",\"Microsoft YaHei\",system-ui,sans-serif}button,select,input{font:inherit}button{color:inherit;background:#222;border:1px solid #555;border-radius:5px;cursor:pointer;padding:8px 12px}button:hover{border-color:#eee}button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--blue);outline-offset:3px}main{height:100svh;min-height:680px;display:flex;flex-direction:column;padding:28px 3vw 0}.heading{display:flex;align-items:center;justify-content:space-between;min-height:105px;padding-bottom:20px}.kicker{font:12px ui-monospace,monospace;letter-spacing:2px;color:var(--muted)}h1{font-size:clamp(24px,2.5vw,38px);font-weight:500;margin:10px 0 0}#count{font:40px ui-monospace,monospace;color:#777}.workspace{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(330px,1fr);flex:1;min-height:0;gap:2px}.visual{position:relative;background:#131313;display:flex;flex-direction:column;min-height:0;overflow:hidden;border-radius:8px}#canvas{flex:1;min-height:0;touch-action:none;cursor:grab}svg{width:100%;height:100%;display:block}svg text{font-family:inherit;fill:#e8e8e8;font-size:16px}svg .hit{cursor:pointer}svg .hit:hover>rect,svg .hit.selected>rect,svg .hit:hover>circle,svg .hit.selected>circle{stroke:#fff;stroke-width:2.3}.op{fill:#505050;stroke:#858585;stroke-width:1.5}.op-label{font-size:18px;font-weight:650;fill:white;dominant-baseline:middle}.small{font-size:14px;fill:#ababab}aside{background:#171717;border-radius:8px;padding:28px 30px;overflow:auto}aside h2{font-size:23px;font-weight:500;line-height:1.5;margin:12px 0 18px}aside p{font-size:16px;line-height:1.85;color:#c8c8c8;margin:0 0 17px}.formula{padding:13px 16px;background:#222;border-left:2px solid var(--blue);font:14px/1.8 ui-monospace,monospace;white-space:pre-line;margin:20px 0;color:#c9deff}#inspector{border-top:1px solid #3b3b3b;margin-top:23px;padding-top:18px}#inspector h3{font-size:16px;font-weight:550;margin:10px 0}#inspector p{font-size:14px;color:#ababab}.source{font-size:12px;line-height:1.8;color:#ababab;margin-top:20px}.source a{color:#c4c4c4}.toolbar{position:absolute;top:13px;left:13px;display:flex;gap:5px;z-index:2}.toolbar button{background:#191919e8;font-size:12px;padding:6px 10px}.info-toggle{position:absolute;right:16px;top:14px;border-radius:50%;width:28px;height:28px;padding:0;font:italic 18px Georgia;z-index:4}.info{position:absolute;right:15px;top:52px;max-width:355px;width:calc(100% - 30px);padding:22px;background:#242424;border:1px solid #555;border-radius:8px;z-index:5;font-size:13px;line-height:1.85;box-shadow:0 12px 40px #0008}.info svg{height:120px}.controls{display:flex;justify-content:center;align-items:center;gap:8px;min-height:53px;flex-wrap:wrap;padding:10px;font-size:13px}.controls:empty{display:none}.controls button.active{border-color:var(--blue);color:var(--blue)}input{accent-color:var(--blue)}footer{display:flex;gap:15px;align-items:center;height:85px;flex-shrink:0}#steps{display:flex;overflow:auto;gap:9px;flex:1;scrollbar-width:thin}#steps button{flex:0 0 82px;font-size:12px;line-height:1.8;border:0;border-bottom:2px solid #3a3a3a;border-radius:0;background:none;padding:7px 0;color:#ababab}#steps button.current{border-bottom-color:var(--blue);color:#d4e6ff}footer>button{white-space:nowrap;font-size:13px}#next{background:#e8e8e8;color:#111}.cover aside{display:flex;flex-direction:column;justify-content:center}.cover aside h2{font-size:40px}.cover .heading h1{font-size:20px}a{overflow-wrap:anywhere}[hidden]{display:none!important}@media(max-width:800px){main{height:auto;min-height:100svh;padding:20px 16px 0}.workspace{grid-template-columns:1fr}.visual{height:560px}aside{overflow:visible;padding:24px}footer{position:sticky;bottom:0;background:#111;z-index:6;gap:8px}.heading{min-height:100px}#count{font-size:28px}.cover aside h2{font-size:30px}}@media(min-width:1700px){aside{padding:36px 40px}}\n\n.hero{flex:1;min-height:0;display:grid;grid-template-columns:1.1fr 1fr;align-items:center;gap:70px;padding:25px 5vw 50px}.hero-mark{display:grid;grid-template-columns:repeat(3,10px);gap:5px;margin-bottom:50px;width:max-content}.hero-mark i{height:10px;background:#8CBDFF}.hero-mark i:nth-child(3n){opacity:.45}.hero h1{font-size:clamp(42px,5vw,76px);font-weight:450;line-height:1.3;letter-spacing:-1.5px;margin:15px 0 25px}.hero p{max-width:490px;font-size:18px;line-height:1.9;color:#bdbdbd;margin:0}.hero-note{font-size:13px;line-height:2;color:#ababab;margin-top:43px}.hero-art{border-left:1px solid #333;padding-left:30px;height:620px;max-height:calc(100svh - 170px)}.hero .kicker{line-height:1.6;letter-spacing:1.6px}.hero .hit{cursor:default}.hero .hit:hover>rect{stroke-width:1.2}body.cover main{padding-top:34px}@media(max-width:1100px){.hero{gap:35px;padding-left:20px;padding-right:20px}.hero h1{font-size:50px}.hero-art{padding-left:15px}.hero p{font-size:16px}}@media(max-width:800px){.hero{grid-template-columns:1fr;gap:20px;padding:12px 15px 25px}.hero-mark{margin-bottom:30px}.hero h1{font-size:43px}.hero-note{margin-top:22px}.hero-art{border-left:0;border-top:1px solid #333;padding:20px 0 0;height:380px;max-height:none}.hero-art svg{height:350px}}\nbody.rounds .workspace{grid-template-columns:minmax(0,2.15fr) minmax(330px,1fr)}@media(max-width:800px){body.rounds .workspace{grid-template-columns:1fr}}\nsvg .rank-pin{stroke:none!important}svg .rank-label{font-size:20px;font-weight:650;fill:#fff}svg .rank-outline{stroke:#ddd;stroke-width:1.8}svg .rank:hover>.rank-outline,svg .rank.selected>.rank-outline{stroke:#fff;stroke-width:2.5}\n\nsvg{--tensor-w:#BCA0F3;--tensor-i:#B1EF6B;--tensor-a:#F2C45F;--tensor-grad:#79D4F2}\nsvg .blue{fill:var(--tensor-i)}svg .wire{stroke:var(--tensor-i)}\n.semantic-legend{display:grid;gap:9px;font-size:12px;line-height:1.7;margin:12px 0}\n svg{--text:#e8e8e8;--muted:#ababab;font-family:Inter,\"PingFang SC\",system-ui,sans-serif} svg text{font-family:inherit} .hit{cursor:default}</style><defs><marker id=\"blue-0\" markerWidth=\"8\" markerHeight=\"8\" refX=\"12\" refY=\"4\" orient=\"auto\" overflow=\"visible\"><path d=\"M1 1 L7 4 L1 7\" fill=\"none\" stroke=\"#B1EF6B\" stroke-width=\"1.4\"/></marker><marker id=\"gold-0\" markerWidth=\"8\" markerHeight=\"8\" refX=\"12\" refY=\"4\" orient=\"auto\" overflow=\"visible\"><path d=\"M1 1 L7 4 L1 7\" fill=\"none\" stroke=\"#BCA0F3\" stroke-width=\"1.4\"/></marker><marker id=\"white-0\" markerWidth=\"8\" markerHeight=\"8\" refX=\"12\" refY=\"4\" orient=\"auto\" overflow=\"visible\"><path d=\"M1 1 L7 4 L1 7\" fill=\"none\" stroke=\"#E8E8E8\" stroke-width=\"1.4\"/></marker></defs><g class=\"hit\" data-node=\"n0\" role=\"button\" tabindex=\"0\" aria-label=\"K cache · V cache\"><rect x=\"35\" y=\"50\" width=\"250\" height=\"35\" rx=\"6\" fill=\"#131313\" stroke=\"#B1EF6B\" stroke-width=\"1.2\"/><rect x=\"42.5\" y=\"55\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"56.5\" y=\"55\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"70.5\" y=\"55\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"84.5\" y=\"55\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"98.5\" y=\"55\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"112.5\" y=\"55\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"126.5\" y=\"55\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"140.5\" y=\"55\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"154.5\" y=\"55\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"168.5\" y=\"55\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"182.5\" y=\"55\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"196.5\" y=\"55\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"210.5\" y=\"55\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"224.5\" y=\"55\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"238.5\" y=\"55\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"252.5\" y=\"55\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"266.5\" y=\"55\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"42.5\" y=\"69\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"56.5\" y=\"69\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"70.5\" y=\"69\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"84.5\" y=\"69\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"98.5\" y=\"69\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"112.5\" y=\"69\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"126.5\" y=\"69\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"140.5\" y=\"69\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"154.5\" y=\"69\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"168.5\" y=\"69\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"182.5\" y=\"69\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"196.5\" y=\"69\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"210.5\" y=\"69\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"224.5\" y=\"69\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"238.5\" y=\"69\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"252.5\" y=\"69\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"266.5\" y=\"69\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><text x=\"160\" y=\"73\" text-anchor=\"middle\" style=\"fill:#B1EF6B;font-size:14px;paint-order:stroke;stroke:#131313;stroke-width:4px\">K cache · V cache</text></g><g class=\"hit\" data-node=\"n1\" role=\"button\" tabindex=\"0\" aria-label=\"当前 token 的 K / V\"><rect x=\"35\" y=\"105\" width=\"250\" height=\"35\" rx=\"6\" fill=\"#131313\" stroke=\"#B1EF6B\" stroke-width=\"1.2\"/><rect x=\"42.5\" y=\"110\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"56.5\" y=\"110\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"70.5\" y=\"110\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"84.5\" y=\"110\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"98.5\" y=\"110\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"112.5\" y=\"110\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"126.5\" y=\"110\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"140.5\" y=\"110\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"154.5\" y=\"110\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"168.5\" y=\"110\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"182.5\" y=\"110\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"196.5\" y=\"110\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"210.5\" y=\"110\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"224.5\" y=\"110\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"238.5\" y=\"110\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"252.5\" y=\"110\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"266.5\" y=\"110\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"42.5\" y=\"124\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"56.5\" y=\"124\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"70.5\" y=\"124\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"84.5\" y=\"124\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"98.5\" y=\"124\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"112.5\" y=\"124\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"126.5\" y=\"124\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"140.5\" y=\"124\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"154.5\" y=\"124\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"168.5\" y=\"124\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"182.5\" y=\"124\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"196.5\" y=\"124\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"210.5\" y=\"124\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"224.5\" y=\"124\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"238.5\" y=\"124\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"252.5\" y=\"124\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><rect x=\"266.5\" y=\"124\" width=\"11\" height=\"11\" fill=\"#B1EF6B\" opacity=\".22\"/><text x=\"160\" y=\"128\" text-anchor=\"middle\" style=\"fill:#B1EF6B;font-size:14px;paint-order:stroke;stroke:#131313;stroke-width:4px\">当前 token 的 K / V</text></g></svg>"
+        },
+        {
+          "id": "data-6",
+          "title": "分块状态",
+          "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 440 160\"><image x=\"0\" y=\"20\" width=\"220\" height=\"130\" href=\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjAgMTgwIiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IuW3suWujOaIkOW9kue6pueahOWIhuWdlyI+PHN0eWxlPgpzdmd7Y29sb3Itc2NoZW1lOmRhcms7LS1iZzojMTExOy0tZmc6I2U4ZThlODstLW11dGVkOiNhYmFiYWI7LS1ibHVlOiM4Y2JkZmY7LS1nb2xkOiNCQ0EwRjM7LS1ncmVlbjojNzlENEYyOy0tbGluZTojMzUzNTM1fSp7Ym94LXNpemluZzpib3JkZXItYm94fWJvZHl7bWFyZ2luOjA7YmFja2dyb3VuZDp2YXIoLS1iZyk7Y29sb3I6dmFyKC0tZmcpO2ZvbnQtZmFtaWx5OkludGVyLCJQaW5nRmFuZyBTQyIsIk1pY3Jvc29mdCBZYUhlaSIsc3lzdGVtLXVpLHNhbnMtc2VyaWZ9YnV0dG9uLHNlbGVjdCxpbnB1dHtmb250OmluaGVyaXQ7Y29sb3I6aW5oZXJpdH1idXR0b24sc2VsZWN0e2JhY2tncm91bmQ6IzIwMjAyMDtib3JkZXI6MXB4IHNvbGlkICM1NTU7Ym9yZGVyLXJhZGl1czo1cHg7cGFkZGluZzo4cHggMTJweH1idXR0b257Y3Vyc29yOnBvaW50ZXJ9YnV0dG9uOmhvdmVye2JvcmRlci1jb2xvcjojYWFhfWJ1dHRvbjpkaXNhYmxlZHtvcGFjaXR5Oi4zNTtjdXJzb3I6ZGVmYXVsdH1idXR0b246Zm9jdXMtdmlzaWJsZSxzZWxlY3Q6Zm9jdXMtdmlzaWJsZSxbdGFiaW5kZXhdOmZvY3VzLXZpc2libGUsYTpmb2N1cy12aXNpYmxle291dGxpbmU6MnB4IHNvbGlkIHZhcigtLWJsdWUpO291dGxpbmUtb2Zmc2V0OjNweH1idXR0b24uYWN0aXZle2JvcmRlci1jb2xvcjp2YXIoLS1ibHVlKTtjb2xvcjp2YXIoLS1ibHVlKTtiYWNrZ3JvdW5kOiMyMDI4MzJ9YXtjb2xvcjojYjhjY2U0O3RleHQtdW5kZXJsaW5lLW9mZnNldDo0cHh9bWFpbnttYXgtd2lkdGg6MTcwMHB4O21hcmdpbjphdXRvO3BhZGRpbmc6MzJweCAzdncgMDttaW4taGVpZ2h0OjEwMHN2aDtkaXNwbGF5OmZsZXg7ZmxleC1kaXJlY3Rpb246Y29sdW1ufS5oZWFkaW5ne2Rpc3BsYXk6ZmxleDtqdXN0aWZ5LWNvbnRlbnQ6c3BhY2UtYmV0d2VlbjtnYXA6MjBweDttYXJnaW4tYm90dG9tOjI0cHh9LmV5ZWJyb3d7Zm9udDoxMnB4LzEuNSB1aS1tb25vc3BhY2UsbW9ub3NwYWNlO2xldHRlci1zcGFjaW5nOjJweDtjb2xvcjp2YXIoLS1ibHVlKTttYXJnaW4tYm90dG9tOjEwcHh9aDF7Zm9udC1zaXplOmNsYW1wKDI2cHgsMi41dncsMzhweCk7Zm9udC13ZWlnaHQ6NTAwO21hcmdpbjowO2xpbmUtaGVpZ2h0OjEuNH0uc3Vie2ZvbnQtc2l6ZToxNXB4O2NvbG9yOnZhcigtLW11dGVkKTtsaW5lLWhlaWdodDoxLjc1O21hcmdpbjo4cHggMCAwfS5jb3VudGVye2ZvbnQ6NDhweCB1aS1tb25vc3BhY2UsbW9ub3NwYWNlO2NvbG9yOiM3Nzd9LndvcmtzcGFjZXtkaXNwbGF5OmdyaWQ7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOm1pbm1heCgwLDEuNmZyKSBtaW5tYXgoMzUwcHgsMWZyKTtib3JkZXI6MXB4IHNvbGlkIHZhcigtLWxpbmUpO2JvcmRlci1yYWRpdXM6MTBweDtvdmVyZmxvdzpoaWRkZW47ZmxleDoxO21pbi1oZWlnaHQ6NjIwcHh9LnZpc3VhbHtiYWNrZ3JvdW5kOiMxMzEzMTM7cG9zaXRpb246cmVsYXRpdmU7ZGlzcGxheTpmbGV4O2ZsZXgtZGlyZWN0aW9uOmNvbHVtbjttaW4td2lkdGg6MDttaW4taGVpZ2h0OjA7b3ZlcmZsb3c6aGlkZGVufS5jYW52YXN7aGVpZ2h0OjU0MHB4O2ZsZXg6MTttaW4taGVpZ2h0OjQzMHB4O292ZXJmbG93OmhpZGRlbjt0b3VjaC1hY3Rpb246bm9uZTtkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2p1c3RpZnktY29udGVudDpjZW50ZXI7cGFkZGluZzo0NXB4IDE0cHggMTJweH0uY2FudmFzIHN2Z3tkaXNwbGF5OmJsb2NrO3dpZHRoOjEwMCU7aGVpZ2h0OjEwMCU7bWluLWhlaWdodDowO21pbi13aWR0aDowO2ZsZXg6bm9uZTtvdmVyZmxvdzpoaWRkZW59LmNhbnZhcy56b29tZWR7Y3Vyc29yOmdyYWJ9LmNvbnRyb2xze2Rpc3BsYXk6ZmxleDtqdXN0aWZ5LWNvbnRlbnQ6Y2VudGVyO2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6OHB4O2ZsZXgtd3JhcDp3cmFwO3BhZGRpbmc6MTBweCAxOHB4IDIycHg7bWluLWhlaWdodDo2MHB4fS5jb250cm9scyBsYWJlbHtmb250LXNpemU6MTNweDtjb2xvcjojYmJifS5jb250cm9scyBidXR0b24sLmNvbnRyb2xzIHNlbGVjdHtmb250LXNpemU6MTNweH0uY29udHJvbHMgaW5wdXR7YWNjZW50LWNvbG9yOnZhcigtLWJsdWUpO3dpZHRoOjE4MHB4fS56b29te2Rpc3BsYXk6ZmxleDtnYXA6NHB4O3BhZGRpbmc6MCAxOHB4IDEwcHg7anVzdGlmeS1jb250ZW50OmZsZXgtZW5kfS56b29tIGJ1dHRvbntmb250LXNpemU6MTJweDtwYWRkaW5nOjVweCAxMHB4O2JhY2tncm91bmQ6dHJhbnNwYXJlbnR9LmluZm8td3JhcHtwb3NpdGlvbjphYnNvbHV0ZTtyaWdodDoxNnB4O3RvcDoxNnB4O3otaW5kZXg6M30uaW5mb3tib3JkZXItcmFkaXVzOjUwJTtwYWRkaW5nOjA7d2lkdGg6MjhweDtoZWlnaHQ6MjhweDtmb250Oml0YWxpYyAxOHB4IEdlb3JnaWF9LmluZm8tcGFuZWx7cG9zaXRpb246YWJzb2x1dGU7cmlnaHQ6MDt0b3A6MzhweDt3aWR0aDozMDBweDtib3JkZXI6MXB4IHNvbGlkICM1NTU7Ym9yZGVyLXJhZGl1czo4cHg7cGFkZGluZzoyMHB4O2JhY2tncm91bmQ6IzIwMjAyMDtib3gtc2hhZG93OjAgMTJweCA0MHB4ICMwMDA5O2ZvbnQtc2l6ZToxM3B4O2xpbmUtaGVpZ2h0OjEuODV9LmluZm8tcGFuZWwgcHttYXJnaW46OXB4IDB9LmV4cGxhbmF0aW9ue3BhZGRpbmc6MjhweCAzMHB4O2JhY2tncm91bmQ6IzE3MTcxNztib3JkZXItbGVmdDoxcHggc29saWQgdmFyKC0tbGluZSk7ZGlzcGxheTpmbGV4O2ZsZXgtZGlyZWN0aW9uOmNvbHVtbn0uc2VjdGlvbi1sYWJlbHtmb250OjEycHggdWktbW9ub3NwYWNlLG1vbm9zcGFjZTtsZXR0ZXItc3BhY2luZzoycHg7Y29sb3I6dmFyKC0tbXV0ZWQpO21hcmdpbi1ib3R0b206MTZweH1oMntmb250LXNpemU6MjNweDtsaW5lLWhlaWdodDoxLjU7Zm9udC13ZWlnaHQ6NTUwO21hcmdpbjowIDAgMThweH0uY29weSBwe2ZvbnQtc2l6ZToxNnB4O2xpbmUtaGVpZ2h0OjEuOTtjb2xvcjojYzhjOGM4O21hcmdpbjowIDAgMThweH1zdHJvbmd7Y29sb3I6I2VlZTtmb250LXdlaWdodDo1NTB9LmZvcm11bGF7YmFja2dyb3VuZDojMWMyMjJhO2JvcmRlci1sZWZ0OjJweCBzb2xpZCB2YXIoLS1ibHVlKTtwYWRkaW5nOjEzcHggMTVweDtmb250OjE0cHgvMS45IHVpLW1vbm9zcGFjZSxtb25vc3BhY2U7Y29sb3I6I2MxZDlmODt3aGl0ZS1zcGFjZTpwcmUtd3JhcDtvdmVyZmxvdy13cmFwOmFueXdoZXJlO21hcmdpbjo0cHggMCAyMnB4fS5pbnNwZWN0b3J7Ym9yZGVyLXRvcDoxcHggc29saWQgdmFyKC0tbGluZSk7bWFyZ2luLXRvcDphdXRvO3BhZGRpbmctdG9wOjE4cHh9Lmluc3BlY3RvciBoM3tmb250LXNpemU6MTZweDtmb250LXdlaWdodDo1NTA7bWFyZ2luOjhweCAwfS5pbnNwZWN0b3IgcHtmb250LXNpemU6MTRweDtjb2xvcjp2YXIoLS1tdXRlZCk7bGluZS1oZWlnaHQ6MS44O21hcmdpbjowfS5zb3VyY2V7Zm9udC1zaXplOjEycHg7bGluZS1oZWlnaHQ6MS45O2NvbG9yOiNhYWE7bWFyZ2luLXRvcDoxOHB4fS5ib3R0b217cG9zaXRpb246c3RpY2t5O2JvdHRvbTowO3otaW5kZXg6NTtiYWNrZ3JvdW5kOiMxMTFmO2Rpc3BsYXk6ZmxleDtnYXA6MTZweDthbGlnbi1pdGVtczpjZW50ZXI7cGFkZGluZzoxOHB4IDA7bWFyZ2luLXRvcDoxMnB4fS5zdGVwc3tkaXNwbGF5OmZsZXg7ZmxleDoxO21pbi13aWR0aDowO292ZXJmbG93OmF1dG87Z2FwOjlweDtzY3JvbGxiYXItd2lkdGg6dGhpbn0uc3RlcHMgYnV0dG9ue2ZsZXg6MCAwIGF1dG87YmFja2dyb3VuZDpub25lO2JvcmRlcjowO2JvcmRlci1ib3R0b206MnB4IHNvbGlkICMzYjNiM2I7Ym9yZGVyLXJhZGl1czowO3doaXRlLXNwYWNlOm5vd3JhcDtmb250LXNpemU6MTJweDtwYWRkaW5nOjlweCA4cHg7bWluLXdpZHRoOjcwcHg7Y29sb3I6I2FhYX0uc3RlcHMgYnV0dG9uLmFjdGl2ZXtib3JkZXItY29sb3I6dmFyKC0tYmx1ZSk7Y29sb3I6dmFyKC0tYmx1ZSl9LmJvdHRvbT5idXR0b257d2hpdGUtc3BhY2U6bm93cmFwO2ZvbnQtc2l6ZToxM3B4fS5jb3ZlcntkaXNwbGF5OmdyaWQ7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjEuMDVmciAxZnI7YWxpZ24taXRlbXM6Y2VudGVyO2dhcDo1MHB4O21pbi1oZWlnaHQ6Y2FsYygxMDBzdmggLSAxMjVweCk7cGFkZGluZzozMHB4IDN2dyA1NXB4fS5jb3ZlciBoMXtmb250LXNpemU6Y2xhbXAoNDJweCw1dncsNzJweCk7bGluZS1oZWlnaHQ6MS4zO2xldHRlci1zcGFjaW5nOi0xcHg7bWFyZ2luOjIwcHggMCAyNXB4fS5jb3ZlciBwe2ZvbnQtc2l6ZToxOHB4O2NvbG9yOiNiZGJkYmQ7bGluZS1oZWlnaHQ6MS45O21heC13aWR0aDo1NDBweH0uY292ZXItbm90ZXtmb250LXNpemU6MTNweDtjb2xvcjojYWFhO2xpbmUtaGVpZ2h0OjI7bWFyZ2luLXRvcDozNXB4fS5jb3Zlci12aXN1YWx7aGVpZ2h0OjU0MHB4O2JvcmRlci1sZWZ0OjFweCBzb2xpZCAjMzMzO3BhZGRpbmctbGVmdDoyNHB4fS5jb3Zlci12aXN1YWwgc3Zne3dpZHRoOjEwMCU7aGVpZ2h0OjEwMCV9c3ZnIHRleHR7Zm9udC1mYW1pbHk6aW5oZXJpdDtmaWxsOiNlOGU4ZTg7Zm9udC1zaXplOjE4cHh9c3ZnIC5zbWFsbHtmb250LXNpemU6MTRweDtmaWxsOiNhYmFiYWJ9c3ZnIC50aW55e2ZvbnQtc2l6ZToxMnB4O2ZpbGw6I2FiYWJhYn1zdmcgLm9we2ZpbGw6IzUwNTA1MDtzdHJva2U6Izg1ODU4NTtzdHJva2Utd2lkdGg6MS41fXN2ZyAub3AtbGFiZWx7Zm9udC1zaXplOjE4cHg7Zm9udC13ZWlnaHQ6NjUwO2ZpbGw6I2ZmZjtkb21pbmFudC1iYXNlbGluZTptaWRkbGV9c3ZnIC5oaXR7Y3Vyc29yOnBvaW50ZXJ9c3ZnIC5oaXQ6aG92ZXI+Lm91dGxpbmUsc3ZnIC5oaXQuc2VsZWN0ZWQ+Lm91dGxpbmUsc3ZnIC5oaXQ6Zm9jdXM+Lm91dGxpbmV7c3Ryb2tlOiNmZmY7c3Ryb2tlLXdpZHRoOjIuNX1zdmcgLmNvbW17c3Ryb2tlOiNmZmY7c3Ryb2tlLXdpZHRoOjI7c3Ryb2tlLWRhc2hhcnJheTo2IDU7ZmlsbDpub25lfXN2ZyAucmFua3tmaWxsOiMxOTE5MTk7c3Ryb2tlOiM1NDU0NTQ7c3Ryb2tlLXdpZHRoOjEuMn1zdmcgLndpcmV7ZmlsbDpub25lO3N0cm9rZS13aWR0aDoyfXN2ZyAuZ3JpZC1jZWxse3NoYXBlLXJlbmRlcmluZzpnZW9tZXRyaWNQcmVjaXNpb259W2hpZGRlbl17ZGlzcGxheTpub25lIWltcG9ydGFudH0uc3J7cG9zaXRpb246YWJzb2x1dGU7d2lkdGg6MXB4O2hlaWdodDoxcHg7b3ZlcmZsb3c6aGlkZGVuO2NsaXA6cmVjdCgwLDAsMCwwKX1AbWVkaWEobWluLXdpZHRoOjEwMDBweCl7Ym9keS5vdmVydmlld3tvdmVyZmxvdzpoaWRkZW59Lm92ZXJ2aWV3IG1haW57aGVpZ2h0OjEwMHN2aDttaW4taGVpZ2h0OjB9Lm92ZXJ2aWV3IC53b3Jrc3BhY2V7bWluLWhlaWdodDowO2hlaWdodDowfS5vdmVydmlldyAuY2FudmFze2hlaWdodDowO21pbi1oZWlnaHQ6MH0ub3ZlcnZpZXcgLmV4cGxhbmF0aW9ue292ZXJmbG93LXk6YXV0b30ub3ZlcnZpZXcgLmhlYWRpbmcsLm92ZXJ2aWV3IC5ib3R0b217ZmxleC1zaHJpbms6MH19QG1lZGlhKG1heC13aWR0aDoxMDAwcHgpe21haW57cGFkZGluZzoyNHB4IDIwcHggMH0ud29ya3NwYWNle2dyaWQtdGVtcGxhdGUtY29sdW1uczptaW5tYXgoMCwxLjNmcikgbWlubWF4KDMxMHB4LDFmcil9LmV4cGxhbmF0aW9ue3BhZGRpbmc6MjRweH0uY292ZXJ7Z2FwOjIycHg7cGFkZGluZzoyMHB4fS5jb3ZlciBoMXtmb250LXNpemU6NDhweH19QG1lZGlhKG1heC13aWR0aDo3NjBweCl7bWFpbntwYWRkaW5nOjIycHggMTRweCAwfS53b3Jrc3BhY2V7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjFmcjttaW4taGVpZ2h0OjB9LmNhbnZhc3toZWlnaHQ6NDQwcHg7bWluLWhlaWdodDowO2ZsZXg6bm9uZTtwYWRkaW5nLXRvcDo0OHB4fS5leHBsYW5hdGlvbntib3JkZXItbGVmdDowO2JvcmRlci10b3A6MXB4IHNvbGlkICMzNTM1MzU7cGFkZGluZzoyNHB4fS5jb3ZlcntncmlkLXRlbXBsYXRlLWNvbHVtbnM6MWZyO21pbi1oZWlnaHQ6MDtwYWRkaW5nOjI1cHggMTJweDtnYXA6MTVweH0uY292ZXItdmlzdWFse2hlaWdodDozNDBweDtib3JkZXItbGVmdDowO2JvcmRlci10b3A6MXB4IHNvbGlkICMzMzM7cGFkZGluZzoxNXB4IDAgMH0uY292ZXIgaDF7Zm9udC1zaXplOjQzcHh9LmNvdmVyIHB7Zm9udC1zaXplOjE2cHh9LmNvdW50ZXJ7Zm9udC1zaXplOjM0cHh9LmJvdHRvbXtnYXA6N3B4O3BhZGRpbmc6MTJweCAwfS5ib3R0b20+YnV0dG9ue2ZvbnQtc2l6ZToxMnB4O3BhZGRpbmc6OHB4fS5pbmZvLXBhbmVse3dpZHRoOm1pbigzMDBweCxjYWxjKDEwMHZ3IC0gNjZweCkpfS5jb250cm9sc3twYWRkaW5nOjhweCAxMnB4IDE4cHh9LmNvcHkgcHtmb250LXNpemU6MTVweH19QG1lZGlhKHByZWZlcnMtcmVkdWNlZC1tb3Rpb246cmVkdWNlKXsqe3Njcm9sbC1iZWhhdmlvcjphdXRvIWltcG9ydGFudH19Cgpzdmd7LS10ZW5zb3ItdzojQkNBMEYzOy0tdGVuc29yLWk6I0IxRUY2QjstLXRlbnNvci1hOiNGMkM0NUY7LS10ZW5zb3ItZ3JhZDojNzlENEYyfQpzdmcgLmJsdWV7ZmlsbDp2YXIoLS10ZW5zb3ItaSl9c3ZnIC53aXJle3N0cm9rZTp2YXIoLS10ZW5zb3ItaSl9Ci5zZW1hbnRpYy1sZWdlbmR7ZGlzcGxheTpncmlkO2dhcDo5cHg7Zm9udC1zaXplOjEycHg7bGluZS1oZWlnaHQ6MS43O21hcmdpbjoxMnB4IDB9CiBzdmd7LS10ZXh0OiNlOGU4ZTg7LS1tdXRlZDojYWJhYmFiO2ZvbnQtZmFtaWx5OkludGVyLCJQaW5nRmFuZyBTQyIsc3lzdGVtLXVpLHNhbnMtc2VyaWZ9IHN2ZyB0ZXh0e2ZvbnQtZmFtaWx5OmluaGVyaXR9IC5oaXR7Y3Vyc29yOmRlZmF1bHR9PC9zdHlsZT48ZGVmcz48bWFya2VyIGlkPSJiYSIgdmlld0JveD0iMCAwIDEwIDEwIiByZWZYPSI5IiByZWZZPSI1IiBtYXJrZXJXaWR0aD0iNyIgbWFya2VySGVpZ2h0PSI3IiBvcmllbnQ9ImF1dG8tc3RhcnQtcmV2ZXJzZSI+PHBhdGggZD0iTTAgMEwxMCA1TDAgMTBaIiBmaWxsPSIjQjFFRjZCIi8+PC9tYXJrZXI+PG1hcmtlciBpZD0iZ2EiIHZpZXdCb3g9IjAgMCAxMCAxMCIgcmVmWD0iOSIgcmVmWT0iNSIgbWFya2VyV2lkdGg9IjciIG1hcmtlckhlaWdodD0iNyIgb3JpZW50PSJhdXRvLXN0YXJ0LXJldmVyc2UiPjxwYXRoIGQ9Ik0wIDBMMTAgNUwwIDEwWiIgZmlsbD0iI0JDQTBGMyIvPjwvbWFya2VyPjxtYXJrZXIgaWQ9InBhIiB2aWV3Qm94PSIwIDAgMTAgMTAiIHJlZlg9IjkiIHJlZlk9IjUiIG1hcmtlcldpZHRoPSI3IiBtYXJrZXJIZWlnaHQ9IjciIG9yaWVudD0iYXV0by1zdGFydC1yZXZlcnNlIj48cGF0aCBkPSJNMCAwTDEwIDVMMCAxMFoiIGZpbGw9IiM3OUQ0RjIiLz48L21hcmtlcj48bWFya2VyIGlkPSJjYSIgdmlld0JveD0iMCAwIDEwIDEwIiByZWZYPSI5IiByZWZZPSI1IiBtYXJrZXJXaWR0aD0iNyIgbWFya2VySGVpZ2h0PSI3IiBvcmllbnQ9ImF1dG8tc3RhcnQtcmV2ZXJzZSI+PHBhdGggZD0iTTAgMEwxMCA1TDAgMTBaIiBmaWxsPSIjZDZkNmQ2Ii8+PC9tYXJrZXI+PC9kZWZzPjxnIGNsYXNzPSJoaXQiIHRhYmluZGV4PSIwIiByb2xlPSJidXR0b24iIGRhdGEtbm9kZT0iZG9uZSIgYXJpYS1sYWJlbD0i5b2S57qm5a6M5oiQIj48cmVjdCBjbGFzcz0ib3V0bGluZSBkYXRhLWJsb2NrIHZlY3Rvci1vdXRsaW5lIiBkYXRhLWxlbmd0aD0iNiIgeD0iODIiIHk9Ijc3IiB3aWR0aD0iMTU2IiBoZWlnaHQ9IjI2IiByeD0iNCIgZmlsbD0iIzEzMTMxMyIgc3Ryb2tlPSIjNzlENEYyIiBzdHJva2Utd2lkdGg9IjIuNCIvPjxyZWN0IGNsYXNzPSJ2ZWN0b3ItY2VsbCIgeD0iODQiIHk9Ijc5IiB3aWR0aD0iMjIiIGhlaWdodD0iMjIiIGZpbGw9IiM3OUQ0RjIiIG9wYWNpdHk9IjAuMzIiLz48dGV4dCB4PSI5NSIgeT0iOTUiIGNsYXNzPSJzbWFsbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgc3R5bGU9ImZpbGw6Izc5RDRGMiI+MTA8L3RleHQ+PHJlY3QgY2xhc3M9InZlY3Rvci1jZWxsIiB4PSIxMTAiIHk9Ijc5IiB3aWR0aD0iMjIiIGhlaWdodD0iMjIiIGZpbGw9IiM3OUQ0RjIiIG9wYWNpdHk9IjAuMzIiLz48dGV4dCB4PSIxMjEiIHk9Ijk1IiBjbGFzcz0ic21hbGwiIHRleHQtYW5jaG9yPSJtaWRkbGUiIHN0eWxlPSJmaWxsOiM3OUQ0RjIiPjIwPC90ZXh0PjxyZWN0IGNsYXNzPSJ2ZWN0b3ItY2VsbCIgeD0iMTM2IiB5PSI3OSIgd2lkdGg9IjIyIiBoZWlnaHQ9IjIyIiBmaWxsPSIjNzlENEYyIiBvcGFjaXR5PSIwLjMyIi8+PHRleHQgeD0iMTQ3IiB5PSI5NSIgY2xhc3M9InNtYWxsIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBzdHlsZT0iZmlsbDojNzlENEYyIj4zMDwvdGV4dD48cmVjdCBjbGFzcz0idmVjdG9yLWNlbGwiIHg9IjE2MiIgeT0iNzkiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgZmlsbD0iIzc5RDRGMiIgb3BhY2l0eT0iMC4zMiIvPjx0ZXh0IHg9IjE3MyIgeT0iOTUiIGNsYXNzPSJzbWFsbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgc3R5bGU9ImZpbGw6Izc5RDRGMiI+NDA8L3RleHQ+PHJlY3QgY2xhc3M9InZlY3Rvci1jZWxsIiB4PSIxODgiIHk9Ijc5IiB3aWR0aD0iMjIiIGhlaWdodD0iMjIiIGZpbGw9IiM3OUQ0RjIiIG9wYWNpdHk9IjAuMzIiLz48dGV4dCB4PSIxOTkiIHk9Ijk1IiBjbGFzcz0ic21hbGwiIHRleHQtYW5jaG9yPSJtaWRkbGUiIHN0eWxlPSJmaWxsOiM3OUQ0RjIiPjUwPC90ZXh0PjxyZWN0IGNsYXNzPSJ2ZWN0b3ItY2VsbCIgeD0iMjE0IiB5PSI3OSIgd2lkdGg9IjIyIiBoZWlnaHQ9IjIyIiBmaWxsPSIjNzlENEYyIiBvcGFjaXR5PSIwLjMyIi8+PHRleHQgeD0iMjI1IiB5PSI5NSIgY2xhc3M9InNtYWxsIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBzdHlsZT0iZmlsbDojNzlENEYyIj42MDwvdGV4dD48L2c+PC9zdmc+\"/><text x=\"110\" y=\"18\" text-anchor=\"middle\" fill=\"#ababab\" font-size=\"12\" font-family=\"system-ui\">归约完成</text><image x=\"220\" y=\"20\" width=\"220\" height=\"130\" href=\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjAgMTgwIiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IuacquWujOaIkOW9kue6pueahOWIhuWdlyI+PHN0eWxlPgpzdmd7Y29sb3Itc2NoZW1lOmRhcms7LS1iZzojMTExOy0tZmc6I2U4ZThlODstLW11dGVkOiNhYmFiYWI7LS1ibHVlOiM4Y2JkZmY7LS1nb2xkOiNCQ0EwRjM7LS1ncmVlbjojNzlENEYyOy0tbGluZTojMzUzNTM1fSp7Ym94LXNpemluZzpib3JkZXItYm94fWJvZHl7bWFyZ2luOjA7YmFja2dyb3VuZDp2YXIoLS1iZyk7Y29sb3I6dmFyKC0tZmcpO2ZvbnQtZmFtaWx5OkludGVyLCJQaW5nRmFuZyBTQyIsIk1pY3Jvc29mdCBZYUhlaSIsc3lzdGVtLXVpLHNhbnMtc2VyaWZ9YnV0dG9uLHNlbGVjdCxpbnB1dHtmb250OmluaGVyaXQ7Y29sb3I6aW5oZXJpdH1idXR0b24sc2VsZWN0e2JhY2tncm91bmQ6IzIwMjAyMDtib3JkZXI6MXB4IHNvbGlkICM1NTU7Ym9yZGVyLXJhZGl1czo1cHg7cGFkZGluZzo4cHggMTJweH1idXR0b257Y3Vyc29yOnBvaW50ZXJ9YnV0dG9uOmhvdmVye2JvcmRlci1jb2xvcjojYWFhfWJ1dHRvbjpkaXNhYmxlZHtvcGFjaXR5Oi4zNTtjdXJzb3I6ZGVmYXVsdH1idXR0b246Zm9jdXMtdmlzaWJsZSxzZWxlY3Q6Zm9jdXMtdmlzaWJsZSxbdGFiaW5kZXhdOmZvY3VzLXZpc2libGUsYTpmb2N1cy12aXNpYmxle291dGxpbmU6MnB4IHNvbGlkIHZhcigtLWJsdWUpO291dGxpbmUtb2Zmc2V0OjNweH1idXR0b24uYWN0aXZle2JvcmRlci1jb2xvcjp2YXIoLS1ibHVlKTtjb2xvcjp2YXIoLS1ibHVlKTtiYWNrZ3JvdW5kOiMyMDI4MzJ9YXtjb2xvcjojYjhjY2U0O3RleHQtdW5kZXJsaW5lLW9mZnNldDo0cHh9bWFpbnttYXgtd2lkdGg6MTcwMHB4O21hcmdpbjphdXRvO3BhZGRpbmc6MzJweCAzdncgMDttaW4taGVpZ2h0OjEwMHN2aDtkaXNwbGF5OmZsZXg7ZmxleC1kaXJlY3Rpb246Y29sdW1ufS5oZWFkaW5ne2Rpc3BsYXk6ZmxleDtqdXN0aWZ5LWNvbnRlbnQ6c3BhY2UtYmV0d2VlbjtnYXA6MjBweDttYXJnaW4tYm90dG9tOjI0cHh9LmV5ZWJyb3d7Zm9udDoxMnB4LzEuNSB1aS1tb25vc3BhY2UsbW9ub3NwYWNlO2xldHRlci1zcGFjaW5nOjJweDtjb2xvcjp2YXIoLS1ibHVlKTttYXJnaW4tYm90dG9tOjEwcHh9aDF7Zm9udC1zaXplOmNsYW1wKDI2cHgsMi41dncsMzhweCk7Zm9udC13ZWlnaHQ6NTAwO21hcmdpbjowO2xpbmUtaGVpZ2h0OjEuNH0uc3Vie2ZvbnQtc2l6ZToxNXB4O2NvbG9yOnZhcigtLW11dGVkKTtsaW5lLWhlaWdodDoxLjc1O21hcmdpbjo4cHggMCAwfS5jb3VudGVye2ZvbnQ6NDhweCB1aS1tb25vc3BhY2UsbW9ub3NwYWNlO2NvbG9yOiM3Nzd9LndvcmtzcGFjZXtkaXNwbGF5OmdyaWQ7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOm1pbm1heCgwLDEuNmZyKSBtaW5tYXgoMzUwcHgsMWZyKTtib3JkZXI6MXB4IHNvbGlkIHZhcigtLWxpbmUpO2JvcmRlci1yYWRpdXM6MTBweDtvdmVyZmxvdzpoaWRkZW47ZmxleDoxO21pbi1oZWlnaHQ6NjIwcHh9LnZpc3VhbHtiYWNrZ3JvdW5kOiMxMzEzMTM7cG9zaXRpb246cmVsYXRpdmU7ZGlzcGxheTpmbGV4O2ZsZXgtZGlyZWN0aW9uOmNvbHVtbjttaW4td2lkdGg6MDttaW4taGVpZ2h0OjA7b3ZlcmZsb3c6aGlkZGVufS5jYW52YXN7aGVpZ2h0OjU0MHB4O2ZsZXg6MTttaW4taGVpZ2h0OjQzMHB4O292ZXJmbG93OmhpZGRlbjt0b3VjaC1hY3Rpb246bm9uZTtkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2p1c3RpZnktY29udGVudDpjZW50ZXI7cGFkZGluZzo0NXB4IDE0cHggMTJweH0uY2FudmFzIHN2Z3tkaXNwbGF5OmJsb2NrO3dpZHRoOjEwMCU7aGVpZ2h0OjEwMCU7bWluLWhlaWdodDowO21pbi13aWR0aDowO2ZsZXg6bm9uZTtvdmVyZmxvdzpoaWRkZW59LmNhbnZhcy56b29tZWR7Y3Vyc29yOmdyYWJ9LmNvbnRyb2xze2Rpc3BsYXk6ZmxleDtqdXN0aWZ5LWNvbnRlbnQ6Y2VudGVyO2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6OHB4O2ZsZXgtd3JhcDp3cmFwO3BhZGRpbmc6MTBweCAxOHB4IDIycHg7bWluLWhlaWdodDo2MHB4fS5jb250cm9scyBsYWJlbHtmb250LXNpemU6MTNweDtjb2xvcjojYmJifS5jb250cm9scyBidXR0b24sLmNvbnRyb2xzIHNlbGVjdHtmb250LXNpemU6MTNweH0uY29udHJvbHMgaW5wdXR7YWNjZW50LWNvbG9yOnZhcigtLWJsdWUpO3dpZHRoOjE4MHB4fS56b29te2Rpc3BsYXk6ZmxleDtnYXA6NHB4O3BhZGRpbmc6MCAxOHB4IDEwcHg7anVzdGlmeS1jb250ZW50OmZsZXgtZW5kfS56b29tIGJ1dHRvbntmb250LXNpemU6MTJweDtwYWRkaW5nOjVweCAxMHB4O2JhY2tncm91bmQ6dHJhbnNwYXJlbnR9LmluZm8td3JhcHtwb3NpdGlvbjphYnNvbHV0ZTtyaWdodDoxNnB4O3RvcDoxNnB4O3otaW5kZXg6M30uaW5mb3tib3JkZXItcmFkaXVzOjUwJTtwYWRkaW5nOjA7d2lkdGg6MjhweDtoZWlnaHQ6MjhweDtmb250Oml0YWxpYyAxOHB4IEdlb3JnaWF9LmluZm8tcGFuZWx7cG9zaXRpb246YWJzb2x1dGU7cmlnaHQ6MDt0b3A6MzhweDt3aWR0aDozMDBweDtib3JkZXI6MXB4IHNvbGlkICM1NTU7Ym9yZGVyLXJhZGl1czo4cHg7cGFkZGluZzoyMHB4O2JhY2tncm91bmQ6IzIwMjAyMDtib3gtc2hhZG93OjAgMTJweCA0MHB4ICMwMDA5O2ZvbnQtc2l6ZToxM3B4O2xpbmUtaGVpZ2h0OjEuODV9LmluZm8tcGFuZWwgcHttYXJnaW46OXB4IDB9LmV4cGxhbmF0aW9ue3BhZGRpbmc6MjhweCAzMHB4O2JhY2tncm91bmQ6IzE3MTcxNztib3JkZXItbGVmdDoxcHggc29saWQgdmFyKC0tbGluZSk7ZGlzcGxheTpmbGV4O2ZsZXgtZGlyZWN0aW9uOmNvbHVtbn0uc2VjdGlvbi1sYWJlbHtmb250OjEycHggdWktbW9ub3NwYWNlLG1vbm9zcGFjZTtsZXR0ZXItc3BhY2luZzoycHg7Y29sb3I6dmFyKC0tbXV0ZWQpO21hcmdpbi1ib3R0b206MTZweH1oMntmb250LXNpemU6MjNweDtsaW5lLWhlaWdodDoxLjU7Zm9udC13ZWlnaHQ6NTUwO21hcmdpbjowIDAgMThweH0uY29weSBwe2ZvbnQtc2l6ZToxNnB4O2xpbmUtaGVpZ2h0OjEuOTtjb2xvcjojYzhjOGM4O21hcmdpbjowIDAgMThweH1zdHJvbmd7Y29sb3I6I2VlZTtmb250LXdlaWdodDo1NTB9LmZvcm11bGF7YmFja2dyb3VuZDojMWMyMjJhO2JvcmRlci1sZWZ0OjJweCBzb2xpZCB2YXIoLS1ibHVlKTtwYWRkaW5nOjEzcHggMTVweDtmb250OjE0cHgvMS45IHVpLW1vbm9zcGFjZSxtb25vc3BhY2U7Y29sb3I6I2MxZDlmODt3aGl0ZS1zcGFjZTpwcmUtd3JhcDtvdmVyZmxvdy13cmFwOmFueXdoZXJlO21hcmdpbjo0cHggMCAyMnB4fS5pbnNwZWN0b3J7Ym9yZGVyLXRvcDoxcHggc29saWQgdmFyKC0tbGluZSk7bWFyZ2luLXRvcDphdXRvO3BhZGRpbmctdG9wOjE4cHh9Lmluc3BlY3RvciBoM3tmb250LXNpemU6MTZweDtmb250LXdlaWdodDo1NTA7bWFyZ2luOjhweCAwfS5pbnNwZWN0b3IgcHtmb250LXNpemU6MTRweDtjb2xvcjp2YXIoLS1tdXRlZCk7bGluZS1oZWlnaHQ6MS44O21hcmdpbjowfS5zb3VyY2V7Zm9udC1zaXplOjEycHg7bGluZS1oZWlnaHQ6MS45O2NvbG9yOiNhYWE7bWFyZ2luLXRvcDoxOHB4fS5ib3R0b217cG9zaXRpb246c3RpY2t5O2JvdHRvbTowO3otaW5kZXg6NTtiYWNrZ3JvdW5kOiMxMTFmO2Rpc3BsYXk6ZmxleDtnYXA6MTZweDthbGlnbi1pdGVtczpjZW50ZXI7cGFkZGluZzoxOHB4IDA7bWFyZ2luLXRvcDoxMnB4fS5zdGVwc3tkaXNwbGF5OmZsZXg7ZmxleDoxO21pbi13aWR0aDowO292ZXJmbG93OmF1dG87Z2FwOjlweDtzY3JvbGxiYXItd2lkdGg6dGhpbn0uc3RlcHMgYnV0dG9ue2ZsZXg6MCAwIGF1dG87YmFja2dyb3VuZDpub25lO2JvcmRlcjowO2JvcmRlci1ib3R0b206MnB4IHNvbGlkICMzYjNiM2I7Ym9yZGVyLXJhZGl1czowO3doaXRlLXNwYWNlOm5vd3JhcDtmb250LXNpemU6MTJweDtwYWRkaW5nOjlweCA4cHg7bWluLXdpZHRoOjcwcHg7Y29sb3I6I2FhYX0uc3RlcHMgYnV0dG9uLmFjdGl2ZXtib3JkZXItY29sb3I6dmFyKC0tYmx1ZSk7Y29sb3I6dmFyKC0tYmx1ZSl9LmJvdHRvbT5idXR0b257d2hpdGUtc3BhY2U6bm93cmFwO2ZvbnQtc2l6ZToxM3B4fS5jb3ZlcntkaXNwbGF5OmdyaWQ7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjEuMDVmciAxZnI7YWxpZ24taXRlbXM6Y2VudGVyO2dhcDo1MHB4O21pbi1oZWlnaHQ6Y2FsYygxMDBzdmggLSAxMjVweCk7cGFkZGluZzozMHB4IDN2dyA1NXB4fS5jb3ZlciBoMXtmb250LXNpemU6Y2xhbXAoNDJweCw1dncsNzJweCk7bGluZS1oZWlnaHQ6MS4zO2xldHRlci1zcGFjaW5nOi0xcHg7bWFyZ2luOjIwcHggMCAyNXB4fS5jb3ZlciBwe2ZvbnQtc2l6ZToxOHB4O2NvbG9yOiNiZGJkYmQ7bGluZS1oZWlnaHQ6MS45O21heC13aWR0aDo1NDBweH0uY292ZXItbm90ZXtmb250LXNpemU6MTNweDtjb2xvcjojYWFhO2xpbmUtaGVpZ2h0OjI7bWFyZ2luLXRvcDozNXB4fS5jb3Zlci12aXN1YWx7aGVpZ2h0OjU0MHB4O2JvcmRlci1sZWZ0OjFweCBzb2xpZCAjMzMzO3BhZGRpbmctbGVmdDoyNHB4fS5jb3Zlci12aXN1YWwgc3Zne3dpZHRoOjEwMCU7aGVpZ2h0OjEwMCV9c3ZnIHRleHR7Zm9udC1mYW1pbHk6aW5oZXJpdDtmaWxsOiNlOGU4ZTg7Zm9udC1zaXplOjE4cHh9c3ZnIC5zbWFsbHtmb250LXNpemU6MTRweDtmaWxsOiNhYmFiYWJ9c3ZnIC50aW55e2ZvbnQtc2l6ZToxMnB4O2ZpbGw6I2FiYWJhYn1zdmcgLm9we2ZpbGw6IzUwNTA1MDtzdHJva2U6Izg1ODU4NTtzdHJva2Utd2lkdGg6MS41fXN2ZyAub3AtbGFiZWx7Zm9udC1zaXplOjE4cHg7Zm9udC13ZWlnaHQ6NjUwO2ZpbGw6I2ZmZjtkb21pbmFudC1iYXNlbGluZTptaWRkbGV9c3ZnIC5oaXR7Y3Vyc29yOnBvaW50ZXJ9c3ZnIC5oaXQ6aG92ZXI+Lm91dGxpbmUsc3ZnIC5oaXQuc2VsZWN0ZWQ+Lm91dGxpbmUsc3ZnIC5oaXQ6Zm9jdXM+Lm91dGxpbmV7c3Ryb2tlOiNmZmY7c3Ryb2tlLXdpZHRoOjIuNX1zdmcgLmNvbW17c3Ryb2tlOiNmZmY7c3Ryb2tlLXdpZHRoOjI7c3Ryb2tlLWRhc2hhcnJheTo2IDU7ZmlsbDpub25lfXN2ZyAucmFua3tmaWxsOiMxOTE5MTk7c3Ryb2tlOiM1NDU0NTQ7c3Ryb2tlLXdpZHRoOjEuMn1zdmcgLndpcmV7ZmlsbDpub25lO3N0cm9rZS13aWR0aDoyfXN2ZyAuZ3JpZC1jZWxse3NoYXBlLXJlbmRlcmluZzpnZW9tZXRyaWNQcmVjaXNpb259W2hpZGRlbl17ZGlzcGxheTpub25lIWltcG9ydGFudH0uc3J7cG9zaXRpb246YWJzb2x1dGU7d2lkdGg6MXB4O2hlaWdodDoxcHg7b3ZlcmZsb3c6aGlkZGVuO2NsaXA6cmVjdCgwLDAsMCwwKX1AbWVkaWEobWluLXdpZHRoOjEwMDBweCl7Ym9keS5vdmVydmlld3tvdmVyZmxvdzpoaWRkZW59Lm92ZXJ2aWV3IG1haW57aGVpZ2h0OjEwMHN2aDttaW4taGVpZ2h0OjB9Lm92ZXJ2aWV3IC53b3Jrc3BhY2V7bWluLWhlaWdodDowO2hlaWdodDowfS5vdmVydmlldyAuY2FudmFze2hlaWdodDowO21pbi1oZWlnaHQ6MH0ub3ZlcnZpZXcgLmV4cGxhbmF0aW9ue292ZXJmbG93LXk6YXV0b30ub3ZlcnZpZXcgLmhlYWRpbmcsLm92ZXJ2aWV3IC5ib3R0b217ZmxleC1zaHJpbms6MH19QG1lZGlhKG1heC13aWR0aDoxMDAwcHgpe21haW57cGFkZGluZzoyNHB4IDIwcHggMH0ud29ya3NwYWNle2dyaWQtdGVtcGxhdGUtY29sdW1uczptaW5tYXgoMCwxLjNmcikgbWlubWF4KDMxMHB4LDFmcil9LmV4cGxhbmF0aW9ue3BhZGRpbmc6MjRweH0uY292ZXJ7Z2FwOjIycHg7cGFkZGluZzoyMHB4fS5jb3ZlciBoMXtmb250LXNpemU6NDhweH19QG1lZGlhKG1heC13aWR0aDo3NjBweCl7bWFpbntwYWRkaW5nOjIycHggMTRweCAwfS53b3Jrc3BhY2V7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjFmcjttaW4taGVpZ2h0OjB9LmNhbnZhc3toZWlnaHQ6NDQwcHg7bWluLWhlaWdodDowO2ZsZXg6bm9uZTtwYWRkaW5nLXRvcDo0OHB4fS5leHBsYW5hdGlvbntib3JkZXItbGVmdDowO2JvcmRlci10b3A6MXB4IHNvbGlkICMzNTM1MzU7cGFkZGluZzoyNHB4fS5jb3ZlcntncmlkLXRlbXBsYXRlLWNvbHVtbnM6MWZyO21pbi1oZWlnaHQ6MDtwYWRkaW5nOjI1cHggMTJweDtnYXA6MTVweH0uY292ZXItdmlzdWFse2hlaWdodDozNDBweDtib3JkZXItbGVmdDowO2JvcmRlci10b3A6MXB4IHNvbGlkICMzMzM7cGFkZGluZzoxNXB4IDAgMH0uY292ZXIgaDF7Zm9udC1zaXplOjQzcHh9LmNvdmVyIHB7Zm9udC1zaXplOjE2cHh9LmNvdW50ZXJ7Zm9udC1zaXplOjM0cHh9LmJvdHRvbXtnYXA6N3B4O3BhZGRpbmc6MTJweCAwfS5ib3R0b20+YnV0dG9ue2ZvbnQtc2l6ZToxMnB4O3BhZGRpbmc6OHB4fS5pbmZvLXBhbmVse3dpZHRoOm1pbigzMDBweCxjYWxjKDEwMHZ3IC0gNjZweCkpfS5jb250cm9sc3twYWRkaW5nOjhweCAxMnB4IDE4cHh9LmNvcHkgcHtmb250LXNpemU6MTVweH19QG1lZGlhKHByZWZlcnMtcmVkdWNlZC1tb3Rpb246cmVkdWNlKXsqe3Njcm9sbC1iZWhhdmlvcjphdXRvIWltcG9ydGFudH19Cgpzdmd7LS10ZW5zb3ItdzojQkNBMEYzOy0tdGVuc29yLWk6I0IxRUY2QjstLXRlbnNvci1hOiNGMkM0NUY7LS10ZW5zb3ItZ3JhZDojNzlENEYyfQpzdmcgLmJsdWV7ZmlsbDp2YXIoLS10ZW5zb3ItaSl9c3ZnIC53aXJle3N0cm9rZTp2YXIoLS10ZW5zb3ItaSl9Ci5zZW1hbnRpYy1sZWdlbmR7ZGlzcGxheTpncmlkO2dhcDo5cHg7Zm9udC1zaXplOjEycHg7bGluZS1oZWlnaHQ6MS43O21hcmdpbjoxMnB4IDB9CiBzdmd7LS10ZXh0OiNlOGU4ZTg7LS1tdXRlZDojYWJhYmFiO2ZvbnQtZmFtaWx5OkludGVyLCJQaW5nRmFuZyBTQyIsc3lzdGVtLXVpLHNhbnMtc2VyaWZ9IHN2ZyB0ZXh0e2ZvbnQtZmFtaWx5OmluaGVyaXR9IC5oaXR7Y3Vyc29yOmRlZmF1bHR9PC9zdHlsZT48ZGVmcz48bWFya2VyIGlkPSJiYSIgdmlld0JveD0iMCAwIDEwIDEwIiByZWZYPSI5IiByZWZZPSI1IiBtYXJrZXJXaWR0aD0iNyIgbWFya2VySGVpZ2h0PSI3IiBvcmllbnQ9ImF1dG8tc3RhcnQtcmV2ZXJzZSI+PHBhdGggZD0iTTAgMEwxMCA1TDAgMTBaIiBmaWxsPSIjQjFFRjZCIi8+PC9tYXJrZXI+PG1hcmtlciBpZD0iZ2EiIHZpZXdCb3g9IjAgMCAxMCAxMCIgcmVmWD0iOSIgcmVmWT0iNSIgbWFya2VyV2lkdGg9IjciIG1hcmtlckhlaWdodD0iNyIgb3JpZW50PSJhdXRvLXN0YXJ0LXJldmVyc2UiPjxwYXRoIGQ9Ik0wIDBMMTAgNUwwIDEwWiIgZmlsbD0iI0JDQTBGMyIvPjwvbWFya2VyPjxtYXJrZXIgaWQ9InBhIiB2aWV3Qm94PSIwIDAgMTAgMTAiIHJlZlg9IjkiIHJlZlk9IjUiIG1hcmtlcldpZHRoPSI3IiBtYXJrZXJIZWlnaHQ9IjciIG9yaWVudD0iYXV0by1zdGFydC1yZXZlcnNlIj48cGF0aCBkPSJNMCAwTDEwIDVMMCAxMFoiIGZpbGw9IiM3OUQ0RjIiLz48L21hcmtlcj48bWFya2VyIGlkPSJjYSIgdmlld0JveD0iMCAwIDEwIDEwIiByZWZYPSI5IiByZWZZPSI1IiBtYXJrZXJXaWR0aD0iNyIgbWFya2VySGVpZ2h0PSI3IiBvcmllbnQ9ImF1dG8tc3RhcnQtcmV2ZXJzZSI+PHBhdGggZD0iTTAgMEwxMCA1TDAgMTBaIiBmaWxsPSIjZDZkNmQ2Ii8+PC9tYXJrZXI+PC9kZWZzPjxnIGNsYXNzPSJoaXQiIHRhYmluZGV4PSIwIiByb2xlPSJidXR0b24iIGRhdGEtbm9kZT0icGVuZGluZyIgYXJpYS1sYWJlbD0i5pyq5a6M5oiQ5b2S57qmIj48cmVjdCBjbGFzcz0ib3V0bGluZSBkYXRhLWJsb2NrIHZlY3Rvci1vdXRsaW5lIiBkYXRhLWxlbmd0aD0iNiIgeD0iODIiIHk9Ijc3IiB3aWR0aD0iMTU2IiBoZWlnaHQ9IjI2IiByeD0iNCIgZmlsbD0iIzEzMTMxMyIgc3Ryb2tlPSIjNzlENEYyIiBzdHJva2Utd2lkdGg9IjEuMiIvPjxyZWN0IGNsYXNzPSJ2ZWN0b3ItY2VsbCIgeD0iODQiIHk9Ijc5IiB3aWR0aD0iMjIiIGhlaWdodD0iMjIiIGZpbGw9IiM3OUQ0RjIiIG9wYWNpdHk9IjAuMjIiLz48dGV4dCB4PSI5NSIgeT0iOTUiIGNsYXNzPSJzbWFsbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgc3R5bGU9ImZpbGw6Izc5RDRGMiI+MTwvdGV4dD48cmVjdCBjbGFzcz0idmVjdG9yLWNlbGwiIHg9IjExMCIgeT0iNzkiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgZmlsbD0iIzc5RDRGMiIgb3BhY2l0eT0iMC4yMiIvPjx0ZXh0IHg9IjEyMSIgeT0iOTUiIGNsYXNzPSJzbWFsbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgc3R5bGU9ImZpbGw6Izc5RDRGMiI+MjwvdGV4dD48cmVjdCBjbGFzcz0idmVjdG9yLWNlbGwiIHg9IjEzNiIgeT0iNzkiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgZmlsbD0iIzc5RDRGMiIgb3BhY2l0eT0iMC4yMiIvPjx0ZXh0IHg9IjE0NyIgeT0iOTUiIGNsYXNzPSJzbWFsbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgc3R5bGU9ImZpbGw6Izc5RDRGMiI+MzwvdGV4dD48cmVjdCBjbGFzcz0idmVjdG9yLWNlbGwiIHg9IjE2MiIgeT0iNzkiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgZmlsbD0iIzc5RDRGMiIgb3BhY2l0eT0iMC4yMiIvPjx0ZXh0IHg9IjE3MyIgeT0iOTUiIGNsYXNzPSJzbWFsbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgc3R5bGU9ImZpbGw6Izc5RDRGMiI+NDwvdGV4dD48cmVjdCBjbGFzcz0idmVjdG9yLWNlbGwiIHg9IjE4OCIgeT0iNzkiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgZmlsbD0iIzc5RDRGMiIgb3BhY2l0eT0iMC4yMiIvPjx0ZXh0IHg9IjE5OSIgeT0iOTUiIGNsYXNzPSJzbWFsbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgc3R5bGU9ImZpbGw6Izc5RDRGMiI+NTwvdGV4dD48cmVjdCBjbGFzcz0idmVjdG9yLWNlbGwiIHg9IjIxNCIgeT0iNzkiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgZmlsbD0iIzc5RDRGMiIgb3BhY2l0eT0iMC4yMiIvPjx0ZXh0IHg9IjIyNSIgeT0iOTUiIGNsYXNzPSJzbWFsbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgc3R5bGU9ImZpbGw6Izc5RDRGMiI+NjwvdGV4dD48L2c+PC9zdmc+\"/><text x=\"330\" y=\"18\" text-anchor=\"middle\" fill=\"#ababab\" font-size=\"12\" font-family=\"system-ui\">未完成归约</text></svg>"
+        },
+        {
+          "id": "data-7",
+          "title": "局部异常采样",
+          "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" id=\"front-graph\" viewBox=\"0 0 640 280\"><style>#layer-front{position:fixed;inset:85px 190px 85px 290px;z-index:7;display:flex;flex-direction:column;min-width:0;background:#111}\n#layer-front[hidden],#layer-front [hidden]{display:none!important}\n.front-view #scene,.front-view .path-demo{visibility:hidden;pointer-events:none}\n.front-heading{display:flex;align-items:flex-start;justify-content:flex-end;gap:12px;flex:none}\n.front-tools{display:flex;gap:5px;align-items:center}\n.front-tools button,#front-node-info button{font:12px inherit;color:#ccc;background:#191919;border:1px solid #444;padding:6px 8px;cursor:pointer;white-space:nowrap}\n.front-canvas{flex:1;min-height:0;overflow:hidden;margin-top:8px}\n#front-graph{width:100%;height:100%;display:block;touch-action:none;user-select:none}\n#front-graph text{fill:#eee;font:18px Inter,\"PingFang SC\",\"Microsoft YaHei\",system-ui,sans-serif;pointer-events:none}\n#front-graph .minor{fill:#ababab;font-size:14px}\n#front-graph .section-label{fill:#ababab;font-size:14px}\n#front-graph .tensor-label{font-size:16px;font-weight:600;dominant-baseline:middle;paint-order:stroke fill;stroke:#111;stroke-width:4px;stroke-linejoin:round}\n#front-graph .weight .tensor-label,#front-graph .gradient .tensor-label{font-size:14px}\n#front-graph .activation .tensor-label{fill:#B1EF6B}\n#front-graph .weight .tensor-label{fill:#BCA0F3}\n#front-graph .gradient .tensor-label{fill:#79D4F2}\n#front-graph .op-label{fill:#fff;font-size:18px;font-weight:650;dominant-baseline:middle}\n#front-graph .op{fill:#505050;stroke:#858585;stroke-width:1.5}\n#front-graph circle{fill:#111;stroke:#ddd;stroke-width:1.6}\n#front-graph .residual-circle{fill:#111;stroke:#ddd;stroke-width:1.6;transform:none}\n#front-graph .add-mark{fill:none;stroke:#ddd;stroke-width:1.6;stroke-linecap:butt;pointer-events:none}\n#front-graph .residual-label{fill:#B1EF6B;font-size:18px}\n#front-graph .sublayer{fill:#161616;stroke:#333;stroke-width:1}\n#front-graph .front-edge{fill:none;stroke:#777777;stroke-width:2}\n#front-graph .gradient.front-edge{stroke-dasharray:6 6}\n#front-graph .tensor-outline{fill:#111;stroke-width:1.2}\n#front-graph .front-node{cursor:pointer;outline:none}\n#front-graph .front-node:hover>.op,#front-graph .front-node:focus-visible>.op,#front-graph [aria-pressed=true]>.op,#front-graph .front-node:hover>.tensor-outline,#front-graph .front-node:focus-visible>.tensor-outline,#front-graph [aria-pressed=true]>.tensor-outline,#front-graph .front-node:hover>circle,#front-graph .front-node:focus-visible>circle,#front-graph [aria-pressed=true]>circle{stroke:#fff;stroke-width:2.5}\n/* Fixed graph glyphs follow the reference guide; observation modes emphasize semantic roles. */\n#front-graph[data-mode=activation] .weight,#front-graph[data-mode=activation] .gradient{visibility:hidden}\n#front-graph[data-mode=weight] .gradient{visibility:hidden}\n#front-graph[data-mode=weight] .activation.front-node,#front-graph[data-mode=gradient] .activation.front-node{opacity:.55}\n#front-graph[data-mode=gradient] .weight.front-node{opacity:.6}\n.front-foot{font-size:11px;color:#aaa;padding-top:7px;text-align:center}\n#front-node-info,#front-evidence{position:absolute;z-index:10;right:0;top:60px;width:300px;padding:18px;background:#191919;border:1px solid #555;box-shadow:0 8px 30px #0008;font-size:12px;line-height:1.8}\n#front-node-info h3{font-size:15px;margin:0 24px 10px 0;font-weight:500}\n#front-node-info p{color:#bbb;margin:0 0 14px}\n#front-node-info #front-node-close{position:absolute;top:8px;right:8px;border:0;background:none;font-size:18px}\n#front-evidence{width:360px;max-height:80%;overflow:auto}\n#front-evidence p{color:#bbb}#front-evidence a{color:#ddd}\n@media(max-width:1100px){#layer-front{inset:235px 22px 100px}.front-view .identity h2{font-size:40px;margin-bottom:8px}.front-view .identity h3{font-size:15px;margin-bottom:6px}.front-view .identity button{margin-top:8px}.front-view .identity{top:93px}.front-view .sampling-note{display:none}}\n@media(max-width:600px){#layer-front{inset:275px 12px 100px}.front-heading{flex-wrap:wrap;gap:6px}.front-tools button{padding:4px 6px;font-size:11px}#front-layer-label{font-size:13px}#front-mode-label{font-size:11px;margin-top:4px}.front-foot{font-size:10px}.front-view .identity{top:140px}.front-view .identity h2{font-size:32px}.front-view .identity h3{margin-bottom:3px}.front-view .identity p{font-size:10px}#front-node-info,#front-evidence{max-width:100%;top:68px;max-height:75%;overflow:auto}}\n\n#front-graph .has-alert .tensor-outline{stroke:#FD5644;stroke-opacity:1;stroke-width:2}\n#front-graph .has-alert .tensor-label,#front-graph .anomaly-mark{fill:#FD5644}\n#front-graph .anomaly-mark{font-size:20px;font-weight:650}\n\n#front-node-info{position:fixed;right:auto;box-sizing:border-box;max-width:calc(100vw - 24px);max-height:calc(100vh - 24px);overflow:auto}\n\n#front-graph .tensor-rms{font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}\n</style><defs><marker id=\"front-activation\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto\"><path d=\"M1 1 L8 5 L1 9\" fill=\"none\" stroke=\"#777777\" stroke-width=\"1.3\"/></marker><marker id=\"front-weight\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto\"><path d=\"M1 1 L8 5 L1 9\" fill=\"none\" stroke=\"#777777\" stroke-width=\"1.3\"/></marker><marker id=\"front-gradient\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto\"><path d=\"M1 1 L8 5 L1 9\" fill=\"none\" stroke=\"#777777\" stroke-width=\"1.3\"/></marker></defs><g class=\"front-node activation has-alert\" data-node=\"query\" role=\"button\" tabindex=\"0\" aria-label=\"Query\" aria-pressed=\"false\"><title>采样示例 1 个采样点超阈值；橙红格表示对应区域含异常采样。 采样 RMS 0.1250。</title><rect class=\"tensor-outline\" x=\"230\" y=\"105\" width=\"180\" height=\"62\" rx=\"6\" fill=\"#111\" stroke=\"#B1EF6B\"/><rect class=\"grid-cell\" x=\"236\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#FD5644\" opacity=\"1\"/><rect class=\"grid-cell\" x=\"253.1\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.22\"/><rect class=\"grid-cell\" x=\"270.2\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.26\"/><rect class=\"grid-cell\" x=\"287.3\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.3\"/><rect class=\"grid-cell\" x=\"304.4\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.24\"/><rect class=\"grid-cell\" x=\"321.5\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.28\"/><rect class=\"grid-cell\" x=\"338.6\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.22\"/><rect class=\"grid-cell\" x=\"355.70000000000005\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.26\"/><rect class=\"grid-cell\" x=\"372.8\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.3\"/><rect class=\"grid-cell\" x=\"389.9\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.24\"/><rect class=\"grid-cell\" x=\"236\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.22\"/><rect class=\"grid-cell\" x=\"253.1\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.26\"/><rect class=\"grid-cell\" x=\"270.2\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.3\"/><rect class=\"grid-cell\" x=\"287.3\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.24\"/><rect class=\"grid-cell\" x=\"304.4\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.28\"/><rect class=\"grid-cell\" x=\"321.5\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.22\"/><rect class=\"grid-cell\" x=\"338.6\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.26\"/><rect class=\"grid-cell\" x=\"355.70000000000005\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.3\"/><rect class=\"grid-cell\" x=\"372.8\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.24\"/><rect class=\"grid-cell\" x=\"389.9\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.28\"/><rect class=\"grid-cell\" x=\"236\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.26\"/><rect class=\"grid-cell\" x=\"253.1\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.3\"/><rect class=\"grid-cell\" x=\"270.2\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.24\"/><rect class=\"grid-cell\" x=\"287.3\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.28\"/><rect class=\"grid-cell\" x=\"304.4\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.22\"/><rect class=\"grid-cell\" x=\"321.5\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.26\"/><rect class=\"grid-cell\" x=\"338.6\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.3\"/><rect class=\"grid-cell\" x=\"355.70000000000005\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.24\"/><rect class=\"grid-cell\" x=\"372.8\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.28\"/><rect class=\"grid-cell\" x=\"389.9\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.22\"/><text x=\"418\" y=\"97\" text-anchor=\"middle\" class=\"anomaly-mark\">!</text><text x=\"320\" y=\"126\" text-anchor=\"middle\" class=\"tensor-label\">[T × 1024]</text><text x=\"320\" y=\"148\" text-anchor=\"middle\" class=\"tensor-label tensor-rms\">RMS 0.1250</text></g></svg>"
+        },
+        {
+          "id": "data-8",
+          "title": "灰度采样矩阵",
+          "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" id=\"front-graph\" viewBox=\"0 0 640 280\"><style>#layer-front{position:fixed;inset:85px 190px 85px 290px;z-index:7;display:flex;flex-direction:column;min-width:0;background:#111}\n#layer-front[hidden],#layer-front [hidden]{display:none!important}\n.front-view #scene,.front-view .path-demo{visibility:hidden;pointer-events:none}\n.front-heading{display:flex;align-items:flex-start;justify-content:flex-end;gap:12px;flex:none}\n.front-tools{display:flex;gap:5px;align-items:center}\n.front-tools button,#front-node-info button{font:12px inherit;color:#ccc;background:#191919;border:1px solid #444;padding:6px 8px;cursor:pointer;white-space:nowrap}\n.front-canvas{flex:1;min-height:0;overflow:hidden;margin-top:8px}\n#front-graph{width:100%;height:100%;display:block;touch-action:none;user-select:none}\n#front-graph text{fill:#eee;font:18px Inter,\"PingFang SC\",\"Microsoft YaHei\",system-ui,sans-serif;pointer-events:none}\n#front-graph .minor{fill:#ababab;font-size:14px}\n#front-graph .section-label{fill:#ababab;font-size:14px}\n#front-graph .tensor-label{font-size:16px;font-weight:600;dominant-baseline:middle;paint-order:stroke fill;stroke:#111;stroke-width:4px;stroke-linejoin:round}\n#front-graph .weight .tensor-label,#front-graph .gradient .tensor-label{font-size:14px}\n#front-graph .activation .tensor-label{fill:#B1EF6B}\n#front-graph .weight .tensor-label{fill:#BCA0F3}\n#front-graph .gradient .tensor-label{fill:#79D4F2}\n#front-graph .op-label{fill:#fff;font-size:18px;font-weight:650;dominant-baseline:middle}\n#front-graph .op{fill:#505050;stroke:#858585;stroke-width:1.5}\n#front-graph circle{fill:#111;stroke:#ddd;stroke-width:1.6}\n#front-graph .residual-circle{fill:#111;stroke:#ddd;stroke-width:1.6;transform:none}\n#front-graph .add-mark{fill:none;stroke:#ddd;stroke-width:1.6;stroke-linecap:butt;pointer-events:none}\n#front-graph .residual-label{fill:#B1EF6B;font-size:18px}\n#front-graph .sublayer{fill:#161616;stroke:#333;stroke-width:1}\n#front-graph .front-edge{fill:none;stroke:#777777;stroke-width:2}\n#front-graph .gradient.front-edge{stroke-dasharray:6 6}\n#front-graph .tensor-outline{fill:#111;stroke-width:1.2}\n#front-graph .front-node{cursor:pointer;outline:none}\n#front-graph .front-node:hover>.op,#front-graph .front-node:focus-visible>.op,#front-graph [aria-pressed=true]>.op,#front-graph .front-node:hover>.tensor-outline,#front-graph .front-node:focus-visible>.tensor-outline,#front-graph [aria-pressed=true]>.tensor-outline,#front-graph .front-node:hover>circle,#front-graph .front-node:focus-visible>circle,#front-graph [aria-pressed=true]>circle{stroke:#fff;stroke-width:2.5}\n/* Fixed graph glyphs follow the reference guide; observation modes emphasize semantic roles. */\n#front-graph[data-mode=activation] .weight,#front-graph[data-mode=activation] .gradient{visibility:hidden}\n#front-graph[data-mode=weight] .gradient{visibility:hidden}\n#front-graph[data-mode=weight] .activation.front-node,#front-graph[data-mode=gradient] .activation.front-node{opacity:.55}\n#front-graph[data-mode=gradient] .weight.front-node{opacity:.6}\n.front-foot{font-size:11px;color:#aaa;padding-top:7px;text-align:center}\n#front-node-info,#front-evidence{position:absolute;z-index:10;right:0;top:60px;width:300px;padding:18px;background:#191919;border:1px solid #555;box-shadow:0 8px 30px #0008;font-size:12px;line-height:1.8}\n#front-node-info h3{font-size:15px;margin:0 24px 10px 0;font-weight:500}\n#front-node-info p{color:#bbb;margin:0 0 14px}\n#front-node-info #front-node-close{position:absolute;top:8px;right:8px;border:0;background:none;font-size:18px}\n#front-evidence{width:360px;max-height:80%;overflow:auto}\n#front-evidence p{color:#bbb}#front-evidence a{color:#ddd}\n@media(max-width:1100px){#layer-front{inset:235px 22px 100px}.front-view .identity h2{font-size:40px;margin-bottom:8px}.front-view .identity h3{font-size:15px;margin-bottom:6px}.front-view .identity button{margin-top:8px}.front-view .identity{top:93px}.front-view .sampling-note{display:none}}\n@media(max-width:600px){#layer-front{inset:275px 12px 100px}.front-heading{flex-wrap:wrap;gap:6px}.front-tools button{padding:4px 6px;font-size:11px}#front-layer-label{font-size:13px}#front-mode-label{font-size:11px;margin-top:4px}.front-foot{font-size:10px}.front-view .identity{top:140px}.front-view .identity h2{font-size:32px}.front-view .identity h3{margin-bottom:3px}.front-view .identity p{font-size:10px}#front-node-info,#front-evidence{max-width:100%;top:68px;max-height:75%;overflow:auto}}\n\n#front-graph .has-alert .tensor-outline{stroke:#FD5644;stroke-opacity:1;stroke-width:2}\n#front-graph .has-alert .tensor-label,#front-graph .anomaly-mark{fill:#FD5644}\n#front-graph .anomaly-mark{font-size:20px;font-weight:650}\n\n#front-node-info{position:fixed;right:auto;box-sizing:border-box;max-width:calc(100vw - 24px);max-height:calc(100vh - 24px);overflow:auto}\n\n#front-graph .tensor-rms{font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}\n</style><defs><marker id=\"front-activation\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto\"><path d=\"M1 1 L8 5 L1 9\" fill=\"none\" stroke=\"#777777\" stroke-width=\"1.3\"/></marker><marker id=\"front-weight\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto\"><path d=\"M1 1 L8 5 L1 9\" fill=\"none\" stroke=\"#777777\" stroke-width=\"1.3\"/></marker><marker id=\"front-gradient\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto\"><path d=\"M1 1 L8 5 L1 9\" fill=\"none\" stroke=\"#777777\" stroke-width=\"1.3\"/></marker></defs><rect x=\"176\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(51,51,51)\"/><rect x=\"200\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(94,94,94)\"/><rect x=\"224\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(145,145,145)\"/><rect x=\"248\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(188,188,188)\"/><rect x=\"272\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(227,227,227)\"/><rect x=\"296\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(74,74,74)\"/><rect x=\"320\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(124,124,124)\"/><rect x=\"344\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(170,170,170)\"/><rect x=\"368\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(211,211,211)\"/><rect x=\"392\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(59,59,59)\"/><rect x=\"416\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(102,102,102)\"/><rect x=\"440\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(151,151,151)\"/><rect x=\"176\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(164,164,164)\"/><rect x=\"200\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(205,205,205)\"/><rect x=\"224\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(51,51,51)\"/><rect x=\"248\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(94,94,94)\"/><rect x=\"272\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(145,145,145)\"/><rect x=\"296\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(188,188,188)\"/><rect x=\"320\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(227,227,227)\"/><rect x=\"344\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(74,74,74)\"/><rect x=\"368\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(124,124,124)\"/><rect x=\"392\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(170,170,170)\"/><rect x=\"416\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(211,211,211)\"/><rect x=\"440\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(59,59,59)\"/><rect x=\"176\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(69,69,69)\"/><rect x=\"200\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(117,117,117)\"/><rect x=\"224\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(164,164,164)\"/><rect x=\"248\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(205,205,205)\"/><rect x=\"272\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(51,51,51)\"/><rect x=\"296\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(94,94,94)\"/><rect x=\"320\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(145,145,145)\"/><rect x=\"344\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(188,188,188)\"/><rect x=\"368\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(227,227,227)\"/><rect x=\"392\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(74,74,74)\"/><rect x=\"416\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(124,124,124)\"/><rect x=\"440\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(170,170,170)\"/><rect x=\"176\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(182,182,182)\"/><rect x=\"200\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(222,222,222)\"/><rect x=\"224\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(69,69,69)\"/><rect x=\"248\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(117,117,117)\"/><rect x=\"272\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(164,164,164)\"/><rect x=\"296\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(205,205,205)\"/><rect x=\"320\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(51,51,51)\"/><rect x=\"344\" y=\"116\" width=\"23\" height=\"23\" fill=\"#FD5644\"/><rect x=\"368\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(145,145,145)\"/><rect x=\"392\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(188,188,188)\"/><rect x=\"416\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(227,227,227)\"/><rect x=\"440\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(74,74,74)\"/><rect x=\"176\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(86,86,86)\"/><rect x=\"200\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(139,139,139)\"/><rect x=\"224\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(182,182,182)\"/><rect x=\"248\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(222,222,222)\"/><rect x=\"272\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(69,69,69)\"/><rect x=\"296\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(117,117,117)\"/><rect x=\"320\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(164,164,164)\"/><rect x=\"344\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(205,205,205)\"/><rect x=\"368\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(51,51,51)\"/><rect x=\"392\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(94,94,94)\"/><rect x=\"416\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(145,145,145)\"/><rect x=\"440\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(188,188,188)\"/><rect x=\"176\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(200,200,200)\"/><rect x=\"200\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(238,238,238)\"/><rect x=\"224\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(86,86,86)\"/><rect x=\"248\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(139,139,139)\"/><rect x=\"272\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(182,182,182)\"/><rect x=\"296\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(222,222,222)\"/><rect x=\"320\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(69,69,69)\"/><rect x=\"344\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(117,117,117)\"/><rect x=\"368\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(164,164,164)\"/><rect x=\"392\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(205,205,205)\"/><rect x=\"416\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(51,51,51)\"/><rect x=\"440\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(94,94,94)\"/><rect x=\"176\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(109,109,109)\"/><rect x=\"200\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(158,158,158)\"/><rect x=\"224\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(200,200,200)\"/><rect x=\"248\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(238,238,238)\"/><rect x=\"272\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(86,86,86)\"/><rect x=\"296\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(139,139,139)\"/><rect x=\"320\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(182,182,182)\"/><rect x=\"344\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(222,222,222)\"/><rect x=\"368\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(69,69,69)\"/><rect x=\"392\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(117,117,117)\"/><rect x=\"416\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(164,164,164)\"/><rect x=\"440\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(205,205,205)\"/><rect x=\"176\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(216,216,216)\"/><rect x=\"200\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(64,64,64)\"/><rect x=\"224\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(109,109,109)\"/><rect x=\"248\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(158,158,158)\"/><rect x=\"272\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(200,200,200)\"/><rect x=\"296\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(238,238,238)\"/><rect x=\"320\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(86,86,86)\"/><rect x=\"344\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(139,139,139)\"/><rect x=\"368\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(182,182,182)\"/><rect x=\"392\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(222,222,222)\"/><rect x=\"416\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(69,69,69)\"/><rect x=\"440\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(117,117,117)\"/></svg>"
+        }
+      ],
+      "incorporated": [
+        {
+          "id": "layer-sample",
+          "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" id=\"front-graph\" viewBox=\"0 0 640 280\"><style>#layer-front{position:fixed;inset:85px 190px 85px 290px;z-index:7;display:flex;flex-direction:column;min-width:0;background:#111}\n#layer-front[hidden],#layer-front [hidden]{display:none!important}\n.front-view #scene,.front-view .path-demo{visibility:hidden;pointer-events:none}\n.front-heading{display:flex;align-items:flex-start;justify-content:flex-end;gap:12px;flex:none}\n.front-tools{display:flex;gap:5px;align-items:center}\n.front-tools button,#front-node-info button{font:12px inherit;color:#ccc;background:#191919;border:1px solid #444;padding:6px 8px;cursor:pointer;white-space:nowrap}\n.front-canvas{flex:1;min-height:0;overflow:hidden;margin-top:8px}\n#front-graph{width:100%;height:100%;display:block;touch-action:none;user-select:none}\n#front-graph text{fill:#eee;font:18px Inter,\"PingFang SC\",\"Microsoft YaHei\",system-ui,sans-serif;pointer-events:none}\n#front-graph .minor{fill:#ababab;font-size:14px}\n#front-graph .section-label{fill:#ababab;font-size:14px}\n#front-graph .tensor-label{font-size:16px;font-weight:600;dominant-baseline:middle;paint-order:stroke fill;stroke:#111;stroke-width:4px;stroke-linejoin:round}\n#front-graph .weight .tensor-label,#front-graph .gradient .tensor-label{font-size:14px}\n#front-graph .activation .tensor-label{fill:#B1EF6B}\n#front-graph .weight .tensor-label{fill:#BCA0F3}\n#front-graph .gradient .tensor-label{fill:#79D4F2}\n#front-graph .op-label{fill:#fff;font-size:18px;font-weight:650;dominant-baseline:middle}\n#front-graph .op{fill:#505050;stroke:#858585;stroke-width:1.5}\n#front-graph circle{fill:#111;stroke:#ddd;stroke-width:1.6}\n#front-graph .residual-circle{fill:#111;stroke:#ddd;stroke-width:1.6;transform:none}\n#front-graph .add-mark{fill:none;stroke:#ddd;stroke-width:1.6;stroke-linecap:butt;pointer-events:none}\n#front-graph .residual-label{fill:#B1EF6B;font-size:18px}\n#front-graph .sublayer{fill:#161616;stroke:#333;stroke-width:1}\n#front-graph .front-edge{fill:none;stroke:#777777;stroke-width:2}\n#front-graph .gradient.front-edge{stroke-dasharray:6 6}\n#front-graph .tensor-outline{fill:#111;stroke-width:1.2}\n#front-graph .front-node{cursor:pointer;outline:none}\n#front-graph .front-node:hover>.op,#front-graph .front-node:focus-visible>.op,#front-graph [aria-pressed=true]>.op,#front-graph .front-node:hover>.tensor-outline,#front-graph .front-node:focus-visible>.tensor-outline,#front-graph [aria-pressed=true]>.tensor-outline,#front-graph .front-node:hover>circle,#front-graph .front-node:focus-visible>circle,#front-graph [aria-pressed=true]>circle{stroke:#fff;stroke-width:2.5}\n/* Fixed graph glyphs follow the reference guide; observation modes emphasize semantic roles. */\n#front-graph[data-mode=activation] .weight,#front-graph[data-mode=activation] .gradient{visibility:hidden}\n#front-graph[data-mode=weight] .gradient{visibility:hidden}\n#front-graph[data-mode=weight] .activation.front-node,#front-graph[data-mode=gradient] .activation.front-node{opacity:.55}\n#front-graph[data-mode=gradient] .weight.front-node{opacity:.6}\n.front-foot{font-size:11px;color:#aaa;padding-top:7px;text-align:center}\n#front-node-info,#front-evidence{position:absolute;z-index:10;right:0;top:60px;width:300px;padding:18px;background:#191919;border:1px solid #555;box-shadow:0 8px 30px #0008;font-size:12px;line-height:1.8}\n#front-node-info h3{font-size:15px;margin:0 24px 10px 0;font-weight:500}\n#front-node-info p{color:#bbb;margin:0 0 14px}\n#front-node-info #front-node-close{position:absolute;top:8px;right:8px;border:0;background:none;font-size:18px}\n#front-evidence{width:360px;max-height:80%;overflow:auto}\n#front-evidence p{color:#bbb}#front-evidence a{color:#ddd}\n@media(max-width:1100px){#layer-front{inset:235px 22px 100px}.front-view .identity h2{font-size:40px;margin-bottom:8px}.front-view .identity h3{font-size:15px;margin-bottom:6px}.front-view .identity button{margin-top:8px}.front-view .identity{top:93px}.front-view .sampling-note{display:none}}\n@media(max-width:600px){#layer-front{inset:275px 12px 100px}.front-heading{flex-wrap:wrap;gap:6px}.front-tools button{padding:4px 6px;font-size:11px}#front-layer-label{font-size:13px}#front-mode-label{font-size:11px;margin-top:4px}.front-foot{font-size:10px}.front-view .identity{top:140px}.front-view .identity h2{font-size:32px}.front-view .identity h3{margin-bottom:3px}.front-view .identity p{font-size:10px}#front-node-info,#front-evidence{max-width:100%;top:68px;max-height:75%;overflow:auto}}\n\n#front-graph .has-alert .tensor-outline{stroke:#FD5644;stroke-opacity:1;stroke-width:2}\n#front-graph .has-alert .tensor-label,#front-graph .anomaly-mark{fill:#FD5644}\n#front-graph .anomaly-mark{font-size:20px;font-weight:650}\n\n#front-node-info{position:fixed;right:auto;box-sizing:border-box;max-width:calc(100vw - 24px);max-height:calc(100vh - 24px);overflow:auto}\n\n#front-graph .tensor-rms{font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}\n</style><defs><marker id=\"front-activation\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto\"><path d=\"M1 1 L8 5 L1 9\" fill=\"none\" stroke=\"#777777\" stroke-width=\"1.3\"/></marker><marker id=\"front-weight\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto\"><path d=\"M1 1 L8 5 L1 9\" fill=\"none\" stroke=\"#777777\" stroke-width=\"1.3\"/></marker><marker id=\"front-gradient\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto\"><path d=\"M1 1 L8 5 L1 9\" fill=\"none\" stroke=\"#777777\" stroke-width=\"1.3\"/></marker></defs><g class=\"front-node activation has-alert\" data-node=\"query\" role=\"button\" tabindex=\"0\" aria-label=\"Query\" aria-pressed=\"false\"><title>采样示例 1 个采样点超阈值；橙红格表示对应区域含异常采样。 采样 RMS 0.1250。</title><rect class=\"tensor-outline\" x=\"230\" y=\"105\" width=\"180\" height=\"62\" rx=\"6\" fill=\"#111\" stroke=\"#B1EF6B\"/><rect class=\"grid-cell\" x=\"236\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#FD5644\" opacity=\"1\"/><rect class=\"grid-cell\" x=\"253.1\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.22\"/><rect class=\"grid-cell\" x=\"270.2\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.26\"/><rect class=\"grid-cell\" x=\"287.3\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.3\"/><rect class=\"grid-cell\" x=\"304.4\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.24\"/><rect class=\"grid-cell\" x=\"321.5\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.28\"/><rect class=\"grid-cell\" x=\"338.6\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.22\"/><rect class=\"grid-cell\" x=\"355.70000000000005\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.26\"/><rect class=\"grid-cell\" x=\"372.8\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.3\"/><rect class=\"grid-cell\" x=\"389.9\" y=\"111\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.24\"/><rect class=\"grid-cell\" x=\"236\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.22\"/><rect class=\"grid-cell\" x=\"253.1\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.26\"/><rect class=\"grid-cell\" x=\"270.2\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.3\"/><rect class=\"grid-cell\" x=\"287.3\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.24\"/><rect class=\"grid-cell\" x=\"304.4\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.28\"/><rect class=\"grid-cell\" x=\"321.5\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.22\"/><rect class=\"grid-cell\" x=\"338.6\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.26\"/><rect class=\"grid-cell\" x=\"355.70000000000005\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.3\"/><rect class=\"grid-cell\" x=\"372.8\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.24\"/><rect class=\"grid-cell\" x=\"389.9\" y=\"128.95\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.28\"/><rect class=\"grid-cell\" x=\"236\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.26\"/><rect class=\"grid-cell\" x=\"253.1\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.3\"/><rect class=\"grid-cell\" x=\"270.2\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.24\"/><rect class=\"grid-cell\" x=\"287.3\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.28\"/><rect class=\"grid-cell\" x=\"304.4\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.22\"/><rect class=\"grid-cell\" x=\"321.5\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.26\"/><rect class=\"grid-cell\" x=\"338.6\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.3\"/><rect class=\"grid-cell\" x=\"355.70000000000005\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.24\"/><rect class=\"grid-cell\" x=\"372.8\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.28\"/><rect class=\"grid-cell\" x=\"389.9\" y=\"146.9\" width=\"14.1\" height=\"14.1\" fill=\"#B1EF6B\" opacity=\"0.22\"/><text x=\"418\" y=\"97\" text-anchor=\"middle\" class=\"anomaly-mark\">!</text><text x=\"320\" y=\"126\" text-anchor=\"middle\" class=\"tensor-label\">[T × 1024]</text><text x=\"320\" y=\"148\" text-anchor=\"middle\" class=\"tensor-label tensor-rms\">RMS 0.1250</text></g></svg>",
+          "provenance": [
+            {
+              "file": "layer-front.js",
+              "sha256": "5870e1180f22c5bfb21dc7e4bbd6101c859fdb1d0bb6dc1960434d88b1a1b295"
+            },
+            {
+              "file": "layer-front.css",
+              "sha256": "b51e0efadd229eb40f574e40407fb7704465f9613f6a600094f34f62ec6e54c9"
+            },
+            {
+              "file": "rank-memory-view.js",
+              "sha256": "24a14c060d8a158eae896a62781c9b17f82654215ef7d2dfd09861c4ae84b377"
+            },
+            {
+              "file": "pangu-layer-stack-preview.js",
+              "sha256": "fb009382661a84af3497fe33684b2acb994d3587220c5866393dc7fcba8203c6"
+            },
+            {
+              "file": "layer-stack-face.js",
+              "sha256": "5361925e2d207ddd7b1866371ce2b5939c25b795ceea84830d1bcca3e1b687cb"
+            },
+            {
+              "file": "layer-stack-face.css",
+              "sha256": "72d0b8db3e78f24c820e361bfe7fdc12a03e78a0a10429ae34b6116bf074ac03"
+            }
+          ]
+        },
+        {
+          "id": "layer-sample-gray",
+          "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" id=\"front-graph\" viewBox=\"0 0 640 280\"><style>#layer-front{position:fixed;inset:85px 190px 85px 290px;z-index:7;display:flex;flex-direction:column;min-width:0;background:#111}\n#layer-front[hidden],#layer-front [hidden]{display:none!important}\n.front-view #scene,.front-view .path-demo{visibility:hidden;pointer-events:none}\n.front-heading{display:flex;align-items:flex-start;justify-content:flex-end;gap:12px;flex:none}\n.front-tools{display:flex;gap:5px;align-items:center}\n.front-tools button,#front-node-info button{font:12px inherit;color:#ccc;background:#191919;border:1px solid #444;padding:6px 8px;cursor:pointer;white-space:nowrap}\n.front-canvas{flex:1;min-height:0;overflow:hidden;margin-top:8px}\n#front-graph{width:100%;height:100%;display:block;touch-action:none;user-select:none}\n#front-graph text{fill:#eee;font:18px Inter,\"PingFang SC\",\"Microsoft YaHei\",system-ui,sans-serif;pointer-events:none}\n#front-graph .minor{fill:#ababab;font-size:14px}\n#front-graph .section-label{fill:#ababab;font-size:14px}\n#front-graph .tensor-label{font-size:16px;font-weight:600;dominant-baseline:middle;paint-order:stroke fill;stroke:#111;stroke-width:4px;stroke-linejoin:round}\n#front-graph .weight .tensor-label,#front-graph .gradient .tensor-label{font-size:14px}\n#front-graph .activation .tensor-label{fill:#B1EF6B}\n#front-graph .weight .tensor-label{fill:#BCA0F3}\n#front-graph .gradient .tensor-label{fill:#79D4F2}\n#front-graph .op-label{fill:#fff;font-size:18px;font-weight:650;dominant-baseline:middle}\n#front-graph .op{fill:#505050;stroke:#858585;stroke-width:1.5}\n#front-graph circle{fill:#111;stroke:#ddd;stroke-width:1.6}\n#front-graph .residual-circle{fill:#111;stroke:#ddd;stroke-width:1.6;transform:none}\n#front-graph .add-mark{fill:none;stroke:#ddd;stroke-width:1.6;stroke-linecap:butt;pointer-events:none}\n#front-graph .residual-label{fill:#B1EF6B;font-size:18px}\n#front-graph .sublayer{fill:#161616;stroke:#333;stroke-width:1}\n#front-graph .front-edge{fill:none;stroke:#777777;stroke-width:2}\n#front-graph .gradient.front-edge{stroke-dasharray:6 6}\n#front-graph .tensor-outline{fill:#111;stroke-width:1.2}\n#front-graph .front-node{cursor:pointer;outline:none}\n#front-graph .front-node:hover>.op,#front-graph .front-node:focus-visible>.op,#front-graph [aria-pressed=true]>.op,#front-graph .front-node:hover>.tensor-outline,#front-graph .front-node:focus-visible>.tensor-outline,#front-graph [aria-pressed=true]>.tensor-outline,#front-graph .front-node:hover>circle,#front-graph .front-node:focus-visible>circle,#front-graph [aria-pressed=true]>circle{stroke:#fff;stroke-width:2.5}\n/* Fixed graph glyphs follow the reference guide; observation modes emphasize semantic roles. */\n#front-graph[data-mode=activation] .weight,#front-graph[data-mode=activation] .gradient{visibility:hidden}\n#front-graph[data-mode=weight] .gradient{visibility:hidden}\n#front-graph[data-mode=weight] .activation.front-node,#front-graph[data-mode=gradient] .activation.front-node{opacity:.55}\n#front-graph[data-mode=gradient] .weight.front-node{opacity:.6}\n.front-foot{font-size:11px;color:#aaa;padding-top:7px;text-align:center}\n#front-node-info,#front-evidence{position:absolute;z-index:10;right:0;top:60px;width:300px;padding:18px;background:#191919;border:1px solid #555;box-shadow:0 8px 30px #0008;font-size:12px;line-height:1.8}\n#front-node-info h3{font-size:15px;margin:0 24px 10px 0;font-weight:500}\n#front-node-info p{color:#bbb;margin:0 0 14px}\n#front-node-info #front-node-close{position:absolute;top:8px;right:8px;border:0;background:none;font-size:18px}\n#front-evidence{width:360px;max-height:80%;overflow:auto}\n#front-evidence p{color:#bbb}#front-evidence a{color:#ddd}\n@media(max-width:1100px){#layer-front{inset:235px 22px 100px}.front-view .identity h2{font-size:40px;margin-bottom:8px}.front-view .identity h3{font-size:15px;margin-bottom:6px}.front-view .identity button{margin-top:8px}.front-view .identity{top:93px}.front-view .sampling-note{display:none}}\n@media(max-width:600px){#layer-front{inset:275px 12px 100px}.front-heading{flex-wrap:wrap;gap:6px}.front-tools button{padding:4px 6px;font-size:11px}#front-layer-label{font-size:13px}#front-mode-label{font-size:11px;margin-top:4px}.front-foot{font-size:10px}.front-view .identity{top:140px}.front-view .identity h2{font-size:32px}.front-view .identity h3{margin-bottom:3px}.front-view .identity p{font-size:10px}#front-node-info,#front-evidence{max-width:100%;top:68px;max-height:75%;overflow:auto}}\n\n#front-graph .has-alert .tensor-outline{stroke:#FD5644;stroke-opacity:1;stroke-width:2}\n#front-graph .has-alert .tensor-label,#front-graph .anomaly-mark{fill:#FD5644}\n#front-graph .anomaly-mark{font-size:20px;font-weight:650}\n\n#front-node-info{position:fixed;right:auto;box-sizing:border-box;max-width:calc(100vw - 24px);max-height:calc(100vh - 24px);overflow:auto}\n\n#front-graph .tensor-rms{font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}\n</style><defs><marker id=\"front-activation\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto\"><path d=\"M1 1 L8 5 L1 9\" fill=\"none\" stroke=\"#777777\" stroke-width=\"1.3\"/></marker><marker id=\"front-weight\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto\"><path d=\"M1 1 L8 5 L1 9\" fill=\"none\" stroke=\"#777777\" stroke-width=\"1.3\"/></marker><marker id=\"front-gradient\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto\"><path d=\"M1 1 L8 5 L1 9\" fill=\"none\" stroke=\"#777777\" stroke-width=\"1.3\"/></marker></defs><rect x=\"176\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(51,51,51)\"/><rect x=\"200\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(94,94,94)\"/><rect x=\"224\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(145,145,145)\"/><rect x=\"248\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(188,188,188)\"/><rect x=\"272\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(227,227,227)\"/><rect x=\"296\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(74,74,74)\"/><rect x=\"320\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(124,124,124)\"/><rect x=\"344\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(170,170,170)\"/><rect x=\"368\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(211,211,211)\"/><rect x=\"392\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(59,59,59)\"/><rect x=\"416\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(102,102,102)\"/><rect x=\"440\" y=\"44\" width=\"23\" height=\"23\" fill=\"rgb(151,151,151)\"/><rect x=\"176\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(164,164,164)\"/><rect x=\"200\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(205,205,205)\"/><rect x=\"224\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(51,51,51)\"/><rect x=\"248\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(94,94,94)\"/><rect x=\"272\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(145,145,145)\"/><rect x=\"296\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(188,188,188)\"/><rect x=\"320\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(227,227,227)\"/><rect x=\"344\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(74,74,74)\"/><rect x=\"368\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(124,124,124)\"/><rect x=\"392\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(170,170,170)\"/><rect x=\"416\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(211,211,211)\"/><rect x=\"440\" y=\"68\" width=\"23\" height=\"23\" fill=\"rgb(59,59,59)\"/><rect x=\"176\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(69,69,69)\"/><rect x=\"200\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(117,117,117)\"/><rect x=\"224\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(164,164,164)\"/><rect x=\"248\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(205,205,205)\"/><rect x=\"272\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(51,51,51)\"/><rect x=\"296\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(94,94,94)\"/><rect x=\"320\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(145,145,145)\"/><rect x=\"344\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(188,188,188)\"/><rect x=\"368\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(227,227,227)\"/><rect x=\"392\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(74,74,74)\"/><rect x=\"416\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(124,124,124)\"/><rect x=\"440\" y=\"92\" width=\"23\" height=\"23\" fill=\"rgb(170,170,170)\"/><rect x=\"176\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(182,182,182)\"/><rect x=\"200\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(222,222,222)\"/><rect x=\"224\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(69,69,69)\"/><rect x=\"248\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(117,117,117)\"/><rect x=\"272\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(164,164,164)\"/><rect x=\"296\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(205,205,205)\"/><rect x=\"320\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(51,51,51)\"/><rect x=\"344\" y=\"116\" width=\"23\" height=\"23\" fill=\"#FD5644\"/><rect x=\"368\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(145,145,145)\"/><rect x=\"392\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(188,188,188)\"/><rect x=\"416\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(227,227,227)\"/><rect x=\"440\" y=\"116\" width=\"23\" height=\"23\" fill=\"rgb(74,74,74)\"/><rect x=\"176\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(86,86,86)\"/><rect x=\"200\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(139,139,139)\"/><rect x=\"224\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(182,182,182)\"/><rect x=\"248\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(222,222,222)\"/><rect x=\"272\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(69,69,69)\"/><rect x=\"296\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(117,117,117)\"/><rect x=\"320\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(164,164,164)\"/><rect x=\"344\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(205,205,205)\"/><rect x=\"368\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(51,51,51)\"/><rect x=\"392\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(94,94,94)\"/><rect x=\"416\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(145,145,145)\"/><rect x=\"440\" y=\"140\" width=\"23\" height=\"23\" fill=\"rgb(188,188,188)\"/><rect x=\"176\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(200,200,200)\"/><rect x=\"200\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(238,238,238)\"/><rect x=\"224\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(86,86,86)\"/><rect x=\"248\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(139,139,139)\"/><rect x=\"272\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(182,182,182)\"/><rect x=\"296\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(222,222,222)\"/><rect x=\"320\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(69,69,69)\"/><rect x=\"344\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(117,117,117)\"/><rect x=\"368\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(164,164,164)\"/><rect x=\"392\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(205,205,205)\"/><rect x=\"416\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(51,51,51)\"/><rect x=\"440\" y=\"164\" width=\"23\" height=\"23\" fill=\"rgb(94,94,94)\"/><rect x=\"176\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(109,109,109)\"/><rect x=\"200\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(158,158,158)\"/><rect x=\"224\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(200,200,200)\"/><rect x=\"248\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(238,238,238)\"/><rect x=\"272\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(86,86,86)\"/><rect x=\"296\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(139,139,139)\"/><rect x=\"320\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(182,182,182)\"/><rect x=\"344\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(222,222,222)\"/><rect x=\"368\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(69,69,69)\"/><rect x=\"392\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(117,117,117)\"/><rect x=\"416\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(164,164,164)\"/><rect x=\"440\" y=\"188\" width=\"23\" height=\"23\" fill=\"rgb(205,205,205)\"/><rect x=\"176\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(216,216,216)\"/><rect x=\"200\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(64,64,64)\"/><rect x=\"224\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(109,109,109)\"/><rect x=\"248\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(158,158,158)\"/><rect x=\"272\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(200,200,200)\"/><rect x=\"296\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(238,238,238)\"/><rect x=\"320\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(86,86,86)\"/><rect x=\"344\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(139,139,139)\"/><rect x=\"368\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(182,182,182)\"/><rect x=\"392\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(222,222,222)\"/><rect x=\"416\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(69,69,69)\"/><rect x=\"440\" y=\"212\" width=\"23\" height=\"23\" fill=\"rgb(117,117,117)\"/></svg>",
+          "provenance": [
+            {
+              "file": "layer-front.js",
+              "sha256": "5870e1180f22c5bfb21dc7e4bbd6101c859fdb1d0bb6dc1960434d88b1a1b295"
+            },
+            {
+              "file": "layer-front.css",
+              "sha256": "b51e0efadd229eb40f574e40407fb7704465f9613f6a600094f34f62ec6e54c9"
+            },
+            {
+              "file": "rank-memory-view.js",
+              "sha256": "24a14c060d8a158eae896a62781c9b17f82654215ef7d2dfd09861c4ae84b377"
+            },
+            {
+              "file": "pangu-layer-stack-preview.js",
+              "sha256": "fb009382661a84af3497fe33684b2acb994d3587220c5866393dc7fcba8203c6"
+            },
+            {
+              "file": "layer-stack-face.js",
+              "sha256": "5361925e2d207ddd7b1866371ce2b5939c25b795ceea84830d1bcca3e1b687cb"
+            },
+            {
+              "file": "layer-stack-face.css",
+              "sha256": "72d0b8db3e78f24c820e361bfe7fdc12a03e78a0a10429ae34b6116bf074ac03"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "token",
+      "title": "Token",
+      "cat": "对象",
+      "legacy": [
+        "token"
+      ],
+      "layer": "system",
+      "desc": "独立标签表示离散 token 或其编号，不能把该标签直接当作隐藏特征矩阵。",
+      "note": "",
+      "refs": [
+        {
+          "id": "transformer-layer-guide",
+          "anchor": "step-1"
+        },
+        {
+          "id": "dense-ffn-to-moe",
+          "anchor": ""
+        },
+        {
+          "id": "llm-inference-dense-to-clusters",
+          "anchor": ""
+        }
+      ],
+      "variants": [
+        {
+          "id": "token",
+          "title": "Token 标识",
+          "desc": "独立标签表示离散 token 或其编号，不能把该标签直接当作隐藏特征矩阵。"
+        }
+      ]
+    },
+    {
+      "id": "system-op",
+      "cat": "对象",
+      "title": "计算与通信操作",
+      "desc": "具名计算操作采用统一胶囊。模型层操作与 IR 操作通过名称、所属层级和来源区分，跨阶段对应需要变换证据。",
+      "refs": [
+        {
+          "id": "pypto-compilation-guide"
+        },
+        {
+          "id": "training-parallel-communication"
+        },
+        {
+          "id": "training-parallel-communication",
+          "anchor": "vocab"
+        },
+        {
+          "id": "llm-inference-dense-to-clusters",
+          "anchor": ""
+        },
+        {
+          "id": "dense-ffn-to-moe",
+          "anchor": ""
+        },
+        {
+          "id": "transformer-layer-guide",
+          "anchor": "step-2"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "objects"
+        },
+        {
+          "id": "pypto-guides",
+          "anchor": "structure-tile"
+        }
+      ],
+      "legacy": [
+        "model-op",
+        "ir-op",
+        "router",
+        "communication"
+      ],
+      "layer": "system",
+      "note": "统一规则 v1 · 基于来源图元整理的设计规则与教学示例，并非来源报告的原始截图或实际运行记录。",
+      "variants": [
+        {
+          "id": "model-op",
+          "title": "模型计算模块",
+          "desc": "中灰胶囊表示计算操作或折叠子层，例如 Norm、Attention、FFN；名称说明层级。"
+        },
+        {
+          "id": "ir-op",
+          "title": "IR 操作",
+          "desc": "紫色胶囊带函数标记，表示 tensor.matmul 或 tile.matmul 等 IR 操作，不等同一条设备指令。"
+        },
+        {
+          "id": "router",
+          "title": "Router",
+          "desc": "Router 是有独立参数的计算模块。它生成专家选择与合并系数，图形仍采用计算胶囊。"
+        },
+        {
+          "id": "communication",
+          "title": "通信操作",
+          "desc": "深灰胶囊外的白色虚线轮廓表示通信操作。AllGather、AllReduce 等名称规定数据交换语义。"
+        }
+      ]
+    },
+    {
+      "id": "system-add",
+      "cat": "对象",
+      "title": "逐元素加／乘",
+      "desc": "圆形加号保留独立形态；输入形状与广播条件由操作定义决定。",
+      "refs": [
+        {
+          "id": "pypto-compilation-guide"
+        },
+        {
+          "id": "training-parallel-communication"
+        },
+        {
+          "id": "transformer-layer-guide",
+          "anchor": "step-2"
+        },
+        {
+          "id": "dense-ffn-to-moe",
+          "anchor": ""
+        },
+        {
+          "id": "llm-inference-dense-to-clusters",
+          "anchor": ""
+        },
+        {
+          "id": "training-parallel-communication",
+          "anchor": "vocab"
+        }
+      ],
+      "legacy": [
+        "add",
+        "multiply"
+      ],
+      "layer": "system",
+      "note": "统一规则 v1 · 基于来源图元整理的设计规则与教学示例，并非来源报告的原始截图或实际运行记录。",
+      "variants": [
+        {
+          "id": "add",
+          "title": "逐元素相加",
+          "desc": "圆形加号表示对应位置相加；残差合并使用此图元。输入 shape 的匹配条件由计算语义确定。"
+        },
+        {
+          "id": "multiply",
+          "title": "逐元素／广播乘法",
+          "desc": "圆形乘号表示逐元素相乘；标量系数乘向量时广播到各特征。矩阵乘法使用明确命名的计算节点。"
+        }
+      ]
+    },
+    {
+      "id": "expert",
+      "title": "MoE 专家",
+      "cat": "对象",
+      "legacy": [
+        "expert",
+        "expert-inactive"
+      ],
+      "layer": "system",
+      "desc": "专家胶囊内部以三组参数小格概括 SwiGLU 参数，边界标识专家身份。 降低轮廓与参数网格的亮度，表达当前 token 路由中未选中的专家；专家参数仍然存在。",
+      "note": "",
+      "refs": [
+        {
+          "id": "dense-ffn-to-moe",
+          "anchor": ""
+        },
+        {
+          "id": "llm-inference-dense-to-clusters",
+          "anchor": ""
+        }
+      ],
+      "variants": [
+        {
+          "id": "expert",
+          "title": "MoE 专家",
+          "desc": "专家胶囊内部以三组参数小格概括 SwiGLU 参数，边界标识专家身份。"
+        },
+        {
+          "id": "expert-inactive",
+          "title": "未选中的专家",
+          "desc": "降低轮廓与参数网格的亮度，表达当前 token 路由中未选中的专家；专家参数仍然存在。"
+        }
+      ]
+    },
+    {
+      "id": "system-loop",
+      "cat": "对象",
+      "title": "循环范围",
+      "desc": "左括线与虚线范围表达控制结构；迭代次数不是设备数量。",
+      "refs": [
+        {
+          "id": "pypto-compilation-guide"
+        },
+        {
+          "id": "pypto-guides"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "objects"
+        },
+        {
+          "id": "pypto-guides",
+          "anchor": "structure-control"
+        }
+      ],
+      "legacy": [
+        "loop"
+      ],
+      "layer": "system",
+      "note": "统一规则 v1 · 基于来源图元整理的设计规则与教学示例，并非来源报告的原始截图或实际运行记录。",
+      "variants": [
+        {
+          "id": "loop",
+          "title": "循环",
+          "desc": "左括线与虚线边界表示重复执行范围；×4 表示示例迭代次数。"
+        }
+      ]
+    },
+    {
+      "id": "system-kernel",
+      "cat": "对象",
+      "title": "核函数",
+      "desc": "10% 白色填充的函数范围与目标标签表示核函数；函数体可包含 OP 与循环。普通函数不自动等同于设备端入口。",
+      "refs": [
+        {
+          "id": "pypto-compilation-guide"
+        },
+        {
+          "id": "pypto-guides"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "objects"
+        },
+        {
+          "id": "pypto-guides",
+          "anchor": "structure-kernels"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "outline"
+        },
+        {
+          "id": "pypto-guides",
+          "anchor": "structure-outline"
+        }
+      ],
+      "legacy": [
+        "kernel",
+        "callable"
+      ],
+      "layer": "system",
+      "note": "统一规则 v1 · 基于来源图元整理的设计规则与教学示例，并非来源报告的原始截图或实际运行记录。",
+      "variants": [
+        {
+          "id": "kernel",
+          "title": "核函数 · Kernel",
+          "desc": "10% 白色填充的函数范围与目标标签表示核函数；函数体可包含 OP 与循环。普通函数不自动等同于设备端入口。"
+        }
+      ]
+    },
+    {
+      "id": "system-task",
+      "cat": "对象",
+      "title": "调度任务",
+      "desc": "亮绿色实心条与调度图标表示一次核函数调度，任务 0 是示例中的第 0 个任务实例，projection 是目标核函数。与设备指令共用样式，但语义层级不同。",
+      "refs": [
+        {
+          "id": "pypto-compilation-guide"
+        },
+        {
+          "id": "pypto-guides"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "objects"
+        },
+        {
+          "id": "pypto-guides",
+          "anchor": "diagnosis-instance"
+        }
+      ],
+      "legacy": [
+        "task"
+      ],
+      "layer": "system",
+      "note": "统一规则 v1 · 基于来源图元整理的设计规则与教学示例，并非来源报告的原始截图或实际运行记录。",
+      "variants": [
+        {
+          "id": "task",
+          "title": "任务 · Task",
+          "desc": "亮绿色实心条与调度图标表示一次核函数调度，任务 0 是示例中的第 0 个任务实例，projection 是目标核函数。与设备指令共用样式，但语义层级不同。"
+        }
+      ]
+    },
+    {
+      "id": "system-instruction",
+      "cat": "对象",
+      "title": "设备指令",
+      "desc": "亮绿色实心条与终端图标表示设备执行动作。DataCopy 为搬运指令的示意名称，不代表某个 ISA 的具体操作码。",
+      "refs": [
+        {
+          "id": "pypto-compilation-guide"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "objects"
+        }
+      ],
+      "legacy": [
+        "instruction"
+      ],
+      "layer": "system",
+      "note": "统一规则 v1 · 基于来源图元整理的设计规则与教学示例，并非来源报告的原始截图或实际运行记录。",
+      "variants": [
+        {
+          "id": "instruction",
+          "title": "设备指令类别",
+          "desc": "亮绿色实心条与终端图标表示设备执行动作。DataCopy 为搬运指令的示意名称，不代表某个 ISA 的具体操作码。"
+        }
+      ]
+    },
+    {
+      "id": "system-rank",
+      "cat": "对象",
+      "title": "Rank 进程",
+      "desc": "部署容器具有稳定进程身份；设备绑定和并行组分别记录，容器外形不代表硬件规格。",
+      "refs": [
+        {
+          "id": "training-parallel-communication"
+        },
+        {
+          "id": "training-parallel-communication",
+          "anchor": "vocab"
+        },
+        {
+          "id": "llm-inference-dense-to-clusters",
+          "anchor": ""
+        }
+      ],
+      "legacy": [
+        "rank-training",
+        "rank-inference"
+      ],
+      "layer": "system",
+      "note": "统一规则 v1 · 基于来源图元整理的设计规则与教学示例，并非来源报告的原始截图或实际运行记录。",
+      "variants": [
+        {
+          "id": "rank-training",
+          "title": "Rank 容器 · 训练图",
+          "desc": "容器内表示一个进程持有的数据与计算。训练报告的教学配置假设一个进程独占一张设备。"
+        },
+        {
+          "id": "rank-inference",
+          "title": "Rank 标识 · 推理图",
+          "desc": "带四角圆点的板卡形标识指定组内的进程编号；设备绑定另行说明，外形不编码硬件规格。"
+        }
+      ]
+    },
+    {
+      "id": "system-memref",
+      "cat": "对象",
+      "title": "存储引用",
+      "desc": "槽形表示 MemRef，记录底层分配身份、偏移与访问范围；多个引用可关联同一分配。",
+      "refs": [
+        {
+          "id": "pypto-compilation-guide"
+        },
+        {
+          "id": "pypto-guides"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "objects"
+        },
+        {
+          "id": "pypto-guides",
+          "anchor": "memory-objects"
+        }
+      ],
+      "legacy": [
+        "memref"
+      ],
+      "layer": "system",
+      "note": "统一规则 v1 · 基于来源图元整理的设计规则与教学示例，并非来源报告的原始截图或实际运行记录。",
+      "variants": [
+        {
+          "id": "memref",
+          "title": "存储引用 · MemRef",
+          "desc": "暖沙色槽形标识存储引用；多个值可共享引用，MemRef 与底层分配身份及物理硬件分别理解。"
+        }
+      ]
+    },
+    {
+      "id": "system-storage",
+      "cat": "对象",
+      "title": "地址区间",
+      "desc": "带刻度的区间表示某一内存空间内的字节范围，必须同时标明空间、偏移与单位。",
+      "refs": [
+        {
+          "id": "pypto-guides"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "memory"
+        },
+        {
+          "id": "pypto-guides",
+          "anchor": "memory-address"
+        }
+      ],
+      "legacy": [
+        "address"
+      ],
+      "layer": "system",
+      "note": "统一规则 v1 · 基于来源图元整理的设计规则与教学示例，并非来源报告的原始截图或实际运行记录。",
+      "variants": [
+        {
+          "id": "address",
+          "title": "地址区间",
+          "desc": "带刻度的区间表示某一内存空间内的字节范围，必须同时标明空间、偏移与单位。"
+        }
+      ]
+    },
+    {
+      "id": "lifetime",
+      "title": "静态生命周期",
+      "cat": "对象",
+      "legacy": [
+        "lifetime"
+      ],
+      "layer": "system",
+      "desc": "条带沿定义／使用位置延展，用于说明哪些值需要同时保留；横轴不是设备运行时间。",
+      "note": "",
+      "refs": [
+        {
+          "id": "pypto-guides",
+          "anchor": "memory-lifetime"
+        }
+      ],
+      "variants": [
+        {
+          "id": "lifetime",
+          "title": "静态生命周期",
+          "desc": "条带沿定义／使用位置延展，用于说明哪些值需要同时保留；横轴不是设备运行时间。"
+        }
+      ]
+    },
+    {
+      "id": "ir",
+      "title": "中间表示 · IR",
+      "cat": "对象",
+      "legacy": [
+        "ir"
+      ],
+      "layer": "system",
+      "desc": "中性灰范围内展示局部数据流。完整 IR 还包含函数、控制流、类型等信息。",
+      "note": "",
+      "refs": [
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "objects"
+        },
+        {
+          "id": "pypto-guides",
+          "anchor": "diagnosis-conditions"
+        }
+      ],
+      "variants": [
+        {
+          "id": "ir",
+          "title": "中间表示 · IR",
+          "desc": "中性灰范围内展示局部数据流。完整 IR 还包含函数、控制流、类型等信息。"
+        }
+      ]
+    },
+    {
+      "id": "system-pass",
+      "cat": "对象",
+      "title": "编译步骤",
+      "desc": "窄矩形表达分析或变换步骤；名称和版本用于追溯，不表示运行任务。",
+      "refs": [
+        {
+          "id": "pypto-compilation-guide"
+        },
+        {
+          "id": "pypto-guides"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "objects"
+        },
+        {
+          "id": "pypto-guides",
+          "anchor": "diagnosis-conditions"
+        }
+      ],
+      "legacy": [
+        "pass"
+      ],
+      "layer": "system",
+      "note": "统一规则 v1 · 基于来源图元整理的设计规则与教学示例，并非来源报告的原始截图或实际运行记录。",
+      "variants": [
+        {
+          "id": "pass",
+          "title": "编译步骤 · Pass",
+          "desc": "中性灰窄矩形标注具名编译步骤；它分析或改写 IR，不表示运行时任务。"
+        }
+      ]
+    },
+    {
+      "id": "relation-data",
+      "cat": "关系",
+      "title": "数据依赖",
+      "desc": "从生产者指向消费者；线长不编码运行耗时。",
+      "refs": [
+        {
+          "id": "pypto-compilation-guide"
+        },
+        {
+          "id": "training-parallel-communication"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "relations"
+        },
+        {
+          "id": "pypto-guides",
+          "anchor": ""
+        },
+        {
+          "id": "transformer-layer-guide",
+          "anchor": "step-2"
+        },
+        {
+          "id": "dense-ffn-to-moe",
+          "anchor": ""
+        },
+        {
+          "id": "llm-inference-dense-to-clusters",
+          "anchor": ""
+        },
+        {
+          "id": "training-parallel-communication",
+          "anchor": ""
+        }
+      ],
+      "legacy": [
+        "data",
+        "forward"
+      ],
+      "layer": "system",
+      "note": "统一规则 v1 · 基于来源图元整理的设计规则与教学示例，并非来源报告的原始截图或实际运行记录。",
+      "variants": [
+        {
+          "id": "data",
+          "title": "编译数据依赖",
+          "desc": "浅灰实线与双折角箭头连接计算值和消费该值的操作。"
+        },
+        {
+          "id": "forward",
+          "title": "模型前向依赖",
+          "desc": "实线箭头连接产生数据与消费数据的计算节点。颜色和箭头外形保留模型报告的约定。"
+        }
+      ]
+    },
+    {
+      "id": "parameter-read",
+      "title": "参数读取",
+      "cat": "关系",
+      "legacy": [
+        "parameter-read"
+      ],
+      "layer": "system",
+      "desc": "推理报告用蓝紫色虚线表示读取参数；应与青色梯度反向关系区分。",
+      "note": "",
+      "refs": [
+        {
+          "id": "llm-inference-dense-to-clusters",
+          "anchor": ""
+        }
+      ],
+      "variants": [
+        {
+          "id": "parameter-read",
+          "title": "固定参数读取",
+          "desc": "推理报告用蓝紫色虚线表示读取参数；应与青色梯度反向关系区分。"
+        }
+      ]
+    },
+    {
+      "id": "backward",
+      "title": "反向求导关系",
+      "cat": "关系",
+      "legacy": [
+        "backward"
+      ],
+      "layer": "system",
+      "desc": "青色虚线指向上游，表示反向传播关系；简写图不能代替完整求导计算图。",
+      "note": "",
+      "refs": [
+        {
+          "id": "transformer-layer-guide",
+          "anchor": "step-12"
+        },
+        {
+          "id": "dense-ffn-to-moe",
+          "anchor": ""
+        },
+        {
+          "id": "training-parallel-communication",
+          "anchor": ""
+        }
+      ],
+      "variants": [
+        {
+          "id": "backward",
+          "title": "反向求导关系",
+          "desc": "青色虚线指向上游，表示反向传播关系；简写图不能代替完整求导计算图。"
+        }
+      ]
+    },
+    {
+      "id": "relation-call",
+      "cat": "关系",
+      "title": "调用",
+      "desc": "虚线开口箭头连接调用方与函数定义，区别于值的数据依赖。",
+      "refs": [
+        {
+          "id": "pypto-compilation-guide"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "relations"
+        },
+        {
+          "id": "pypto-guides",
+          "anchor": ""
+        }
+      ],
+      "legacy": [
+        "call"
+      ],
+      "layer": "system",
+      "note": "统一规则 v1 · 基于来源图元整理的设计规则与教学示例，并非来源报告的原始截图或实际运行记录。",
+      "variants": [
+        {
+          "id": "call",
+          "title": "调用／引用",
+          "desc": "灰色长虚线、开口箭头表达 Task 对核函数的调用或程序中的函数调用。"
+        }
+      ]
+    },
+    {
+      "id": "task-dependency",
+      "title": "任务依赖",
+      "cat": "关系",
+      "legacy": [
+        "dependency"
+      ],
+      "layer": "system",
+      "desc": "实线开口箭头表达前置任务完成条件，线长不表示等待时间。",
+      "note": "",
+      "refs": [
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "relations"
+        },
+        {
+          "id": "pypto-guides",
+          "anchor": ""
+        }
+      ],
+      "variants": [
+        {
+          "id": "dependency",
+          "title": "任务依赖",
+          "desc": "实线开口箭头表达前置任务完成条件，线长不表示等待时间。"
+        }
+      ]
+    },
+    {
+      "id": "relation-binding",
+      "cat": "关系",
+      "title": "存储绑定",
+      "desc": "圆端点连接值或视图与存储引用；不是计算顺序。",
+      "refs": [
+        {
+          "id": "pypto-compilation-guide"
+        },
+        {
+          "id": "pypto-guides"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "relations"
+        },
+        {
+          "id": "pypto-guides",
+          "anchor": ""
+        }
+      ],
+      "legacy": [
+        "binding"
+      ],
+      "layer": "system",
+      "note": "统一规则 v1 · 基于来源图元整理的设计规则与教学示例，并非来源报告的原始截图或实际运行记录。",
+      "variants": [
+        {
+          "id": "binding",
+          "title": "存储绑定",
+          "desc": "以圆端点连接逻辑值与存储引用，表达存放关系。"
+        }
+      ]
+    },
+    {
+      "id": "relation-mapping",
+      "cat": "关系",
+      "title": "跨阶段对应",
+      "desc": "点线空心菱形表示有证据支持的对应；不暗示新增运行依赖。",
+      "refs": [
+        {
+          "id": "pypto-compilation-guide"
+        },
+        {
+          "id": "pypto-guides"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "relations"
+        },
+        {
+          "id": "pypto-guides",
+          "anchor": ""
+        }
+      ],
+      "legacy": [
+        "mapping"
+      ],
+      "layer": "system",
+      "note": "统一规则 v1 · 基于来源图元整理的设计规则与教学示例，并非来源报告的原始截图或实际运行记录。",
+      "variants": [
+        {
+          "id": "mapping",
+          "title": "跨阶段对应",
+          "desc": "点线与空心菱形表示已核对或明确标注的教学对应；本身不增加运行依赖。"
+        }
+      ]
+    },
+    {
+      "id": "checks",
+      "title": "检查结果",
+      "cat": "对象",
+      "legacy": [
+        "verified",
+        "failed",
+        "invalidated",
+        "unknown"
+      ],
+      "layer": "system",
+      "desc": "勾号表示指定检查在该快照通过；仅覆盖所述性质与检查范围。 叉号表示指定检查失败；需要结合前后快照与检查覆盖定位偏离区间。 实线圆与横线表示旧验证保证不再适用，需要重新检查。 虚线圆与横线表示未获得检查记录，不能解释为通过或失败。",
+      "note": "",
+      "refs": [
+        {
+          "id": "pypto-guides",
+          "anchor": "diagnosis-first"
+        }
+      ],
+      "variants": [
+        {
+          "id": "verified",
+          "title": "检查通过",
+          "desc": "勾号表示指定检查在该快照通过；仅覆盖所述性质与检查范围。"
+        },
+        {
+          "id": "failed",
+          "title": "检查失败",
+          "desc": "叉号表示指定检查失败；需要结合前后快照与检查覆盖定位偏离区间。"
+        },
+        {
+          "id": "invalidated",
+          "title": "验证记录失效",
+          "desc": "实线圆与横线表示旧验证保证不再适用，需要重新检查。"
+        },
+        {
+          "id": "unknown",
+          "title": "缺少检查记录",
+          "desc": "虚线圆与横线表示未获得检查记录，不能解释为通过或失败。"
+        }
+      ]
+    },
+    {
+      "id": "runtime-intervals",
+      "title": "执行与等待区间",
+      "cat": "对象",
+      "legacy": [
+        "time-event",
+        "wait-interval"
+      ],
+      "layer": "system",
+      "desc": "事件条对应时间轴上的执行区间；只有标注单位与时间证据后，长度才可以用于比较耗时。 dispatch 与 start 之间的区间表示待解释的时间间隔，单凭间隔不能判定依赖、排队或资源竞争。",
+      "note": "",
+      "refs": [
+        {
+          "id": "pypto-guides",
+          "anchor": "diagnosis-wait"
+        }
+      ],
+      "variants": [
+        {
+          "id": "time-event",
+          "title": "执行时间区间",
+          "desc": "事件条对应时间轴上的执行区间；只有标注单位与时间证据后，长度才可以用于比较耗时。"
+        },
+        {
+          "id": "wait-interval",
+          "title": "调度到开始的间隔",
+          "desc": "dispatch 与 start 之间的区间表示待解释的时间间隔，单凭间隔不能判定依赖、排队或资源竞争。"
+        }
+      ]
+    },
+    {
+      "id": "layer-forward",
+      "title": "Forward · 连续前向符号",
+      "cat": "关系",
+      "layer": "system",
+      "desc": "提取层边界连续右向折线符号；沿路径表达前向依赖方向。此处为水平排列、2 倍放大的图元样例，不是执行时间轴。",
+      "note": "提取位置：pangu-layer-stack-preview.js · groundRail / updateBoundaryArrows",
+      "refs": [
+        {
+          "id": "layer-stack-demo"
+        }
+      ],
+      "legacy": [],
+      "provenance": [
+        {
+          "file": "layer-front.js",
+          "sha256": "5870e1180f22c5bfb21dc7e4bbd6101c859fdb1d0bb6dc1960434d88b1a1b295"
+        },
+        {
+          "file": "layer-front.css",
+          "sha256": "b51e0efadd229eb40f574e40407fb7704465f9613f6a600094f34f62ec6e54c9"
+        },
+        {
+          "file": "rank-memory-view.js",
+          "sha256": "24a14c060d8a158eae896a62781c9b17f82654215ef7d2dfd09861c4ae84b377"
+        },
+        {
+          "file": "pangu-layer-stack-preview.js",
+          "sha256": "fb009382661a84af3497fe33684b2acb994d3587220c5866393dc7fcba8203c6"
+        },
+        {
+          "file": "layer-stack-face.js",
+          "sha256": "5361925e2d207ddd7b1866371ce2b5939c25b795ceea84830d1bcca3e1b687cb"
+        },
+        {
+          "file": "layer-stack-face.css",
+          "sha256": "72d0b8db3e78f24c820e361bfe7fdc12a03e78a0a10429ae34b6116bf074ac03"
+        }
+      ]
+    },
+    {
+      "id": "layer-backward",
+      "title": "Backward · 连续反向符号",
+      "cat": "关系",
+      "layer": "system",
+      "desc": "使用相同折线符号水平镜像，连续指向左侧；表示层间反向依赖，不把参数梯度当作激活梯度。",
+      "note": "提取位置：pangu-layer-stack-preview.js · groundRail / updateBoundaryArrows",
+      "refs": [
+        {
+          "id": "layer-stack-demo"
+        }
+      ],
+      "legacy": [],
+      "provenance": [
+        {
+          "file": "layer-front.js",
+          "sha256": "5870e1180f22c5bfb21dc7e4bbd6101c859fdb1d0bb6dc1960434d88b1a1b295"
+        },
+        {
+          "file": "layer-front.css",
+          "sha256": "b51e0efadd229eb40f574e40407fb7704465f9613f6a600094f34f62ec6e54c9"
+        },
+        {
+          "file": "rank-memory-view.js",
+          "sha256": "24a14c060d8a158eae896a62781c9b17f82654215ef7d2dfd09861c4ae84b377"
+        },
+        {
+          "file": "pangu-layer-stack-preview.js",
+          "sha256": "fb009382661a84af3497fe33684b2acb994d3587220c5866393dc7fcba8203c6"
+        },
+        {
+          "file": "layer-stack-face.js",
+          "sha256": "5361925e2d207ddd7b1866371ce2b5939c25b795ceea84830d1bcca3e1b687cb"
+        },
+        {
+          "file": "layer-stack-face.css",
+          "sha256": "72d0b8db3e78f24c820e361bfe7fdc12a03e78a0a10429ae34b6116bf074ac03"
+        }
+      ]
+    },
+    {
+      "id": "layer-parameter",
+      "title": "参数读取",
+      "cat": "关系",
+      "layer": "system",
+      "desc": "参数保留紫色网格；读取路径为中性灰实线。与图例库上一轮批准的紫色虚线是不同方案，仅收集对比。",
+      "note": "提取位置：layer-front.js · tensor / path / op",
+      "refs": [
+        {
+          "id": "layer-stack-demo"
+        }
+      ],
+      "legacy": [],
+      "provenance": [
+        {
+          "file": "layer-front.js",
+          "sha256": "5870e1180f22c5bfb21dc7e4bbd6101c859fdb1d0bb6dc1960434d88b1a1b295"
+        },
+        {
+          "file": "layer-front.css",
+          "sha256": "b51e0efadd229eb40f574e40407fb7704465f9613f6a600094f34f62ec6e54c9"
+        },
+        {
+          "file": "rank-memory-view.js",
+          "sha256": "24a14c060d8a158eae896a62781c9b17f82654215ef7d2dfd09861c4ae84b377"
+        },
+        {
+          "file": "pangu-layer-stack-preview.js",
+          "sha256": "fb009382661a84af3497fe33684b2acb994d3587220c5866393dc7fcba8203c6"
+        },
+        {
+          "file": "layer-stack-face.js",
+          "sha256": "5361925e2d207ddd7b1866371ce2b5939c25b795ceea84830d1bcca3e1b687cb"
+        },
+        {
+          "file": "layer-stack-face.css",
+          "sha256": "72d0b8db3e78f24c820e361bfe7fdc12a03e78a0a10429ae34b6116bf074ac03"
+        }
+      ]
+    },
+    {
+      "id": "layer-rank-volume",
+      "title": "2.5D Rank · 容量分层",
+      "cat": "对象",
+      "layer": "system",
+      "desc": "直接执行原 renderer；正交投影、三面明暗、贴面文字与容量比例均保留。64 GB 及分配量为示例。该图表示 Rank 的内存视图，不把进程当作物理芯片。权重色使用源 demo 的 #D185E6，尚未替换库内参数紫色。",
+      "note": "提取位置：rank-memory-view.js · render / block / P",
+      "refs": [
+        {
+          "id": "layer-stack-demo"
+        }
+      ],
+      "legacy": [],
+      "provenance": [
+        {
+          "file": "layer-front.js",
+          "sha256": "5870e1180f22c5bfb21dc7e4bbd6101c859fdb1d0bb6dc1960434d88b1a1b295"
+        },
+        {
+          "file": "layer-front.css",
+          "sha256": "b51e0efadd229eb40f574e40407fb7704465f9613f6a600094f34f62ec6e54c9"
+        },
+        {
+          "file": "rank-memory-view.js",
+          "sha256": "24a14c060d8a158eae896a62781c9b17f82654215ef7d2dfd09861c4ae84b377"
+        },
+        {
+          "file": "pangu-layer-stack-preview.js",
+          "sha256": "fb009382661a84af3497fe33684b2acb994d3587220c5866393dc7fcba8203c6"
+        },
+        {
+          "file": "layer-stack-face.js",
+          "sha256": "5361925e2d207ddd7b1866371ce2b5939c25b795ceea84830d1bcca3e1b687cb"
+        },
+        {
+          "file": "layer-stack-face.css",
+          "sha256": "72d0b8db3e78f24c820e361bfe7fdc12a03e78a0a10429ae34b6116bf074ac03"
+        }
+      ]
+    },
+    {
+      "id": "layer-rank-shard",
+      "title": "表示变体 · Rank 异常分片",
+      "cat": "对象",
+      "layer": "system",
+      "desc": "直接执行原 renderer 的分片检查分支：遮挡上层不再绘制，背景分配变暗，异常切片使用橙红。位置由 layer % 8 得到，只是模拟定位，不是真实内存地址。",
+      "note": "提取位置：rank-memory-view.js · shardInspection / block",
+      "refs": [
+        {
+          "id": "layer-stack-demo"
+        }
+      ],
+      "legacy": [],
+      "provenance": [
+        {
+          "file": "layer-front.js",
+          "sha256": "5870e1180f22c5bfb21dc7e4bbd6101c859fdb1d0bb6dc1960434d88b1a1b295"
+        },
+        {
+          "file": "layer-front.css",
+          "sha256": "b51e0efadd229eb40f574e40407fb7704465f9613f6a600094f34f62ec6e54c9"
+        },
+        {
+          "file": "rank-memory-view.js",
+          "sha256": "24a14c060d8a158eae896a62781c9b17f82654215ef7d2dfd09861c4ae84b377"
+        },
+        {
+          "file": "pangu-layer-stack-preview.js",
+          "sha256": "fb009382661a84af3497fe33684b2acb994d3587220c5866393dc7fcba8203c6"
+        },
+        {
+          "file": "layer-stack-face.js",
+          "sha256": "5361925e2d207ddd7b1866371ce2b5939c25b795ceea84830d1bcca3e1b687cb"
+        },
+        {
+          "file": "layer-stack-face.css",
+          "sha256": "72d0b8db3e78f24c820e361bfe7fdc12a03e78a0a10429ae34b6116bf074ac03"
+        }
+      ]
+    },
+    {
+      "id": "pattern-compute",
+      "cat": "组合模式",
+      "title": "参数化计算",
+      "desc": "X [2,4] 与参数 W [4,3] 输入 MatMul，输出 Y [2,3]。参数和输入作为独立数据对象连接操作；展开使用统一 24 单位格距。",
+      "refs": [
+        {
+          "id": "pypto-compilation-guide"
+        },
+        {
+          "id": "training-parallel-communication"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "inherited"
+        },
+        {
+          "id": "training-parallel-communication",
+          "anchor": "vocab"
+        },
+        {
+          "id": "llm-inference-dense-to-clusters",
+          "anchor": ""
+        },
+        {
+          "id": "dense-ffn-to-moe",
+          "anchor": ""
+        },
+        {
+          "id": "transformer-layer-guide",
+          "anchor": "step-2"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "relations"
+        },
+        {
+          "id": "pypto-guides",
+          "anchor": ""
+        }
+      ],
+      "legacy": [
+        "activation",
+        "weight",
+        "model-op",
+        "data"
+      ],
+      "layer": "pattern",
+      "note": "统一规则 v1 · 基于来源图元整理的设计规则与教学示例，并非来源报告的原始截图或实际运行记录。",
+      "variants": [
+        {
+          "id": "activation",
+          "title": "输入与中间值",
+          "desc": "绿色网格表示输入、激活和计算中间值。形状由标签说明，底纹格数不表示实际元素数量。"
+        },
+        {
+          "id": "weight",
+          "title": "模型参数",
+          "desc": "蓝紫色网格表示权重与偏置。路由参数属于这一类，动态路由系数属于中间值。"
+        },
+        {
+          "id": "model-op",
+          "title": "模型计算模块",
+          "desc": "中灰胶囊表示计算操作或折叠子层，例如 Norm、Attention、FFN；名称说明层级。"
+        },
+        {
+          "id": "data",
+          "title": "编译数据依赖",
+          "desc": "浅灰实线与双折角箭头连接计算值和消费该值的操作。"
+        }
+      ]
+    },
+    {
+      "id": "pattern-distribution",
+      "cat": "组合模式",
+      "title": "分片／复制／部分结果",
+      "desc": "同一布局比较三种分布语义：分片覆盖不同索引范围，复制持有同一逻辑值，部分结果需要归约组合。TP 外侧标记不覆盖内部数据角色色。",
+      "refs": [
+        {
+          "id": "training-parallel-communication"
+        },
+        {
+          "id": "training-parallel-communication",
+          "anchor": "vocab"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "inherited"
+        },
+        {
+          "id": "llm-inference-dense-to-clusters",
+          "anchor": ""
+        },
+        {
+          "id": "dense-ffn-to-moe",
+          "anchor": ""
+        },
+        {
+          "id": "transformer-layer-guide",
+          "anchor": "step-2"
+        },
+        {
+          "id": "transformer-layer-guide",
+          "anchor": ""
+        }
+      ],
+      "legacy": [
+        "rank-training",
+        "weight",
+        "aggregate",
+        "communication"
+      ],
+      "layer": "pattern",
+      "note": "统一规则 v1 · 基于来源图元整理的设计规则与教学示例，并非来源报告的原始截图或实际运行记录。",
+      "variants": [
+        {
+          "id": "rank-training",
+          "title": "Rank 容器 · 训练图",
+          "desc": "容器内表示一个进程持有的数据与计算。训练报告的教学配置假设一个进程独占一张设备。"
+        },
+        {
+          "id": "weight",
+          "title": "模型参数",
+          "desc": "蓝紫色网格表示权重与偏置。路由参数属于这一类，动态路由系数属于中间值。"
+        },
+        {
+          "id": "aggregate",
+          "title": "聚合结果",
+          "desc": "黄色网格表示均值、最大值、指数和等聚合数据；具体含义与归约维度需在图中标明。"
+        },
+        {
+          "id": "communication",
+          "title": "通信操作",
+          "desc": "深灰胶囊外的白色虚线轮廓表示通信操作。AllGather、AllReduce 等名称规定数据交换语义。"
+        }
+      ]
+    },
+    {
+      "id": "pattern-storage",
+      "cat": "组合模式",
+      "title": "值／视图／存储",
+      "desc": "连续 FP16 数据 V [4,4] 占 32 B；后两行视图 [2,4] 引用同一分配的 [16,32) B。值、视图、MemRef 与底层分配分别标识。",
+      "refs": [
+        {
+          "id": "pypto-guides"
+        },
+        {
+          "id": "pypto-compilation-guide"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "tile"
+        },
+        {
+          "id": "pypto-guides",
+          "anchor": "memory-objects"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "objects"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "memory"
+        },
+        {
+          "id": "pypto-guides",
+          "anchor": "memory-address"
+        },
+        {
+          "id": "pypto-compilation-guide",
+          "anchor": "relations"
+        },
+        {
+          "id": "pypto-guides",
+          "anchor": ""
+        }
+      ],
+      "legacy": [
+        "tile",
+        "memref",
+        "address",
+        "binding"
+      ],
+      "layer": "pattern",
+      "note": "统一规则 v1 · 基于来源图元整理的设计规则与教学示例，并非来源报告的原始截图或实际运行记录。",
+      "variants": [
+        {
+          "id": "tile",
+          "title": "Tile 值",
+          "desc": "小圆角网格块可携带形状、类型和内存空间信息；Tile 值与其引用的存储分别表示。"
+        },
+        {
+          "id": "memref",
+          "title": "存储引用 · MemRef",
+          "desc": "暖沙色槽形标识存储引用；多个值可共享引用，MemRef 与底层分配身份及物理硬件分别理解。"
+        },
+        {
+          "id": "address",
+          "title": "地址区间",
+          "desc": "带刻度的区间表示某一内存空间内的字节范围，必须同时标明空间、偏移与单位。"
+        },
+        {
+          "id": "binding",
+          "title": "存储绑定",
+          "desc": "以圆端点连接逻辑值与存储引用，表达存放关系。"
+        }
+      ]
+    },
+    {
+      "id": "layer-residual-pattern",
+      "title": "Pattern · 残差旁路",
+      "cat": "组合模式",
+      "layer": "pattern",
+      "desc": "复用源图元组合。侧路绕过计算分支，在圆形加号处汇合；示例只保留局部结构，不将 demo 的四路 mHC 简化为整层恒等连接。",
+      "note": "提取位置：layer-front.js · path / op / add",
+      "refs": [
+        {
+          "id": "layer-stack-demo"
+        }
+      ],
+      "legacy": [],
+      "provenance": [
+        {
+          "file": "layer-front.js",
+          "sha256": "5870e1180f22c5bfb21dc7e4bbd6101c859fdb1d0bb6dc1960434d88b1a1b295"
+        },
+        {
+          "file": "layer-front.css",
+          "sha256": "b51e0efadd229eb40f574e40407fb7704465f9613f6a600094f34f62ec6e54c9"
+        },
+        {
+          "file": "rank-memory-view.js",
+          "sha256": "24a14c060d8a158eae896a62781c9b17f82654215ef7d2dfd09861c4ae84b377"
+        },
+        {
+          "file": "pangu-layer-stack-preview.js",
+          "sha256": "fb009382661a84af3497fe33684b2acb994d3587220c5866393dc7fcba8203c6"
+        },
+        {
+          "file": "layer-stack-face.js",
+          "sha256": "5361925e2d207ddd7b1866371ce2b5939c25b795ceea84830d1bcca3e1b687cb"
+        },
+        {
+          "file": "layer-stack-face.css",
+          "sha256": "72d0b8db3e78f24c820e361bfe7fdc12a03e78a0a10429ae34b6116bf074ac03"
+        }
+      ]
+    },
+    {
+      "id": "layer-layer-face-pattern",
+      "title": "Pattern · 层内计算的紧凑／展开表示",
+      "cat": "组合模式",
+      "layer": "pattern",
+      "desc": "直接执行同一 renderer 的两种 detailed 配置。展开增加 Norm 节点并重新分配间距，保持总高度与对象 ID；不是只把图放大。这里只提取计算组合，不恢复已删除的通用 Layer 边界图例。",
+      "note": "提取位置：layer-stack-face.js · render；layer-stack-face.css",
+      "refs": [
+        {
+          "id": "layer-stack-demo"
+        }
+      ],
+      "legacy": [],
+      "provenance": [
+        {
+          "file": "layer-front.js",
+          "sha256": "5870e1180f22c5bfb21dc7e4bbd6101c859fdb1d0bb6dc1960434d88b1a1b295"
+        },
+        {
+          "file": "layer-front.css",
+          "sha256": "b51e0efadd229eb40f574e40407fb7704465f9613f6a600094f34f62ec6e54c9"
+        },
+        {
+          "file": "rank-memory-view.js",
+          "sha256": "24a14c060d8a158eae896a62781c9b17f82654215ef7d2dfd09861c4ae84b377"
+        },
+        {
+          "file": "pangu-layer-stack-preview.js",
+          "sha256": "fb009382661a84af3497fe33684b2acb994d3587220c5866393dc7fcba8203c6"
+        },
+        {
+          "file": "layer-stack-face.js",
+          "sha256": "5361925e2d207ddd7b1866371ce2b5939c25b795ceea84830d1bcca3e1b687cb"
+        },
+        {
+          "file": "layer-stack-face.css",
+          "sha256": "72d0b8db3e78f24c820e361bfe7fdc12a03e78a0a10429ae34b6116bf074ac03"
+        }
+      ]
+    }
+  ]
+}

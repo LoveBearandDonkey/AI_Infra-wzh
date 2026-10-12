@@ -1,0 +1,129 @@
+[
+  {
+    "file": "index.html",
+    "title": "PyPTO 函数变换、内存复用与问题定位",
+    "chapters": [
+      {
+        "id": "structure-inline",
+        "title": "内联把两个调用点替换为两份计算",
+        "states": 2
+      },
+      {
+        "id": "structure-outline",
+        "title": "区域提取把跨边界的值变为函数接口",
+        "states": 2
+      },
+      {
+        "id": "structure-tile",
+        "title": "Tensor→Tile 时输出参数与调用方同步更新",
+        "states": 2
+      },
+      {
+        "id": "structure-kernels",
+        "title": "混合计算拆为 AIC/AIV，纯核只改变函数类型",
+        "states": 4
+      },
+      {
+        "id": "structure-control",
+        "title": "循环与分支改变调用的动态执行次数",
+        "states": 2
+      },
+      {
+        "id": "memory-objects",
+        "title": "Tile 值、存储引用与空间内地址分别是什么",
+        "states": 1
+      },
+      {
+        "id": "memory-lifetime",
+        "title": "最后一次使用决定生命周期干涉关系",
+        "states": 4
+      },
+      {
+        "id": "memory-reuse",
+        "title": "共享 MemRef 减少分配，但不改变值的身份",
+        "states": 2
+      },
+      {
+        "id": "memory-constraints",
+        "title": "空间、容量与操作语义共同限制共享",
+        "states": 3
+      },
+      {
+        "id": "memory-aliases",
+        "title": "视图沿用底层分配，读取仍延续该分配的使用",
+        "states": 1
+      },
+      {
+        "id": "memory-address",
+        "title": "按内存空间分配地址，并核对规划器职责",
+        "states": 3
+      },
+      {
+        "id": "memory-evidence",
+        "title": "cast 的真实导出显示共享与独立分配的差异",
+        "states": 2
+      },
+      {
+        "id": "memory-tiling",
+        "title": "分块大小同时改变迭代数、存储量与候选成本",
+        "states": 4
+      },
+      {
+        "id": "memory-pipeline",
+        "title": "流水展开提出缓冲需求，容量决定能保留几份",
+        "states": 5
+      },
+      {
+        "id": "memory-sync",
+        "title": "复用同一地址引入跨迭代的读后写约束",
+        "states": 2
+      },
+      {
+        "id": "memory-deps",
+        "title": "任务访问范围决定跨任务的读写依赖",
+        "states": 2
+      },
+      {
+        "id": "diagnosis-instance",
+        "title": "固定工作负载，并定位一次具体任务执行",
+        "states": 2
+      },
+      {
+        "id": "diagnosis-wait",
+        "title": "dispatch 到 start 的间隔不能直接归因",
+        "states": 4
+      },
+      {
+        "id": "diagnosis-critical",
+        "title": "最长依赖路径决定简化模型中的完成下界",
+        "states": 2
+      },
+      {
+        "id": "diagnosis-conditions",
+        "title": "Pass 的前置条件、产出性质与失效声明",
+        "states": 1
+      },
+      {
+        "id": "diagnosis-coverage",
+        "title": "声明、实际检查范围与已验证记录分开读取",
+        "states": 4
+      },
+      {
+        "id": "diagnosis-first",
+        "title": "同一规则的通过与失败限定首次可观测偏离区间",
+        "states": 3
+      },
+      {
+        "id": "diagnosis-repro",
+        "title": "逐步缩小程序，并保留同一失败判据",
+        "states": 2
+      },
+      {
+        "id": "diagnosis-experiment",
+        "title": "只改变一个因素，分别核对编译变化与运行结果",
+        "states": 2
+      }
+    ],
+    "states": 61
+  }
+]

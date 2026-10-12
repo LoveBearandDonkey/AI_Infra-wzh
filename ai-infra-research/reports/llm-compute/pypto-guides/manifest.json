@@ -1,0 +1,247 @@
+[
+  {
+    "file": "compilation.html",
+    "title": "函数内联、接口更新与混合核拆分",
+    "chapters": [
+      {
+        "id": "inline",
+        "title": "内联把两个调用点替换为两份计算",
+        "question": "两个调用点在内联后各对应什么？",
+        "parts": [
+          "4:inline"
+        ],
+        "states": 2
+      },
+      {
+        "id": "outline",
+        "title": "区域提取把跨边界的值变为函数接口",
+        "question": "提取区域后输入输出如何连接？",
+        "parts": [
+          "4:outline"
+        ],
+        "states": 2
+      },
+      {
+        "id": "tile",
+        "title": "Tensor→Tile 时输出参数与调用方同步更新",
+        "question": "为什么既要看函数体，也要看调用方？",
+        "parts": [
+          "4:signature"
+        ],
+        "states": 2
+      },
+      {
+        "id": "kernels",
+        "title": "混合计算拆为 AIC/AIV，纯核只改变函数类型",
+        "question": "拆核与改变函数类型有何区别？",
+        "parts": [
+          "4:mixed",
+          "4:pure"
+        ],
+        "states": 4
+      },
+      {
+        "id": "control",
+        "title": "循环与分支改变调用的动态执行次数",
+        "question": "为什么调用点数不等于运行次数？",
+        "parts": [
+          "4:control"
+        ],
+        "states": 2
+      }
+    ],
+    "states": 12
+  },
+  {
+    "file": "memory-pipeline.html",
+    "title": "生命周期、地址复用与流水缓冲约束",
+    "chapters": [
+      {
+        "id": "objects",
+        "title": "Tile 值、存储引用与空间内地址分别是什么",
+        "question": "复用究竟共享了什么？",
+        "parts": [
+          "2:objects"
+        ],
+        "states": 1
+      },
+      {
+        "id": "lifetime",
+        "title": "最后一次使用决定生命周期干涉关系",
+        "question": "延后一次使用为什么会阻止原有复用？",
+        "parts": [
+          "2:lifetime",
+          "2:conflicts"
+        ],
+        "states": 4
+      },
+      {
+        "id": "reuse",
+        "title": "共享 MemRef 减少分配，但不改变值的身份",
+        "question": "复用改变分配量还是计算内容？",
+        "parts": [
+          "2:reuse"
+        ],
+        "states": 2
+      },
+      {
+        "id": "constraints",
+        "title": "空间、容量与操作语义共同限制共享",
+        "question": "为什么生命周期不重叠仍可能不能共享？",
+        "parts": [
+          "2:constraints"
+        ],
+        "states": 3
+      },
+      {
+        "id": "aliases",
+        "title": "视图沿用底层分配，读取仍延续该分配的使用",
+        "question": "为什么视图读取会影响复用判定？",
+        "parts": [
+          "2:pipeline@1"
+        ],
+        "states": 1
+      },
+      {
+        "id": "address",
+        "title": "按内存空间分配地址，并核对规划器职责",
+        "question": "最终地址与规划路径如何核对？",
+        "parts": [
+          "2:address",
+          "2:planner"
+        ],
+        "states": 3
+      },
+      {
+        "id": "evidence",
+        "title": "cast 的真实导出显示共享与独立分配的差异",
+        "question": "最终布局能证明什么，不能定位什么？",
+        "parts": [
+          "2:evidence"
+        ],
+        "states": 2
+      },
+      {
+        "id": "tiling",
+        "title": "分块大小同时改变迭代数、存储量与候选成本",
+        "question": "为什么容量允许的最大块未必最好？",
+        "parts": [
+          "3:tiling",
+          "3:cost"
+        ],
+        "states": 4
+      },
+      {
+        "id": "pipeline",
+        "title": "流水展开提出缓冲需求，容量决定能保留几份",
+        "question": "为什么请求 stage 数不等于保留缓冲份数？",
+        "parts": [
+          "3:pipeline",
+          "3:capacity"
+        ],
+        "states": 5
+      },
+      {
+        "id": "sync",
+        "title": "复用同一地址引入跨迭代的读后写约束",
+        "question": "共享地址为什么可能减少执行重叠？",
+        "parts": [
+          "3:reuse"
+        ],
+        "states": 2
+      },
+      {
+        "id": "deps",
+        "title": "任务访问范围决定跨任务的读写依赖",
+        "question": "任务依赖与核内同步如何区分？",
+        "parts": [
+          "3:deps"
+        ],
+        "states": 2
+      }
+    ],
+    "states": 29
+  },
+  {
+    "file": "diagnosis.html",
+    "title": "从任务等待到编译检查与首次偏离定位",
+    "chapters": [
+      {
+        "id": "instance",
+        "title": "固定工作负载，并定位一次具体任务执行",
+        "question": "比较和调查的是否是同一项工作？",
+        "parts": [
+          "5:instance"
+        ],
+        "states": 2
+      },
+      {
+        "id": "wait",
+        "title": "dispatch 到 start 的间隔不能直接归因",
+        "question": "这段间隔包含什么，还缺什么证据？",
+        "parts": [
+          "5:wait",
+          "5:hypothesis"
+        ],
+        "states": 4
+      },
+      {
+        "id": "critical",
+        "title": "最长依赖路径决定简化模型中的完成下界",
+        "question": "缩短一个热点是否一定缩短总体时间？",
+        "parts": [
+          "5:critical"
+        ],
+        "states": 2
+      },
+      {
+        "id": "conditions",
+        "title": "Pass 的前置条件、产出性质与失效声明",
+        "question": "Pass 需要什么、产生什么、使什么失效？",
+        "parts": [
+          "6:chain"
+        ],
+        "states": 1
+      },
+      {
+        "id": "coverage",
+        "title": "声明、实际检查范围与已验证记录分开读取",
+        "question": "某个性质本次是否真的被检查？",
+        "parts": [
+          "6:coverage",
+          "6:window"
+        ],
+        "states": 4
+      },
+      {
+        "id": "first",
+        "title": "同一规则的通过与失败限定首次可观测偏离区间",
+        "question": "缺失快照或非单调结果如何影响定位？",
+        "parts": [
+          "6:first",
+          "6:nonmonotone"
+        ],
+        "states": 3
+      },
+      {
+        "id": "repro",
+        "title": "逐步缩小程序，并保留同一失败判据",
+        "question": "怎样确认删减后的程序仍是同一个问题？",
+        "parts": [
+          "6:repro"
+        ],
+        "states": 2
+      },
+      {
+        "id": "experiment",
+        "title": "只改变一个因素，分别核对编译变化与运行结果",
+        "question": "如何用可反驳的实验检验性能假设？",
+        "parts": [
+          "5:experiment"
+        ],
+        "states": 2
+      }
+    ],
+    "states": 20
+  }
+]

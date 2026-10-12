@@ -54,6 +54,7 @@ def build(mode='standalone', service='http://127.0.0.1:8766/', collection='knowl
         '/* CORE_JS */': (ROOT / 'web/catalog-core.js').read_text(),
         '/* APP_JS */': (ROOT / 'web/gallery.js').read_text(),
         '__ATLAS_950_COVER__': ('data:image/png;base64,' + base64.b64encode((ROOT / 'web/media/atlas-950-explorer-cover.png').read_bytes()).decode('ascii')) if collection == 'patterns' else '',
+        '__PYPTO_GUIDES_COVER__': 'data:image/svg+xml;base64,' + base64.b64encode((ROOT / 'web/media/pypto-guides-cover.svg').read_bytes()).decode('ascii'),
         '__PYPTO_COMPILATION_COVER__': 'data:image/svg+xml;base64,' + base64.b64encode((ROOT / 'web/media/pypto-compilation-guide-cover.svg').read_bytes()).decode('ascii'),
         '__NPU_MEMORY_COVER__': ('data:image/png;base64,' + base64.b64encode((ROOT / 'web/media/npu-memory-atlas-training-cover.png').read_bytes()).decode('ascii')) if collection == 'patterns' else '',
         '__PANGU_LAYER_ATLAS_COVER__': ('data:image/png;base64,' + base64.b64encode((ROOT / 'web/media/pangu-layer-atlas-cover.png').read_bytes()).decode('ascii')) if collection == 'patterns' else '',

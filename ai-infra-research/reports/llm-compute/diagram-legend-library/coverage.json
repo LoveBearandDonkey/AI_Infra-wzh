@@ -1,0 +1,152 @@
+{
+  "activation": [
+    "system-value",
+    "pattern-compute"
+  ],
+  "weight": [
+    "system-value",
+    "pattern-compute",
+    "pattern-distribution"
+  ],
+  "aggregate": [
+    "system-value",
+    "pattern-distribution"
+  ],
+  "gradient": [
+    "system-value"
+  ],
+  "optimizer": [
+    "system-value"
+  ],
+  "matrix": [
+    "system-value"
+  ],
+  "vector": [
+    "system-value"
+  ],
+  "tile": [
+    "system-value",
+    "pattern-storage"
+  ],
+  "kv": [
+    "system-value"
+  ],
+  "token": [
+    "token"
+  ],
+  "model-op": [
+    "system-op",
+    "pattern-compute"
+  ],
+  "ir-op": [
+    "system-op"
+  ],
+  "add": [
+    "system-add"
+  ],
+  "multiply": [
+    "system-add"
+  ],
+  "expert": [
+    "expert"
+  ],
+  "router": [
+    "system-op"
+  ],
+  "communication": [
+    "system-op",
+    "pattern-distribution"
+  ],
+  "callable": [
+    "system-kernel"
+  ],
+  "loop": [
+    "system-loop"
+  ],
+  "kernel": [
+    "system-kernel"
+  ],
+  "task": [
+    "system-task"
+  ],
+  "instruction": [
+    "system-instruction"
+  ],
+  "ir": [
+    "ir"
+  ],
+  "pass": [
+    "system-pass"
+  ],
+  "rank-training": [
+    "system-rank",
+    "pattern-distribution"
+  ],
+  "rank-inference": [
+    "system-rank"
+  ],
+  "data": [
+    "relation-data",
+    "pattern-compute"
+  ],
+  "call": [
+    "relation-call"
+  ],
+  "dependency": [
+    "task-dependency"
+  ],
+  "binding": [
+    "relation-binding",
+    "pattern-storage"
+  ],
+  "mapping": [
+    "relation-mapping"
+  ],
+  "forward": [
+    "relation-data"
+  ],
+  "backward": [
+    "backward"
+  ],
+  "parameter-read": [
+    "parameter-read"
+  ],
+  "memref": [
+    "system-memref",
+    "pattern-storage"
+  ],
+  "address": [
+    "system-storage",
+    "pattern-storage"
+  ],
+  "lifetime": [
+    "lifetime"
+  ],
+  "verified": [
+    "checks"
+  ],
+  "failed": [
+    "checks"
+  ],
+  "invalidated": [
+    "checks"
+  ],
+  "unknown": [
+    "checks"
+  ],
+  "time-event": [
+    "runtime-intervals"
+  ],
+  "wait-interval": [
+    "runtime-intervals"
+  ],
+  "completed-block": [
+    "system-value"
+  ],
+  "pending-block": [
+    "system-value"
+  ],
+  "expert-inactive": [
+    "expert"
+  ]
+}

@@ -1,3 +1,7 @@
+> 最新范围：第1篇独立定稿；只合并第2–6篇。结果为 [24节单文件报告](llm-compute/pypto-guides/index.html)。下方较早的六篇合并记录已被此次范围修正取代。
+
+> 当前交付入口：[PyPTO 编译与执行 · 完整单篇报告](llm-compute/pypto-guides/index.html)。原六篇与下方生成记录保留作历史对照。
+
 # PyPTO 图解报告系列计划
 
 更新日期：2026-10-10。面向正在建立 AI Infra 概念体系的产品、设计与开发者。采用 `llm-compute-diagrams` skill，延续第一份报告的图元、分步讲解和交互方式，交付可离线阅读的独立 HTML。
@@ -8,10 +12,10 @@
 | --- | --- | --- | --- | --- | --- |
 | 01 | P0 | 一个算子如何经过 PyPTO 编译流水线 | 从 Tensor 表达到 Tile、循环、核函数、任务和内存地址，各阶段改变了什么 | Pass Atlas、Transform Explorer、Control Flow Explorer | 已完成，沿用现有报告 |
 | 02 | P0 | 片上内存复用：从张量生命期到地址分配 | 不同值如何共享存储，哪些约束阻止共享，怎样检查最终地址布局 | Atlas、Memory Inspector、Transform Explorer | 已完成；用户已指示继续下一篇 |
-| 03 | P0 | 编译器自动决策如何影响并行与流水 | 分块、流水深度、内存复用、依赖和同步为何需要一起看 | Decision Studio、调优工作台、Insight 调优方法论 | 已完成内容与静态自查；视觉待验收 |
-| 04 | P1 | 沿一个 Callable 追踪计算结构的演变 | 一个源码计算范围如何被内联、提取为独立函数、拆核，以及如何保持对象对应 | Transform Explorer 的 Callable 主线、Control Flow Explorer | 已完成内容与静态自查；视觉待验收 |
-| 05 | P1 | 从运行异常反向追踪编译证据 | 如何从等待或性能下降，逐步建立可验证的编译假设 | Gap Investigator、Tuning Console、编译失败诊断、Insight | 已完成内容与静态自查；视觉待验收 |
-| 06 | P2 | Pass 之间的契约与首次偏离定位 | Pass 的前置条件、后置性质和验证器如何帮助缩小错误范围 | Atlas 属性依赖、Insight 开发者体验报告、UX Report | 已完成内容与静态自查；视觉待验收 |
+| 03 | P0 | 分块、流水缓冲与任务依赖如何影响执行 | 分块、流水深度、内存复用、依赖和同步为何需要一起看 | Decision Studio、调优工作台、Insight 调优方法论 | 已完成内容与静态自查；视觉待验收 |
+| 04 | P1 | 函数内联、区域提取与混合核拆分 | 一个源码计算范围如何被内联、提取为独立函数、拆核，以及如何保持对象对应 | Transform Explorer 的 Callable 主线、Control Flow Explorer | 已完成内容与静态自查；视觉待验收 |
+| 05 | P1 | 从任务等待与性能下降追踪编译证据 | 如何从等待或性能下降，逐步建立可验证的编译假设 | Gap Investigator、Tuning Console、编译失败诊断、Insight | 已完成内容与静态自查；视觉待验收 |
+| 06 | P2 | Pass 的前置条件、产出性质与首次偏离定位 | Pass 的前置条件、后置性质和验证器如何帮助缩小错误范围 | Atlas 属性依赖、Insight 开发者体验报告、UX Report | 已完成内容与静态自查；视觉待验收 |
 
 ## 本轮范围与审批节奏
 
@@ -65,7 +69,7 @@
 
 导航、正文、图注和释义按 skill 的技术概念规范统一校对。遵循目标仓库 AGENTS，本轮执行结构与脚本检查，视觉验收交由用户；两者分别记录。
 
-第三份入口：[编译器自动决策如何影响并行与流水](llm-compute/pypto-compiler-decisions-guide/index.html)。共 11 节、19 种正文图示状态；[来源与验证记录](llm-compute/pypto-compiler-decisions-guide/README.md)。已完成文案、结构与脚本检查；已纳入全系列统一自查。
+第三份入口：[分块、流水缓冲与任务依赖如何影响执行](llm-compute/pypto-compiler-decisions-guide/index.html)。共 11 节、19 种正文图示状态；[来源与验证记录](llm-compute/pypto-compiler-decisions-guide/README.md)。已完成文案、结构与脚本检查；已纳入全系列统一自查。
 
 
 ## 全系列完成与统一自查（新增授权）
@@ -104,3 +108,17 @@
 | 06 Pass 契约与首次偏离 | [阅读](llm-compute/pypto-pass-contracts-guide/index.html) | 17 |
 
 [统一自查](PyPTO_图解报告系列自查.md)记录七类图元组合候选、已修正的跨篇概念问题、Insight 34 个内容文件与 12 组尚未解释的概念，以及已实施和后续可沉淀的方法改进。候选图元尚未正式收录到 skill，不将未验证的视觉方案标为通用资产。
+
+## 2026-10-12 内容消融与合并试读
+
+按用户要求，对六篇的标题、符号与重复内容进行自查。原六篇保留，新增[三篇合并试读入口](llm-compute/pypto-series-ablation/index.html)：计算结构（10节）、存储与流水（11节）、异常调查与检查（10节）。正文从61节降为31节；原版111种图示状态，试读版76种。
+
+[A0/A1/A2 对照与逐节去向](llm-compute/pypto-series-ablation/README.md)采用固定问题审查内容覆盖，没有进行读者理解度或阅读时长测试。2026-10-10 的完成状态是历史记录，不代表本轮合并版已获视觉验收。
+
+## 三篇合并报告正式交付（2026-10-12）
+
+按用户要求，三篇合并结果设为正式报告，取消试读定位。正式入口为 `llm-compute/pypto-guides/index.html`；消融比较作为附属材料，旧试读网址兼容跳转到正式报告。
+
+## 最终交付形式修正：一个 HTML（2026-10-12）
+
+用户明确要求将多份 HTML 去重后合为一篇，而非三篇。最终文件为 [pypto-guides/index.html](llm-compute/pypto-guides/index.html)：一个封面、31节连续正文、76种图示状态，共用目录与导航。原三个分篇入口改为章节跳转；上述三篇交付记录仅保留为历史。

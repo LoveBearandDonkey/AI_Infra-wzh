@@ -1,0 +1,28 @@
+{
+  "checkedAt": "2026-10-12T03:14:10.296Z",
+  "scope": "Static syntax, offline dependencies, all chapter/mode rendering with a simulated DOM, glossary selection, next/previous, fit/zoom and local source targets. No browser layout or reader study.",
+  "reports": [
+    {
+      "file": "index.html",
+      "chapters": 24,
+      "states": 61,
+      "hits": 315,
+      "script": "pass",
+      "simulatedReader": "pass",
+      "keyboardSequence": "62 positions forward/backward, boundaries, outline chapter modes and editable exclusion pass",
+      "localSources": "pass",
+      "sha256": "25498cc6d10e1314ad543e3351b3f7afb6ea1e4a04ca4c19ab6266915408456e"
+    }
+  ],
+  "uniqueChapterIds": 24,
+  "limitations": [
+    "No browser visual acceptance",
+    "No reader comprehension/time measurements",
+    "Source implementation versions not refreshed"
+  ],
+  "svgXmlAndTextAnchors": {
+    "states": 61,
+    "result": "pass",
+    "scope": "XML, marker targets and text anchor coordinates; no font extents or overlap measurement"
+  }
+}

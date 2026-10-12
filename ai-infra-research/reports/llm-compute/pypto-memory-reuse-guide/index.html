@@ -116,9 +116,9 @@ const EVIDENCE={"dump": "32_after_AllocateMemoryAddr.py", "backend": {"name": "A
 const P=CompilerPrimitives,defs=P.defs;
 document.head.insertAdjacentHTML('beforeend','<style>'+P.css+'</style>');
 const glossary={...P.glossary,
- A:['A · 第一个 Tile 值','教学值：[32,64] FP16，4 KiB，Vec 空间。S1 定义，常规情形 S3 最后一次使用；延迟使用情形延长到 S6。'],
- B:['B · 同时存活的 Tile','教学值：[32,64] FP16，4 KiB。S2 定义，S6 最后一次使用。B 与 A、C 都有生命期重叠，需要独立缓冲区。'],
- C:['C · 后出现的 Tile 值','教学值：[32,64] FP16，4 KiB。S4 定义，S7 最后一次使用。A 的最后一次使用位于 S3；在满足其他复用条件时，C 可以复用 A 的缓冲区。'],
+ A:['A · 第一个 Tile 值','教学值：[32,64] FP16，4 KiB，Vec 空间。语句1 定义，常规情形 语句3 最后一次使用；延迟使用情形延长到 语句6。'],
+ B:['B · 同时存活的 Tile','教学值：[32,64] FP16，4 KiB。语句2 定义，语句6 最后一次使用。B 与 A、C 都有生命期重叠，需要独立缓冲区。'],
+ C:['C · 后出现的 Tile 值','教学值：[32,64] FP16，4 KiB。语句4 定义，语句7 最后一次使用。A 的最后一次使用位于 语句3；在满足其他复用条件时，C 可以复用 A 的缓冲区。'],
  life:['生命周期 · 定义与最后一次使用','本图用定义位置与最后一次使用位置表示静态生命周期。编译器还需分析控制流和别名，并检查流水并发约束。横轴采用语句序号，不表示设备运行时间。'],
  conflict:['生命周期干涉（Interference）','本教学示例中的 A、B、C 为不同值，且排除语义别名与允许的原地更新。两值的生命周期重叠时，本例要求使用互不覆盖的地址区间。无向边表示这一对称的干涉关系；此图由示例生命周期构造，并非编译器导出的图。'],
  slot:['缓冲区 · 底层分配','本报告以缓冲区表示底层分配占据的存储空间。MemoryReuse 可使多个值共享 MemRef；底层分配大小由该共享组的最大成员决定。'],
@@ -140,7 +140,7 @@ const refs={
  viewer:['Memory Inspector V2','../memory-inspector/Memory_V2.html'],
  officialReuse:['官网 MemoryReuse · 规划器边界','https://www.pypto.ai/pypto/dev/passes/36-memory_reuse/'],
  officialAddr:['官网 AllocateMemoryAddr · 规划器路径','https://www.pypto.ai/pypto/dev/passes/37-allocate_memory_addr/']};
-const teaching='教学示例：顺序执行、同一 Vec 空间，A/B/C 各 4 KiB；无视图、流水、额外保留区。S1–S7 是语句位置，不是耗时。';
+const teaching='教学示例：顺序执行、同一 Vec 空间，A/B/C 各 4 KiB；无视图、流水、额外保留区。语句1–语句7 是语句位置，不是耗时。';
 const pages=[
  {
   "id": "cover",
@@ -163,7 +163,7 @@ const pages=[
    "reuse",
    "addr"
   ],
-  "note": "教学示例：顺序执行，同一 Vec 空间，A/B/C 各 4 KiB；不包含视图、流水或额外保留区。S1–S7 表示语句位置。"
+  "note": "教学示例：顺序执行，同一 Vec 空间，A/B/C 各 4 KiB；不包含视图、流水或额外保留区。语句1–语句7 表示语句位置。"
  },
  {
   "id": "lifetime",
@@ -173,10 +173,10 @@ const pages=[
   "sub": "比较最后一次使用位置变化前后的生命周期区间。",
   "h": "最后一次使用位置影响复用条件",
   "p": [
-   "基准示例中，A 在 S1 定义，最后一次使用位于 S3；C 在 S4 定义。因此 A 与 C 的生命周期不重叠。B 从 S2 定义到 S6 最后一次使用，其生命周期分别与 A、C 重叠。",
-   "将 A 的最后一次使用延长到 S6 后，A 与 C 的生命周期发生重叠，原有复用条件不再成立。对于循环与分支，编译器还需结合控制流分析使用范围；例如在循环外定义、循环内使用的值，其生命周期会延展到循环结束。"
+   "基准示例中，A 在 语句1 定义，最后一次使用位于 语句3；C 在 语句4 定义。因此 A 与 C 的生命周期不重叠。B 从 语句2 定义到 语句6 最后一次使用，其生命周期分别与 A、C 重叠。",
+   "将 A 的最后一次使用延长到 语句6 后，A 与 C 的生命周期发生重叠，原有复用条件不再成立。对于循环与分支，编译器还需结合控制流分析使用范围；例如在循环外定义、循环内使用的值，其生命周期会延展到循环结束。"
   ],
-  "f": "A：S1 定义 → S3 / S6 最后一次使用\nB：S2 定义 → S6 最后一次使用\nC：S4 定义 → S7 最后一次使用",
+  "f": "A：语句1 定义 → 语句3 / 语句6 最后一次使用\nB：语句2 定义 → 语句6 最后一次使用\nC：语句4 定义 → 语句7 最后一次使用",
   "g": "life",
   "refs": [
    "reuse",
@@ -186,7 +186,7 @@ const pages=[
    "基准生命周期",
    "延长 A 的生命周期"
   ],
-  "note": "教学示例：顺序执行，同一 Vec 空间，A/B/C 各 4 KiB；不包含视图、流水或额外保留区。S1–S7 表示语句位置。"
+  "note": "教学示例：顺序执行，同一 Vec 空间，A/B/C 各 4 KiB；不包含视图、流水或额外保留区。语句1–语句7 表示语句位置。"
  },
  {
   "id": "conflicts",
@@ -197,7 +197,7 @@ const pages=[
   "h": "生命周期不重叠是复用的候选条件",
   "p": [
    "本图的节点表示 A、B、C 三个不同的 Tile 值，无向边表示两值的生命周期重叠。在基准示例中，A 与 B、B 与 C 存在干涉，A 与 C 不存在干涉。满足其他安全约束时，A 与 C 可以共享缓冲区，B 使用独立缓冲区。",
-   "将 A 的最后一次使用延长到 S6 后，新增 A–C 干涉关系。三个值的生命周期两两重叠，本例需要三个互不覆盖的缓冲区。<strong>此图仅说明生命周期约束</strong>；操作语义、别名和流水约束将在后续章节展开。"
+   "将 A 的最后一次使用延长到 语句6 后，新增 A–C 干涉关系。三个值的生命周期两两重叠，本例需要三个互不覆盖的缓冲区。<strong>此图仅说明生命周期约束</strong>；操作语义、别名和流水约束将在后续章节展开。"
   ],
   "f": "基准：A–B、B–C 存在干涉\n延长 A 后：A–C 也存在干涉",
   "g": "conflict",
@@ -232,7 +232,7 @@ const pages=[
    "独立分配",
    "复用后"
   ],
-  "note": "教学示例：顺序执行，同一 Vec 空间，A/B/C 各 4 KiB；不包含视图、流水或额外保留区。S1–S7 表示语句位置。"
+  "note": "教学示例：顺序执行，同一 Vec 空间，A/B/C 各 4 KiB；不包含视图、流水或额外保留区。语句1–语句7 表示语句位置。"
  },
  {
   "id": "constraints",
@@ -304,7 +304,7 @@ const pages=[
    "独立分配",
    "复用后"
   ],
-  "note": "教学示例：顺序执行，同一 Vec 空间，A/B/C 各 4 KiB；不包含视图、流水或额外保留区。S1–S7 表示语句位置。"
+  "note": "教学示例：顺序执行，同一 Vec 空间，A/B/C 各 4 KiB；不包含视图、流水或额外保留区。语句1–语句7 表示语句位置。"
  },
  {
   "id": "planner",
@@ -371,7 +371,7 @@ const pages=[
    "impl",
    "addr"
   ],
-  "note": "教学示例：顺序执行，同一 Vec 空间，A/B/C 各 4 KiB；不包含视图、流水或额外保留区。S1–S7 表示语句位置。"
+  "note": "教学示例：顺序执行，同一 Vec 空间，A/B/C 各 4 KiB；不包含视图、流水或额外保留区。语句1–语句7 表示语句位置。"
  }
 ];
 const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -381,10 +381,10 @@ function tile(x,y,name,detail='[32,64] · FP16',key=name){return P.grid(x,y,name
 function caption(y,s){return t(400,y,s,'small','middle')}
 function bar(x,y,w,label,key='address',fill='#C7AD88'){return hit(key,`<rect class="outline" x="${x}" y="${y}" width="${w}" height="54" rx="3" fill="${fill}" fill-opacity=".13" stroke="${fill}"/>`+t(x+w/2,y+32,label,'small','middle'))}
 function axis(y,max=12288){let s=`<path d="M80 ${y} H720" stroke="#777"/>`;for(let i=0;i<=max/4096;i++){let x=80+i*640/(max/4096);s+=`<path d="M${x} ${y-4} V${y+5}" stroke="#777"/>`+t(x,y-14,String(i*4096),'tiny','middle')}return s+t(720,y-40,'地址 / B','small','end')}
-function lifeChart(delayed=false,y=130){let s=t(70,y-75,'Vec · 静态语句位置','small');for(let i=1;i<=7;i++){let x=155+(i-1)*85;s+=`<path class="guide-line" d="M${x} ${y-25} V${y+205}"/>`+t(x,y-35,'S'+i,'small','middle')}
+function lifeChart(delayed=false,y=130){let s=t(70,y-75,'Vec · 静态语句位置','small');for(let i=1;i<=7;i++){let x=155+(i-1)*85;s+=`<path class="guide-line" d="M${x} ${y-25} V${y+205}"/>`+t(x,y-35,'语句'+i,'small','middle')}
  const rows=[['A',1,delayed?6:3],['B',2,6],['C',4,7]];
  rows.forEach(([name,a,b],i)=>{let x=155+(a-1)*85,yy=y+i*72;s+=t(75,yy+23,name)+hit(name,`<rect class="life outline" x="${x}" y="${yy}" width="${(b-a)*85}" height="34" rx="3"/><circle cx="${x}" cy="${yy+17}" r="4" fill="#B1EF6B"/><circle cx="${155+(b-1)*85}" cy="${yy+17}" r="4" fill="#131313" stroke="#B1EF6B"/>`+t(x+(b-a)*42.5,yy+23,a+' → '+b,'small','middle'))});
- return s+caption(y+250,delayed?'A 的最后一次使用为 S6，生命周期与 C 重叠':'A 的最后一次使用为 S3；C 定义于 S4，生命周期不重叠');}
+ return s+caption(y+250,delayed?'A 的最后一次使用为 语句6，生命周期与 C 重叠':'A 的最后一次使用为 语句3；C 定义于 语句4，生命周期不重叠');}
 function slots(reuse,y=80){let s='';['A','B','C'].forEach((n,i)=>{let x=70+i*240;s+=tile(x,y,n);if(reuse&&i===2)s+=P.route([[x+75,y+64],[x+75,y+290],[145,y+290],[145,y+233]],'binding');else s+=P.line(x+75,y+64,x+75,y+180,'binding');if(!(reuse&&i===2))s+=P.buffer(x-5,y+180,reuse&&i===0?'缓冲区 0 · A / C':'缓冲区 '+i+' · '+n,160)});return s+caption(y+355,reuse?'两个缓冲区 · 8 KiB；值的定义与使用保持不变':'三个缓冲区 · 12 KiB；每个值独立分配');}
 function addressDiagram(reuse){let s=caption(65,'Vec · 无保留区 · 4 KiB 已满足 32 B 对齐')+axis(145);let labels=reuse?['A / C · 4096 B','B · 4096 B']:['A · 4096 B','B · 4096 B','C · 4096 B'];labels.forEach((l,i)=>s+=bar(80+i*640/3,160,640/3,l));s+=t(80,310,'高水位','small')+t(80,355,reuse?'8192 B':'12288 B','metric')+t(80,393,reuse?'两个缓冲区 · 8 KiB':'三个缓冲区 · 12 KiB','small');s+=bar(410,310,310,'同一空间的最大分配结束地址','address');return s+caption(465,'地址区间长度对应分配大小；A / C 的复用关系由 MemRef 表示');}
 function evidenceDiagram(){const f=EVIDENCE.functions[mode],s0=f.spaces[0];let s=t(70,65,f.name+' · '+f.ftype)+t(70,95,'Vec · [16,256] · 原始导出字段','small')+axis(160,24576);f.boxes.forEach((b,i)=>{s+=bar(80+b.offset/24576*640,180+i*90,b.size/24576*640,b.base,'evidence');s+=t(80+b.offset/24576*640,252+i*90,b.offset+'–'+(b.offset+b.size)+' B','small')});s+=t(80,430,'HWM '+s0.hwm+' B','metric')+t(80,467,mode?'FP32 → BF16 · 两个值，一个 base':'BF16 → FP32 · 两个值，两个 base','small');return s;}
@@ -402,7 +402,7 @@ function diagram(id){bounds={w:800,h:540};let s='';
  if(id==='address')s=addressDiagram(!!mode);
  if(id==='planner'){s=caption(55,'部分内存相关步骤 · 编译顺序，无耗时比例');[['PYPTO · 本篇主线','MemoryReuse','AllocateMemoryAddr'],['DSA_RP · 官网补充','保持独立分配身份','AllocateMemoryAddr'],['PTOAS','跳过上述两个 Pass','ptoas 规划']].forEach((row,i)=>{let y=110+i*130;s+=t(60,y,row[0],'small')+P.pass(60,y+18,row[1])+P.line(320,y+36,440,y+36,'mapping')+P.pass(440,y+18,row[2])});s+=caption(520,'语义必须共享的别名先由 MaterializeSemanticAliases 处理');}
  if(id==='evidence')s=evidenceDiagram();
- if(id==='overview'){s=tile(55,80,'A')+tile(305,80,'B')+tile(555,80,'C')+caption(45,'① 生命周期 · A:S1–S3   B:S2–S6   C:S4–S7')+P.route([[130,144],[130,235],[250,235]],'binding')+P.route([[630,144],[630,190],[250,190],[250,209]],'binding')+P.line(380,144,500,209,'binding')+P.buffer(160,209,'缓冲区 0 · A / C',180)+P.buffer(420,209,'缓冲区 1 · B',180)+caption(305,'② 检查生命周期、操作语义及流水约束')+P.line(250,262,250,355,'mapping')+P.line(510,262,510,355,'mapping')+bar(130,355,250,'Vec · [0,4096)')+bar(380,355,250,'Vec · [4096,8192)')+caption(465,'③ 核对空间内地址、视图偏移、保留区与高水位');}
+ if(id==='overview'){s=tile(55,80,'A')+tile(305,80,'B')+tile(555,80,'C')+caption(45,'① 生命周期 · A:语句1–语句3   B:语句2–语句6   C:语句4–语句7')+P.route([[130,144],[130,235],[250,235]],'binding')+P.route([[630,144],[630,190],[250,190],[250,209]],'binding')+P.line(380,144,500,209,'binding')+P.buffer(160,209,'缓冲区 0 · A / C',180)+P.buffer(420,209,'缓冲区 1 · B',180)+caption(305,'② 检查生命周期、操作语义及流水约束')+P.line(250,262,250,355,'mapping')+P.line(510,262,510,355,'mapping')+bar(130,355,250,'Vec · [0,4096)')+bar(380,355,250,'Vec · [4096,8192)')+caption(465,'③ 核对空间内地址、视图偏移、保留区与高水位');}
  return s;
 }
 function coverDiagram(){return tile(90,90,'A')+tile(530,90,'C')+P.route([[165,154],[165,250],[290,250]],'binding')+P.route([[605,154],[605,250],[510,250]],'binding')+P.buffer(290,224,'共享存储 · 4 KiB',220)+P.line(400,277,400,365,'mapping')+bar(210,365,380,'同一 Vec 地址区间')+caption(470,'A 与 C 的生命周期不重叠');}

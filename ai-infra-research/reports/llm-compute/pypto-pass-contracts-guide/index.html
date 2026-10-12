@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#111111"><title>Pass 之间的契约与首次偏离定位 · 图解 06</title>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#111111"><title>Pass 的前置条件、产出性质与首次偏离定位 · 图解 06</title>
 <style>
 :root{color-scheme:dark;--bg:#111;--panel:#171717;--line:#353535;--text:#e8e8e8;--muted:#ababab;--i:#B1EF6B;--w:#BCA0F3;--a:#F2C45F;--g:#79D4F2}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,"PingFang SC",system-ui,sans-serif}button{font:inherit;color:inherit;background:transparent;border:1px solid #444;border-radius:5px;cursor:pointer;padding:8px 12px}button:hover{background:#292929}button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid #ddd;outline-offset:4px}button:disabled{opacity:.3;cursor:default}[hidden]{display:none!important}a{color:#b7cce0;text-underline-offset:4px}main{width:100%;max-width:none;margin:0;padding:28px clamp(20px,2vw,48px) 0;min-height:100svh;display:flex;flex-direction:column}.heading{display:flex;gap:20px;align-items:start;margin-bottom:22px}.eyebrow{font:12px ui-monospace,monospace;letter-spacing:2px;color:#aaa;margin-bottom:12px}h1{font-size:clamp(26px,2.6vw,40px);font-weight:450;line-height:1.35;margin:0}.subtitle{font-size:14px;color:var(--muted);margin:10px 0 0;line-height:1.7}.number{font:44px ui-monospace,monospace;color:#555;margin-left:auto}.workspace{display:grid;grid-template-columns:minmax(0,1fr) clamp(320px,28vw,440px);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-height:580px}.visual{background:#131313;position:relative;display:flex;flex-direction:column;min-width:0;min-height:0}.canvas{position:relative;height:520px;min-height:0;overflow:hidden;touch-action:none;flex:1}.canvas svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:hidden}.canvas.dragging{cursor:grabbing}.toolbar{display:flex;gap:7px;align-items:center;justify-content:center;padding:12px 14px;border-top:1px solid #292929;flex-wrap:wrap}.toolbar button{font-size:13px}.toolbar output{font:12px ui-monospace,monospace;min-width:45px;text-align:center}.toolbar .mode{margin-right:auto;display:flex;gap:4px}.mode button.active{background:#e0e0e0;color:#111;border-color:#e0e0e0}.info{position:absolute;top:14px;right:14px;z-index:4}.info>button{border-radius:50%;width:28px;height:28px;padding:0;font:italic 18px Georgia;background:#191919}.info-panel{position:absolute;right:0;top:39px;width:min(330px,75vw);padding:20px;background:#202020;border:1px solid #494949;border-radius:8px;box-shadow:0 14px 45px #0008;font-size:13px;line-height:1.85}.info-panel p{margin:10px 0}.explanation{border-left:1px solid var(--line);padding:28px;background:var(--panel);display:flex;flex-direction:column;min-width:0}.label{font:11px ui-monospace,monospace;letter-spacing:1.5px;color:#aaa;margin-bottom:15px}.explanation h2{font-size:23px;line-height:1.5;font-weight:500;margin:0 0 16px}.copy p{font-size:16px;line-height:1.85;color:#c7c7c7;margin:0 0 17px}.copy strong{color:#eee;font-weight:550}.formula{background:#202020;border-radius:5px;padding:13px 16px;white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.85 ui-monospace,monospace;margin:0 0 20px;color:#ddd}.inspector{margin-top:auto;border-top:1px solid var(--line);padding-top:17px}.inspector h3{font-size:16px;font-weight:500;margin:8px 0}.inspector p{font-size:14px;line-height:1.8;color:#aaa;margin:0}.sources{overflow-wrap:anywhere;font-size:12px;line-height:1.8;color:#999;margin-top:18px}.sources summary{cursor:pointer}.sources ul{padding-left:18px}.bottom{position:sticky;bottom:0;z-index:6;background:#111;display:flex;align-items:center;gap:18px;padding:18px 0;margin-top:auto}.steps{display:flex;overflow:auto;gap:8px;flex:1;scrollbar-width:thin}.steps button{min-width:70px;flex:1 0 70px;border:0;border-bottom:2px solid #333;border-radius:0;padding:8px 2px 12px;font-size:12px;line-height:1.7;color:#999;white-space:nowrap}.steps button[aria-current=step]{color:#eee;border-color:#ddd}.steps span{display:block;font:10px ui-monospace,monospace;color:#777;margin-bottom:5px}.bottom>button{white-space:nowrap;font-size:13px}.next{background:#e8e8e8;color:#111}.next:hover{background:#fff}.cover{display:grid;grid-template-columns:1fr 1.15fr;align-items:center;gap:55px;min-height:calc(100svh - 115px);padding:25px 3vw}.cover h1{font-size:clamp(34px,3.6vw,56px);letter-spacing:-1px;line-height:1.35}.cover p{font-size:17px;line-height:1.9;color:#bbb;max-width:490px}.cover .meta{font-size:12px;line-height:2;color:#999;margin-top:30px}.cover svg{width:100%;height:500px}.badge{display:inline-block;font:11px ui-monospace,monospace;border:1px solid #444;padding:6px 10px;margin-bottom:25px;letter-spacing:1px}.cover button{margin-top:20px}svg text{font-family:Inter,"PingFang SC",system-ui,sans-serif;fill:#e8e8e8;font-size:18px}svg .small{font-size:14px;fill:#ababab}svg .tiny{font-size:12px;fill:#ababab}svg .op-label{font-size:18px;font-weight:650;fill:#fff;dominant-baseline:middle}svg .hit{cursor:pointer}svg .hit .outline{transition:stroke .12s}svg .hit:hover .outline,svg .hit.selected .outline,svg .hit:focus .outline{stroke:#fff;stroke-width:2.5}svg .hit.selected text{fill:#fff}svg .hit:focus{outline:none}svg .data-label{paint-order:stroke;stroke:#131313;stroke-width:2.5px;stroke-linejoin:round}svg .grid-label{font-size:14px;fill:var(--tensor-color);font-weight:400}svg .grid-detail{font-size:12px;fill:var(--tensor-color);font-weight:400}svg .hit.selected .data-label text{fill:var(--tensor-color)}svg .edge-label{font-size:12px;fill:#ccc;paint-order:stroke;stroke:#131313;stroke-width:5px}svg .soft{opacity:.24}svg .hit.selected{opacity:1}.noscript{padding:35px;line-height:1.8}.sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0)}
 @media(min-width:1000px){body:not(.cover-mode) main{height:100svh;min-height:0}.heading,.bottom{flex-shrink:0}.workspace{flex:1;min-height:0}.canvas{height:0;min-height:320px}.explanation{overflow:auto;scrollbar-width:thin}.bottom{position:static}}
@@ -31,9 +31,9 @@ svg .cell-title{font-size:16px;font-weight:600;fill:#eee}
 .mode{flex-wrap:wrap}svg .life{fill:#B1EF6B;fill-opacity:.16;stroke:#B1EF6B}svg .metric{font-size:32px;fill:#C7AD88}svg .warn{fill:#e8a896}svg .guide-line{stroke:#353535;stroke-width:1}pre{tab-size:2}.evidence-code{max-height:260px;overflow:auto;font:11px/1.8 ui-monospace,monospace;background:#202020;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere}.info-panel{max-height:65vh;overflow:auto}a:focus-visible{outline-offset:2px}
 .steps button{min-width:max-content;flex:1 0 84px;padding-inline:6px}
 </style></head><body class="cover-mode"><main>
-<section class="cover" id="cover"><div><div class="badge">AI INFRA · PYPTO / 06</div><h1>Pass 之间的契约<br>与首次偏离定位</h1><p>读取前置要求、产出性质与失效声明，核实验证器实际覆盖，再用相邻快照缩小问题范围。检测位置和根因分别记录。</p><p class="meta">11 节图解 · 规则与证据分别说明<br>教学示例 · 2026-10-10</p><button id="start">开始阅读 →</button></div><div id="cover-art" aria-label="Pass 之间的契约与首次偏离定位"></div></section>
+<section class="cover" id="cover"><div><div class="badge">AI INFRA · PYPTO / 06</div><h1>Pass 的前置条件、产出性质<br>与首次偏离定位</h1><p>读取前置要求、产出性质与失效声明，核实验证器实际覆盖，再用相邻快照缩小问题范围。检测位置和根因分别记录。</p><p class="meta">11 节图解 · 规则与证据分别说明<br>教学示例 · 2026-10-10</p><button id="start">开始阅读 →</button></div><div id="cover-art" aria-label="Pass 的前置条件、产出性质与首次偏离定位"></div></section>
 <header class="heading" id="heading" hidden><div><div class="eyebrow" id="eyebrow"></div><h1 id="title"></h1><p class="subtitle" id="subtitle"></p></div><span class="number" id="number" aria-hidden="true"></span></header>
-<div class="workspace" id="workspace" hidden><section class="visual" aria-label="交互图解"><div class="info"><button id="info-toggle" aria-label="图例与阅读说明" aria-expanded="false" aria-controls="info-panel">i</button><div class="info-panel" id="info-panel" hidden><strong>图例与阅读说明</strong><p><span style="color:var(--i)">■ 输入 / 中间值</span><br><span style="color:var(--w)">■ 权重</span><br>数据填色保持原义。紫色表示计算操作、循环与 Kernel，紫色也用于任务，蓝灰表示通用函数，暖沙色表示存储对象，中性灰表示编译过程；对象类型仍由形状和标签区分。</p><p id="scope-note"></p><p>点击图元查看定义。Tab / Enter 可操作；放大后拖动画布，使用“适应”回到完整图。← / → 翻页。</p><button id="legend-link">返回第一节</button></div></div><div class="canvas" id="canvas"></div><div class="toolbar"><div class="mode" id="modes"></div><button id="minus" aria-label="缩小">−</button><output id="zoom-label">100%</output><button id="plus" aria-label="放大">＋</button><button id="fit">适应</button></div></section><article class="explanation"><div class="label" id="section-label">原理与解释</div><h2 id="explain-title"></h2><div class="copy" id="copy"></div><pre class="formula" id="formula"></pre><div class="inspector" aria-live="polite"><div class="label">选中图元 · 身份与含义</div><h3 id="node-title"></h3><p id="node-copy"></p></div><details class="sources"><summary>来源与适用范围</summary><div id="sources"></div></details></article></div>
+<div class="workspace" id="workspace" hidden><section class="visual" aria-label="交互图解"><div class="info"><button id="info-toggle" aria-label="图例与阅读说明" aria-expanded="false" aria-controls="info-panel">i</button><div class="info-panel" id="info-panel" hidden><strong>图例与阅读说明</strong><p>横向轴表示编译阶段或证据核对顺序，不表示耗时。✓ 为通过或已保证，× 为失败，实线圆内 − 为未保证，虚线圆内 − 为未知；各页图注明确是声明、检查范围还是结果。暖色括线标示调查区间。性质矩阵的填充格表示属于该集合，空格表示不属于。全部数据均为构造示例。</p><p id="scope-note"></p><p>点击图元查看定义。Tab / Enter 可操作；放大后拖动画布，使用“适应”回到完整图。← / → 翻页。</p><button id="legend-link">返回第一节</button></div></div><div class="canvas" id="canvas"></div><div class="toolbar"><div class="mode" id="modes"></div><button id="minus" aria-label="缩小">−</button><output id="zoom-label">100%</output><button id="plus" aria-label="放大">＋</button><button id="fit">适应</button></div></section><article class="explanation"><div class="label" id="section-label">原理与解释</div><h2 id="explain-title"></h2><div class="copy" id="copy"></div><pre class="formula" id="formula"></pre><div class="inspector" aria-live="polite"><div class="label">选中图元 · 身份与含义</div><h3 id="node-title"></h3><p id="node-copy"></p></div><details class="sources"><summary>来源与适用范围</summary><div id="sources"></div></details></article></div>
 <footer class="bottom"><button id="prev">← 上一页</button><nav class="steps" id="steps" aria-label="图解章节"></nav><button class="next" id="next">下一页 →</button></footer>
 <noscript><p>本报告需启用 JavaScript；内容提要与来源见同目录 README.md。</p></noscript>
 </main><script>
@@ -113,7 +113,7 @@ return {css,defs,glossary,grid,op,arithmetic,boundary,loop,kernel,task,instructi
 
 const P=CompilerPrimitives,defs=P.defs;
 document.head.insertAdjacentHTML("beforeend","<style>"+P.css+"</style>");
-const glossary={...P.glossary,...{"identity": ["性质身份", "同一性质在不同表示阶段可能不适用，检查前先固定源码版本、谓词与上下文。"], "contract": ["Pass 性质契约", "required 为前置需求，produced 为产出声明，invalidated 撤销保证。声明与实际检查结果分开记录。"], "property": ["IRProperty", "程序表示应满足的性质。属性依赖图说明前置关系，不能替代真实 Pass 序列或运行日志。"], "declaration": ["声明与执行", "只有启用、适用并实际运行规则后才有检查结果；源码中存在规则不证明本次已执行。"], "coverage": ["验证覆盖", "自动集合和 VerificationInstrument 的模式共同决定检查时机与范围。"], "window": ["性质有效范围", "失效表示原保证不再沿用，不等于出错；再次产生后需要按规则重新验证。"], "first": ["首次可观测偏离", "在适用且可比的相邻快照中，同一谓词首次由通过转为失败的边界，不直接等同根因。"], "nonmonotone": ["非单调检测结果", "后继快照可能重新通过或不适用，未证明单调性时不能使用二分排除前半区间。"], "blindspots": ["规则检查边界", "每条规则有特定对象、条件及跳过分支；通过结果不覆盖未检查的语义或运行行为。"], "repro": ["最小复现", "保留同一故障触发条件与判断标准，缩小无关因素，并重新验证故障确实保留。"], "mapping": ["编译性质关系", "菱形点线表示性质传递或证据检查关系，不是运行时任务依赖。"]}};
+const glossary={...P.glossary,...{"identity": ["性质身份", "同一性质在不同表示阶段可能不适用，检查前先固定源码版本、谓词与上下文。"], "contract": ["Pass 前置条件与产出性质", "required 为前置需求，produced 为产出声明，invalidated 撤销保证。声明与实际检查结果分开记录。"], "property": ["IRProperty", "程序表示应满足的性质。属性依赖图说明前置关系，不能替代真实 Pass 序列或运行日志。"], "declaration": ["声明与执行", "只有启用、适用并实际运行规则后才有检查结果；源码中存在规则不证明本次已执行。"], "coverage": ["验证覆盖", "自动集合和 VerificationInstrument 的模式共同决定检查时机与范围。"], "window": ["性质有效范围", "失效表示原保证不再沿用，不等于出错；再次产生后需要按规则重新验证。"], "first": ["首次可观测偏离", "在适用且可比的相邻快照中，同一谓词首次由通过转为失败的边界，不直接等同根因。"], "nonmonotone": ["非单调检测结果", "后继快照可能重新通过或不适用，未证明单调性时不能使用二分排除前半区间。"], "blindspots": ["规则检查边界", "每条规则有特定对象、条件及跳过分支；通过结果不覆盖未检查的语义或运行行为。"], "repro": ["最小复现", "保留同一故障触发条件与判断标准，缩小无关因素，并重新验证故障确实保留。"], "mapping": ["编译性质关系", "菱形点线表示性质传递或证据检查关系，不是运行时任务依赖。"]}};
 Object.assign(P.glossary,glossary); // Keep shared primitive accessibility labels aligned with this report.
 const refs={"props": ["pass_properties.h", "source-evidence.md#props"], "memory": ["pass_properties.h", "source-evidence.md#memory"], "registry": ["99-verifier.md", "source-evidence.md#registry"], "sets": ["ir_property.cpp", "source-evidence.md#sets"], "pipeline": ["passes.cpp", "source-evidence.md#pipeline"], "instrument": ["pass_context.cpp", "source-evidence.md#instrument"], "ux": ["UX_Insight_Report（pypto仓）.md", "source-evidence.md#ux"], "roundtrip": ["00-pass_manager.md", "source-evidence.md#roundtrip"]};
 const pages=[
@@ -123,13 +123,13 @@ const pages=[
   },
   {
     "id": "contract",
-    "nav": "性质契约",
+    "nav": "前置与产出",
     "en": "01 / PYPTO 06",
-    "title": "Pass 的契约描述输入要求与输出保证",
-    "sub": "required、produced、invalidated 是性质集合，不是耗时指标。",
-    "h": "Pass 的契约描述输入要求与输出保证",
+    "title": "Pass 声明前置条件、产出性质与失效性质",
+    "sub": "用 InitMemRef、MemoryReuse 的性质声明说明前后条件。",
+    "h": "Pass 声明前置条件、产出性质与失效性质",
     "p": [
-      "required 表示 Pass 依赖的前置性质；produced 声明变换后建立或保持的性质；invalidated 表示该性质不再能沿用此前的保证。性质声明与验证器实际执行必须分别检查。",
+      "Pass 的前置条件、产出性质和失效性质由 required、produced、invalidated 声明。它们描述 IR 应满足的条件；schema 主要描述节点字段与结构，两者不能等同。声明与验证器实际执行分别记录。",
       "性质失效不是自动判定编译错误。一些变换会合法地进入另一种表示形式；后续 Pass 必须按新的性质要求处理。所有具体列表应对应当前源码版本。"
     ],
     "f": "required → Pass → produced\ninvalidated：撤销原有保证",
@@ -137,19 +137,15 @@ const pages=[
     "refs": [
       "props"
     ],
-    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。",
-    "modes": [
-      "正常产出",
-      "性质失效"
-    ]
+    "note": "教学图示与构造案例；未执行真实编译、设备运行或性能实验。来源版本与可证明范围分别标注。"
   },
   {
     "id": "chain",
     "nav": "性质依赖",
     "en": "02 / PYPTO 06",
-    "title": "后续 Pass 需要的性质应有明确来源",
+    "title": "前序 Pass 产生的性质满足后续 Pass 的部分要求",
     "sub": "这里选取当前内存规划链的局部契约。",
-    "h": "后续 Pass 需要的性质应有明确来源",
+    "h": "前序 Pass 产生的性质满足后续 Pass 的部分要求",
     "p": [
       "InitMemRef 要求 SSAForm 等性质，产生 HasMemRefs 和 NormalizedStmtStructure，并声明 SSAForm 失效。MemoryReuse 要求 HasMemRefs 等性质；AllocateMemoryAddr 产生 AllocatedMemoryAddr。",
       "这是局部属性依赖，不是完整流水线。不能由共享 MemRef 推导所有 SSA 变量被重新赋值；也不能仅看两个 Pass 在图中相邻，就认为它们的全部前置性质已经满足。"
@@ -216,10 +212,10 @@ const pages=[
     "sub": "同一性质在不同 IR 阶段的适用性需要单独确认。",
     "h": "性质可以被建立、失效并重新建立",
     "p": [
-      "构造例：P 在阶段 A 被建立和验证，阶段 B 声明使 P 失效，阶段 C 重新产生 P。自动验证集合若包含 P，失效会移除已验证记录，重新产生后应再次检查。",
-      "不能把 B 之后的“未保证”渲染成失败，也不能沿用 A 的绿色通过状态覆盖 C。三种状态分别是已验证、当前无保证、重新验证后的结果；P 为教学占位符。"
+      "构造例跟踪 TypeChecked（类型检查）性质：建立并验证后，一次变换使既有保证失效；后续变换重新声明产生该性质，再按自动验证规则检查。图中的阶段是教学步骤，不对应一次真实编译日志。",
+      "失效只表示原保证不能继续沿用。重新检查可能通过，也可能失败；待检查状态没有结果。TypeChecked 是性质名，图中状态与顺序为构造示例。"
     ],
-    "f": "A：P 已验证\nB：P 失效\nC：P 重新产生 → 再检查",
+    "f": "类型检查通过 → 原保证失效 → 重新产生 → 再次检查",
     "g": "window",
     "refs": [
       "pipeline"
@@ -234,14 +230,14 @@ const pages=[
     "id": "first",
     "nav": "首次偏离",
     "en": "06 / PYPTO 06",
-    "title": "对同一谓词比较相邻快照",
+    "title": "比较连续 IR 快照中的同一类型检查结果",
     "sub": "先定义何种性质偏离，再定位最早可观测边界。",
-    "h": "对同一谓词比较相邻快照",
+    "h": "比较连续 IR 快照中的同一类型检查结果",
     "p": [
-      "构造例：在连续快照 S0、S1、S2、S3 上检查同一谓词 Q，结果为通过、通过、失败、失败。若 Q 在这些阶段均适用，首次可观测偏离位于 S1→S2。",
-      "这把调查缩小到该变换边界，但还需区分输入隐藏问题、Pass 实现、检查器缺陷与条件变化。最早发现失败不等于根因已经被证明；缺失快照时只能给出更宽区间。"
+      "构造例比较初始 IR 及三次变换后保存的 IR 快照。始终检查“每个操作数的类型是否满足对应操作的要求”，结果依次为通过、通过、失败、失败。最早可观测偏离位于变换①后的 IR 与变换②后的 IR 之间。",
+      "这些快照是编译过程中的程序表示，不是运行时刻。假设检查规则在四个阶段均适用，缺失变换①后的快照时，只能把区间扩大到初始 IR 与变换②之后；仍需调查变换实现、输入及检查器，不能直接判定根因。"
     ],
-    "f": "相同输入身份 + 相同谓词 + 可比阶段\nS1 通过，S2 失败 → 检查边界 S1→S2",
+    "f": "同一类型检查规则、同一编译输入\n最后通过的快照 → 最早失败的快照",
     "g": "first",
     "refs": [
       "instrument",
@@ -258,7 +254,7 @@ const pages=[
     "nav": "非单调边界",
     "en": "07 / PYPTO 06",
     "title": "失败可能在后续变换中暂时消失",
-    "sub": "没有单调性保证时不能直接二分定位。",
+    "sub": "同一检查先失败、后通过，不能仅凭中点通过排除更早失败。",
     "h": "失败可能在后续变换中暂时消失",
     "p": [
       "构造结果为通过、失败、通过、失败：检查中点得到通过，仍不能排除更早阶段已经出现失败。某个表示性质可能暂时不适用，后续变换也可能改变检查器能观察到的形态。",
@@ -321,14 +317,14 @@ const pages=[
     "id": "overview",
     "nav": "完整检查",
     "en": "10 / PYPTO 06",
-    "title": "用明确性质连接诊断与变换边界",
-    "sub": "契约说明应当成立什么，证据说明实际检查了什么。",
-    "h": "用明确性质连接诊断与变换边界",
+    "title": "在连续 IR 快照中区分性质失效、检查失败与记录缺失",
+    "sub": "横轴为四份程序表示，三行分别说明声明状态、检查结果和证据缺口。",
+    "h": "在连续 IR 快照中区分性质失效、检查失败与记录缺失",
     "p": [
-      "从当前源码读取 required / produced / invalidated，再核实验证器与开关；使用同一输入的相邻快照定位性质变化，保留不适用与缺失状态。",
-      "交付应包含最小复现、首个可观测偏离区间、诊断规则、当前假设及验证结果。不要把通过一个检查写成全程序正确，也不要将检测点自动归责为引入点。"
+      "横轴是初始 IR 与三次变换后保存的 IR 快照；这是构造案例，变换①②③不指代具体实现中的 Pass。三行分别表示 SSAForm 的声明保证、操作数类型检查结果，以及 AllocatedMemoryAddr 的检查记录。",
+      "SSA 保证被撤销不等于检查失败；类型检查由通过变为失败，才形成可调查的偏离区间；地址检查缺少记录，只能保留未知。必须区分声明与结果，再追踪对应的变换、输入及验证器。"
     ],
-    "f": "契约 → 覆盖 → 快照 → 偏离区间\n→ 复现 → 修复与回归",
+    "f": "SSA 保证：声明层\n类型检查：结果层\n地址检查：本例未采集",
     "g": "contract",
     "refs": [
       "props",
@@ -349,21 +345,77 @@ function block(x,y,w,label,key='capacity',color='#C7AD88'){return hit(key,`<rect
 function chain(nodes,y){let s='';nodes.forEach((n,i)=>{let x=45+i*255;if(i<2)s+=P.line(x+200,y+40,x+255,y+40,'mapping');s+=box(x,y,200,80,n[0],n[1],n[2])});return s}
 
 
-function state(x,y,label,value,key='first'){return box(x,y,160,100,label,value,key)}
+
+// Status marks describe checks, not tensor roles. All sequences are teaching examples.
+const statusColor={ok:'#B8CBC0',fail:'#E8A896',unknown:'#888',off:'#686868'};
+function stroke(x1,y1,x2,y2,color='#555',dash=''){return `<path d="M${x1} ${y1} L${x2} ${y2}" fill="none" stroke="${color}" stroke-width="1.5" ${dash?`stroke-dasharray="${dash}"`:''}/>`}
+function mark(x,y,status,key='first',r=16){const c=statusColor[status]||'#aaa';let m=status==='ok'?`M${x-7} ${y} l5 5 10 -11`:status==='fail'?`M${x-6} ${y-6} l12 12 M${x+6} ${y-6} l-12 12`:`M${x-6} ${y} h12`;return hit(key,`<circle class="outline" cx="${x}" cy="${y}" r="${r}" fill="#191919" stroke="${c}" ${status==='unknown'?'stroke-dasharray="3 4"':''}/><path d="${m}" fill="none" stroke="${c}" stroke-width="2"/>`)}
+function bracket(x1,x2,y,label,key='first'){return hit(key,`<path class="outline" d="M${x1} ${y-9} V${y} H${x2} V${y-9}" fill="none" stroke="#E8A896" stroke-width="2"/>`+t((x1+x2)/2,y+28,label,'small','middle'))}
+function rail(labels,y=160){let s=stroke(120,y,690,y);labels.forEach((v,i)=>{let x=120+i*190;s+=`<circle cx="${x}" cy="${y}" r="4" fill="#aaa"/>`+t(x,y-24,v,'small','middle')});return s}
+function propertyRow(label,y,values,key='window'){let s=t(30,y+5,label,'small');values.forEach((v,i)=>{let x=120+i*190;s+=mark(x,y,v,key);if(i<values.length-1)s+=stroke(x+18,y,x+172,y,v==='ok'?'#B8CBC0':'#666',v==='unknown'?'4 6':'')});return s}
+function miniIR(x,y,keep=false){let s=`<path d="M${x} ${y} h130 v140 h-130 Z" fill="none" stroke="#555" stroke-dasharray="4 4"/>`;for(let i=0;i<4;i++){const hot=i===1||i===2;if(keep&&!hot)continue;s+=`<rect x="${x+30}" y="${y+16+i*30}" width="70" height="15" rx="7" fill="${hot?'#685CF0':'#414141'}"/>`;if(i<3&&(!keep||i===1))s+=stroke(x+65,y+31+i*30,x+65,y+46+i*30)}return hit('repro',s)}
+function checks(values,labels,y=215,key='first'){let s=rail(labels,130);values.forEach((v,i)=>{const x=120+i*190;s+=stroke(x,135,x,y-20,'#444','3 5')+mark(x,y,v,key,22)+t(x,y+48,{ok:'通过',fail:'失败',unknown:'未采集',off:'未保证'}[v],'small','middle')});return s}
 function diagram(id){bounds={w:800,h:540};let s='';
-if(id==='contract'){s=chain([['required','入口前置性质','contract'],['Pass','执行程序变换','contract'],['produced','出口性质声明','contract']],125)+box(210,340,380,90,mode?'invalidated：保证撤销':'验证规则与执行记录',mode?'不自动表示编译错误':'声明不等于实际已检查','contract')}
-else if(id==='chain'){s=P.pass(45,95,'InitMemRef')+P.pass(450,95,'MemoryReuse')+box(80,205,200,90,'HasMemRefs','由前者产生','property')+box(485,205,200,90,'HasMemRefs','后者的部分前置条件','property')+P.line(280,250,485,250,'mapping')+P.pass(255,360,'AllocateMemoryAddr')+caption(445,'产生 AllocatedMemoryAddr；图中省略其他前置性质')}
-else if(id==='declaration'){s=chain([['produced 声明','源码可见','declaration'],['verifier 实现',mode?'规则及适用条件':'仍需核实','declaration'],['执行记录',mode?'启用且实际运行':'没有运行证据','declaration']],150)+caption(365,mode?'完整条件；本报告并未实际执行编译器':'只能说明“有声明”，不能标记“本次已验证”')}
-else if(id==='coverage'){s=box(75,115,650,105,mode?'VerificationInstrument':'PassPipeline 自动检查',mode?'BEFORE / AFTER / BEFORE_AND_AFTER':'受 GetVerifiedProperties 集合约束','coverage')+box(75,315,290,95,mode?'入口 required + 结构性质':'移除 invalidated',mode?'仅在 BEFORE 启用时':'撤销旧的验证记录','coverage')+box(435,315,290,95,mode?'出口 produced + 结构性质':'验证新产生的选定性质',mode?'仅在 AFTER 启用时':'已验证且未失效则跳过','coverage')}
-else if(id==='window'){s=chain([['阶段 A','P 已验证','window'],['阶段 B','P 失效：无保证','window'],['阶段 C',mode?'P 再检查：失败':'P 再检查：通过','window']],145)+caption(380,'P 为构造性质；三个状态不能合并为单个通过标志')}
-else if(id==='first'){for(let i=0;i<4;i++){s+=state(35+i*190,175,'S'+i,mode&&i===1?'未采集':i<2?'Q 通过':'Q 失败');if(i<3)s+=P.line(195+i*190,225,225+i*190,225,'mapping')}s+=caption(395,mode?'仅能定位 S0→S2；S1 缺失，不能缩小到最后一步':'首次可观测边界 S1→S2；Q 在各阶段都适用')}
-else if(id==='nonmonotone'){['通过','失败','通过','失败'].forEach((v,i)=>{s+=state(35+i*190,175,'S'+i,v,'nonmonotone');if(i<3)s+=P.line(195+i*190,225,225+i*190,225,'mapping')});s+=caption(395,'只检查 S2 得到通过，会遗漏 S1 已出现的失败')}
-else if(id==='blindspots'){if(!mode){s=P.boundary(65,100,280,225,'变换前')+P.op(105,175,'composite','op',200)+P.boundary(455,100,280,225,'变换后')+P.op(515,150,'op 1','op',150)+P.op(515,235,'op 2','op',150)+P.line(345,215,455,215,'mapping')+caption(435,'合法降级可能改变 op 数量；数量守恒不是通用契约')}
-else{s=box(55,90,300,105,'结构规则','定义 / 类型 / 作用域','blindspots')+box(445,90,300,105,'表示往返','打印后能否重新解析','blindspots')+box(55,300,300,105,'数值验证','golden / 容差 / 输入','blindspots')+box(445,300,300,105,'性能验证','测量契约 / 重复样本','blindspots')}}
-else if(id==='repro'){s=chain(mode?[['候选修复','故障判据不再触发','repro'],['规则回归','正例与反例','repro'],['运行验证','按风险补足数值与设备','repro']]:[['固定输入','版本 / 目标 / 配置','repro'],['相邻快照','同一性质与诊断','first'],['最小用例','删减后仍复现','repro']],150)+caption(385,mode?'本图列出验证要求，没有预填实际通过结果':'必须保留同一故障，不能只保留相似报错文本')}
-else if(id==='overview'){s=chain([['当前契约','要求与产出','contract'],['实际覆盖','规则与启用模式','coverage'],['相邻快照','首次可观测偏离','first']],90)+chain([['保留缺口','不适用 / 未采集','window'],['最小复现','触发条件稳定','repro'],['修复验证','规则与运行回归','repro']],335)+P.route([[655,170],[750,170],[750,275],[145,275],[145,335]],'mapping')}
+if(id==='contract'){
+ s=caption(55,'InitMemRef 的部分输入要求与输出声明')+P.pass(270,220,'InitMemRef')+t(120,145,'required','small','middle')+t(120,190,'SSAForm','small','middle')+P.line(170,190,270,238,'mapping')+P.line(530,238,625,160,'mapping')+P.line(530,238,625,290,'mapping')+t(670,120,'produced','small','middle')+t(665,170,'HasMemRefs','small','middle')+t(665,280,'NormalizedStmt','tiny','middle')+t(665,300,'Structure','tiny','middle')+mark(400,360,'off','contract')+t(400,405,'invalidated：SSAForm','small','middle')+stroke(400,256,400,343,'#666','4 5')+caption(485,'声明说明前后条件；图中没有实际验证执行记录');
+}
+else if(id==='chain'){
+ s=t(35,70,'局部性质依赖：产生、需求与失效','small');
+ const xs=[110,390,670], names=['InitMemRef','MemoryReuse','AllocateMemoryAddr'];
+ names.forEach((v,i)=>{s+=`<rect x="${xs[i]-100}" y="110" width="200" height="36" fill="#252525" stroke="#777"/>`+t(xs[i],134,v,'small','middle')});
+ s+=t(30,207,'SSAForm','small')+stroke(110,160,110,215)+mark(110,240,'off','property')+t(150,245,'invalidated','small');
+ s+=t(30,310,'HasMemRefs','small')+stroke(110,320,390,320,'#B8CBC0')+stroke(110,146,110,295,'#777','3 5')+stroke(390,146,390,295,'#777','3 5')+mark(110,320,'ok','property')+mark(390,320,'ok','property')+t(110,356,'produced','small','middle')+t(390,356,'required','small','middle');
+ s+=stroke(670,146,670,397,'#777','3 5')+mark(670,420,'ok','property')+t(470,465,'produced: AllocatedMemoryAddr','small')+caption(505,'只展示选定性质；横向连接表示性质依赖，不是完整 Pass 顺序');
+}
+else if(id==='declaration'){
+ s=rail(['声明','规则实现','启用 / 适用','运行记录'],140);
+ ['P','P','P','P'].forEach((v,i)=>{s+=stroke(120+i*190,146,120+i*190,215,'#555','3 5')+mark(120+i*190,245,i===0?'ok':'unknown','declaration',24)});
+ s+=bracket(120,mode?690:120,330,mode?'四项证据都需要核实':'目前仅有源码声明','declaration');
+ if(mode)for(let i=1;i<4;i++)s+=`<path d="M${100+i*190} 390 v-15 h40 v15" fill="none" stroke="#888"/>`+t(120+i*190,415,'待核实','small','middle');
+ s+=caption(480,'构造的证据完备度示意；未提供任何实际编译通过记录');
+}
+else if(id==='coverage'){
+ if(!mode){
+ const cols=['类型正确','SSA 形式','内存引用','地址已分配'];const rows=[['produced',[1,1,1,0]],['自动集合',[1,1,0,1]],['已验证（移除失效项后）',[0,1,0,0]],['本步需检查',[1,0,0,0]]];
+ cols.forEach((v,i)=>s+=t(365+i*100,92,v,'tiny','middle'));
+ rows.forEach(([label,vals],r)=>{let y=135+r*82;s+=t(35,y+22,label,'small');vals.forEach((v,i)=>{let x=338+i*100;s+=hit('coverage',`<rect class="outline" x="${x}" y="${y}" width="54" height="42" fill="${v?(r===3?'#B8CBC0':'#777'):'#1b1b1b'}" stroke="#555"/>`+t(x+27,y+27,v?'●':'−','small','middle'))})});
+ s+=caption(490,'构造产出集：检查类型性质；SSA 已验证；内存引用不在自动集合');
+ }else{
+ s=rail(['输入 IR','BEFORE','AFTER','输出 IR'],130)+`<rect x="370" y="105" width="60" height="50" fill="#333" stroke="#aaa"/>`+t(400,135,'Pass','small','middle');
+ const rows=[['required',[0,1,0,0]],['结构性质',[0,1,1,0]],['produced',[0,0,1,0]]];
+ rows.forEach(([label,v],r)=>{s+=t(28,240+r*75,label,'small');v.forEach((n,i)=>{if(n)s+=mark(120+i*190,235+r*75,'ok','coverage');else s+=stroke(112+i*190,235+r*75,128+i*190,235+r*75)})});
+ s+=caption(480,'✓ 表示检查范围；BEFORE_AND_AFTER 同时启用两侧');
+ }
+}
+else if(id==='window'){
+ s=caption(65,'跟踪 TypeChecked：类型检查性质（构造示例）')+rail(['首次检查','保证失效','重新产生','再次检查'],140)+propertyRow('',255,['ok','off','unknown',mode?'fail':'ok']);
+ s+=`<rect x="138" y="310" width="152" height="28" fill="#B8CBC0" opacity=".25"/><path d="M328 324 H672" stroke="#777" stroke-width="2" stroke-dasharray="6 8"/>`+t(213,370,'已有验证记录','small','middle')+t(498,370,'失效后撤销旧记录','small','middle')+bracket(500,690,410,'重新检查','window')+caption(495,'横向为编译阶段，不表示运行时间；− 未保证，虚线圆为待检查');
+}
+else if(id==='first'){
+ s=checks(['ok',mode?'unknown':'ok','fail','fail'],['初始 IR','变换①后','变换②后','变换③后'])+`<rect x="${mode?120:310}" y="295" width="${mode?380:190}" height="40" fill="#E8A896" opacity=".14"/>`+bracket(mode?120:310,500,345,'首次可观测偏离区间')+caption(445,mode?'变换①后的快照缺失：区间扩大为初始 IR → 变换②后':'相邻快照齐全：区间为变换①后 → 变换②后')+caption(490,'检查规则：每个操作数的类型满足对应操作要求（构造例）');
+}
+else if(id==='nonmonotone'){
+ s=rail(['初始 IR','变换①后','变换②后','变换③后'],95)+t(30,210,'通过','small')+t(30,345,'失败','small')+stroke(95,205,720,205,'#333')+stroke(95,340,720,340,'#333');
+ const ys=[205,340,205,340];ys.forEach((y,i)=>{if(i<3)s+=stroke(120+i*190,y,310+i*190,ys[i+1],'#888');s+=mark(120+i*190,y,i%2?'fail':'ok','nonmonotone',22)});
+ s+=bracket(120,310,390,'较早失败仍然存在','nonmonotone')+caption(480,'变换②后通过，不能排除变换①后已失败；连线表示检查顺序');
+}
+else if(id==='blindspots'){
+ if(!mode){s=P.boundary(65,100,280,225,'变换前')+P.op(105,175,'composite','op',200)+P.boundary(455,100,280,225,'变换后')+P.op(515,150,'op 1','op',150)+P.op(515,235,'op 2','op',150)+P.line(345,215,455,215,'mapping')+caption(435,'合法降级可能改变 op 数量；数量守恒不是通用契约')}
+ else{
+ s=t(400,70,'不同检查的证据范围互不替代','','middle');
+ const labels=['结构规则','表示往返','数值验证','性能验证'];labels.forEach((v,i)=>{let x=125+i*180;s+=t(x,130,v,'small','middle')+`<circle cx="${x}" cy="245" r="58" fill="none" stroke="#777"/>`;if(i===0)s+=stroke(x-25,225,x,260)+stroke(x+25,225,x,260)+`<circle cx="${x}" cy="260" r="8" fill="#685CF0"/>`;if(i===1)s+=`<path d="M${x-27} 234 Q${x} 200 ${x+27} 234 M${x+27} 256 Q${x} 290 ${x-27} 256" fill="none" stroke="#bbb" stroke-width="2"/>`+t(x,252,'IR','small','middle');if(i===2)s+=t(x,252,'|y − ŷ| ≤ ε','small','middle');if(i===3)for(let j=0;j<4;j++)s+=`<rect x="${x-30+j*17}" y="${270-[25,47,36,54][j]}" width="10" height="${[25,47,36,54][j]}" fill="#aaa"/>`;s+=mark(x,370,'unknown','blindspots')});s+=caption(470,'每类验证都需要独立结果；图形为验证对象示意');
+ }
+}
+else if(id==='repro'){
+ if(!mode){s=miniIR(70,125)+miniIR(335,125,true)+miniIR(600,125,true)+P.line(215,195,320,195,'mapping')+P.line(480,195,585,195,'mapping')+t(135,95,'原始用例','small','middle')+t(400,95,'移除无关部分','small','middle')+t(665,95,'再次删减','small','middle')+mark(135,325,'fail','repro')+mark(400,325,'fail','repro')+mark(665,325,'unknown','repro')+bracket(135,400,385,'同一故障仍可复现','repro')+caption(475,'最后一次删减尚未验证：不能直接宣布得到最小用例')}
+ else{s=miniIR(65,160,true)+stroke(195,230,340,230)+stroke(340,130,340,390);['故障判据','合法输入正例','必要的运行检查'].forEach((v,i)=>{let y=130+i*130;s+=stroke(340,y,630,y)+mark(660,y,'unknown','repro',22)+t(450,y-18,v,'small','middle')});s+=caption(475,'候选修复分流到独立检查；结果均需实际执行后填写')}
+}
+else if(id==='overview'){
+ s=rail(['初始 IR','变换①后','变换②后','变换③后'],90)+t(10,166,'SSA 保证','tiny')+propertyRow('',160,['ok','ok','off','off'],'window')+t(10,251,'类型检查','tiny')+propertyRow('',245,['ok','ok','fail','fail'],'first')+t(10,336,'地址检查','tiny')+propertyRow('',330,['unknown','unknown','unknown','unknown'],'coverage');
+ s+=`<rect x="310" y="205" width="190" height="80" fill="#E8A896" opacity=".10"/>`+bracket(310,500,385,'类型检查的首次可观测偏离','first')+t(120,455,'SSAForm：既有保证被撤销','small')+t(410,455,'AllocatedMemoryAddr：未采集','small')+caption(505,'同一阶段轴：保证适用范围 × 检查证据 × 偏离区间');
+}
 return s;}
-function coverDiagram(){return P.doc(80,175,'Pass 前 IR')+P.pass(310,180,'受契约约束的变换')+P.doc(610,175,'Pass 后 IR')+P.line(242,210,310,210,'mapping')+P.line(570,210,610,210,'mapping')+box(145,345,510,100,'同一性质的入口与出口检查','缩小首次可观测偏离范围','contract')}
+function coverDiagram(){return rail(['初始 IR','变换①后','变换②后','变换③后'],135)+propertyRow('SSA',230,['ok','ok','off','off'],'window')+propertyRow('类型',325,['ok','ok','fail','fail'],'first')+bracket(310,500,395,'首次可观测偏离','first')}
 
 function updateFormula(){}
 let page=0,mode=0,selected='',bounds={w:800,h:540},zoom=1,view={x:0,y:0,w:800,h:540},drag=null,moved=false;
@@ -382,7 +434,7 @@ $('steps').innerHTML=pages.map((p,i)=>`<button data-page="${i}"><span>${String(i
 $('canvas').onclick=e=>{if(moved){moved=false;return}let h=e.target.closest('[data-key]');if(h)select(h.dataset.key)};$('canvas').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.dataset.key){e.preventDefault();select(e.target.dataset.key)}});document.addEventListener('keydown',e=>{if(e.key==='Escape')info(false);if(e.target.matches('input,textarea')||e.altKey||e.metaKey||e.ctrlKey)return;if(e.key==='ArrowRight'){e.preventDefault();render(page+1)}if(e.key==='ArrowLeft'){e.preventDefault();render(page-1)}});
 $('canvas').addEventListener('pointerdown',e=>{moved=false;if(zoom<=1)return;const svg=$('canvas').querySelector('svg');const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(svg.getScreenCTM().inverse());drag={px:e.clientX,py:e.clientY,x:p.x,y:p.y,vx:view.x,vy:view.y,matrix:svg.getScreenCTM().inverse()}});$('canvas').addEventListener('pointermove',e=>{if(!drag)return;if(Math.hypot(e.clientX-drag.px,e.clientY-drag.py)>5){moved=true;$('canvas').setPointerCapture(e.pointerId);$('canvas').classList.add('dragging')}if(moved){let p=new DOMPoint(e.clientX,e.clientY).matrixTransform(drag.matrix);view.x=drag.vx+drag.x-p.x;view.y=drag.vy+drag.y-p.y;clamp();updateView()}});function stop(){drag=null;$('canvas').classList.remove('dragging')}$('canvas').addEventListener('pointerup',stop);$('canvas').addEventListener('pointercancel',stop);window.addEventListener('resize',()=>{if(page)updateView()});
 
-$('cover-art').innerHTML=`<svg viewBox="0 0 800 540" role="img" aria-label="Pass 之间的契约与首次偏离定位">${defs}${coverDiagram()}</svg>`;
+$('cover-art').innerHTML=`<svg viewBox="0 0 800 540" role="img" aria-label="Pass 的前置条件、产出性质与首次偏离定位">${defs}${coverDiagram()}</svg>`;
 $('cover-art').querySelectorAll('[tabindex]').forEach(el=>{el.removeAttribute('tabindex');el.removeAttribute('role')});
 $('cover-art').innerHTML=$('cover-art').innerHTML.replace(/id="(arrow|open|diamond|circle)"/g,'id="cover-$1"').replace(/url\(#(arrow|open|diamond|circle)\)/g,'url(#cover-$1)');
 window.addEventListener('hashchange',()=>render(Math.max(0,pages.findIndex(p=>p.id===location.hash.slice(1)))));

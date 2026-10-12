@@ -1,0 +1,48 @@
+{
+  "checkedAt": "2026-10-12T02:06:10.955Z",
+  "scope": "Static syntax, offline dependencies, all chapter/mode rendering with a simulated DOM, glossary selection, next/previous, fit/zoom and local source targets. No browser layout or reader study.",
+  "reports": [
+    {
+      "file": "compilation.html",
+      "chapters": 10,
+      "states": 21,
+      "hits": 162,
+      "script": "pass",
+      "simulatedReader": "pass",
+      "localSources": "pass",
+      "sha256": "225e3e9def4ff72421efd18e2a1c2117b8bec0cefcb70206656f69788f6a6c75"
+    },
+    {
+      "file": "memory-pipeline.html",
+      "chapters": 11,
+      "states": 29,
+      "hits": 140,
+      "script": "pass",
+      "simulatedReader": "pass",
+      "localSources": "pass",
+      "sha256": "f4b6b07b00433ac43bea87aff6568186ef3e2170f5b4e5adda698856aa5d2772"
+    },
+    {
+      "file": "diagnosis.html",
+      "chapters": 10,
+      "states": 26,
+      "hits": 136,
+      "script": "pass",
+      "simulatedReader": "pass",
+      "localSources": "pass",
+      "sha256": "c55b4f2661e3f0591a0f1b9edaef500de7bde52ecc959802a935ec9b6a97999a"
+    }
+  ],
+  "baselineChapters": 61,
+  "mapping": "61 unique source chapters with valid destinations",
+  "limitations": [
+    "No browser visual acceptance",
+    "No reader comprehension/time measurements",
+    "Source implementation versions not refreshed"
+  ],
+  "svgXmlAndTextAnchors": {
+    "states": 76,
+    "result": "pass",
+    "scope": "XML, marker targets and text anchor coordinates; no font extents or overlap measurement"
+  }
+}

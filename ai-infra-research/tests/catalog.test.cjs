@@ -25,9 +25,9 @@ test('Layer Atlas Pattern uses the specified entry in both static modes',()=>{
  assert.ok(C.sourceHref(a,{mode:'standalone'}).startsWith(expected+'?v='));
  assert.ok(fs.existsSync(path.join(root,'..',a.sources[0].path)));
 });
-test('22 manually curated entries after explicit exclusions',()=>{
- assert.equal(assets.length,22);assert.equal(assets.filter(a=>a.sources[0].repository==='pto').length,10);
- assert.equal(new Set(assets.map(a=>a.id)).size,22);
+test('23 manually curated entries after explicit exclusions',()=>{
+ assert.equal(assets.length,23);assert.equal(assets.filter(a=>a.sources[0].repository==='pto').length,10);
+ assert.equal(new Set(assets.map(a=>a.id)).size,23);
  assert.ok(!assets.some(a=>a.id==='a5-pmu-design'));
  assert.ok(!assets.some(a=>['pypto-trusted-iteration','devkit-agent-journey','devkit-tui-visual'].includes(a.id)));
  assert.ok(assets.every(a=>!a.sources.some(s=>s.path.includes('model_skill-dss3.2new'))));

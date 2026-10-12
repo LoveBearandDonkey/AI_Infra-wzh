@@ -1,0 +1,11 @@
+{
+  "scope": "Original reports 02–06 only",
+  "finalizedReport01": {
+    "path": "../pypto-compilation-guide/index.html",
+    "baselineSha256": "5e7b49f20da962aede72d8aa92c98363eaaace67139ed984261f3f89675da6e0",
+    "restoredSha256": "5e7b49f20da962aede72d8aa92c98363eaaace67139ed984261f3f89675da6e0"
+  },
+  "chapters": 24,
+  "diagramStates": 61,
+  "report01ExcludedFromCatalogAndStates": true
+}

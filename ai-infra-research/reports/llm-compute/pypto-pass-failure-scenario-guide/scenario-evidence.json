@@ -1,0 +1,1643 @@
+{
+  "run": "l3_decode_csa",
+  "demoSha256": "a7f80ea6202e009ecff71f09be8fc34c3e24ac30aea86cbe8c7a067d9e39461c",
+  "function": "csa_merge_pack_publish",
+  "stages": [
+    {
+      "idx": 29,
+      "file": "29_after_LowerPipelineToSlots.py",
+      "name": "LowerPipelineToSlots",
+      "function": "csa_merge_pack_publish",
+      "functionLine": 280,
+      "loop": [
+        {
+          "line": 297,
+          "text": "for m_sb_inline1219__idx_v0, (m_li_inline1302__iter_v1, m_mi_inline1221__iter_v1, m_oi_inline1220__iter_v1) in pl.pipeline(1, 5, stage=2, init_values=(m_li_inline1302__tile, m_mi_inline1221__tile, m_oi_inline1220__tile)):"
+        }
+      ],
+      "values": {
+        "product0": {
+          "line": 333,
+          "text": "t__tile_5: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.row_expand_mul(m_cur_oi_inline1216__tile, m_beta_inline1213__tile)",
+          "name": "t__tile_5",
+          "buffer": null,
+          "offset": null,
+          "bytes": 32768
+        },
+        "result0": {
+          "line": 334,
+          "text": "m_oi_inline1220__tile_1: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.add(t__tile_4, t__tile_5)",
+          "name": "m_oi_inline1220__tile_1",
+          "buffer": null,
+          "offset": null,
+          "bytes": 32768
+        }
+      },
+      "allocs": [],
+      "allocCount": 0,
+      "allocBytes": 0,
+      "tasks": [
+        {
+          "line": 3599,
+          "text": "ret__tmp_v0_45: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.spmd_submit(self.csa_merge_pack_publish_spmd, attention_grouped_inline1276__ssa_v0, pack_work_count_inline1228__ssa_v0, sparse_blk_mi_inline1234__ssa_v0, sparse_blk_li_inline1283__ssa_v0, sparse_blk_oi_inline1233__ssa_v0, attn_sink__ssa_v0, rope_cos_il_inline1232__ssa_v0, rope_sin_signed_inline1231__ssa_v0, rope_swap_idx_inline1230__ssa_v0, tp_rank__ssa_v0, attention_window__ssa_v0, group_base__ssa_v0, attention_signal__ssa_v0, deps=[qk_tid_inline1229__ssa_v0, attn_rope_tid_inline1294__ssa_v0], core_num=48)"
+        },
+        {
+          "line": 3600,
+          "text": "publish_tid_inline1260__ssa_v0: pl.Scalar[pl.TASK_ID] = ret__tmp_v0_45[0]"
+        },
+        {
+          "line": 3601,
+          "text": "ret__tmp_v0_46: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.submit(self.o_group_a2a_wait, tp_rank__ssa_v0, attention_signal__ssa_v0, deps=[publish_tid_inline1260__ssa_v0])"
+        }
+      ],
+      "before": null,
+      "loads": [
+        {
+          "line": 301,
+          "text": "m_cur_oi_inline1216__tile: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec)"
+        }
+      ]
+    },
+    {
+      "idx": 30,
+      "file": "30_after_LowerPipelineLoops.py",
+      "name": "LowerPipelineLoops",
+      "function": "csa_merge_pack_publish",
+      "functionLine": 341,
+      "loop": [
+        {
+          "line": 358,
+          "text": "for m_sb_inline1219__idx_v0, (m_li_inline1302__iter_v1, m_mi_inline1221__iter_v1, m_oi_inline1220__iter_v1) in pl.pipeline(1, 5, 2, stage=1, init_values=(m_li_inline1302__tile, m_mi_inline1221__tile, m_oi_inline1220__tile)):"
+        }
+      ],
+      "values": {
+        "product0": {
+          "line": 394,
+          "text": "t__tile_5: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.row_expand_mul(m_cur_oi_inline1216__tile, m_beta_inline1213__tile, attrs={\"pipeline_membership\": \"0:0\"})",
+          "name": "t__tile_5",
+          "buffer": null,
+          "offset": null,
+          "bytes": 32768
+        },
+        "product1": {
+          "line": 431,
+          "text": "t__tile_10: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.row_expand_mul(m_oi_inline1220__tile_1, m_alpha_inline1214__tile_1, attrs={\"pipeline_membership\": \"0:1\"})",
+          "name": "t__tile_10",
+          "buffer": null,
+          "offset": null,
+          "bytes": 32768
+        },
+        "result0": {
+          "line": 395,
+          "text": "m_oi_inline1220__tile_1: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.add(t__tile_4, t__tile_5, attrs={\"pipeline_membership\": \"0:0\"})",
+          "name": "m_oi_inline1220__tile_1",
+          "buffer": null,
+          "offset": null,
+          "bytes": 32768
+        },
+        "result1": {
+          "line": 433,
+          "text": "m_oi_inline1220__tile_2: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.add(t__tile_10, t__tile_11, attrs={\"pipeline_membership\": \"0:1\"})",
+          "name": "m_oi_inline1220__tile_2",
+          "buffer": null,
+          "offset": null,
+          "bytes": 32768
+        }
+      },
+      "allocs": [],
+      "allocCount": 0,
+      "allocBytes": 0,
+      "tasks": [
+        {
+          "line": 4667,
+          "text": "ret__tmp_v0_45: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.spmd_submit(self.csa_merge_pack_publish_spmd, attention_grouped_inline1276__ssa_v0, pack_work_count_inline1228__ssa_v0, sparse_blk_mi_inline1234__ssa_v0, sparse_blk_li_inline1283__ssa_v0, sparse_blk_oi_inline1233__ssa_v0, attn_sink__ssa_v0, rope_cos_il_inline1232__ssa_v0, rope_sin_signed_inline1231__ssa_v0, rope_swap_idx_inline1230__ssa_v0, tp_rank__ssa_v0, attention_window__ssa_v0, group_base__ssa_v0, attention_signal__ssa_v0, deps=[qk_tid_inline1229__ssa_v0, attn_rope_tid_inline1294__ssa_v0], core_num=48)"
+        },
+        {
+          "line": 4668,
+          "text": "publish_tid_inline1260__ssa_v0: pl.Scalar[pl.TASK_ID] = ret__tmp_v0_45[0]"
+        },
+        {
+          "line": 4669,
+          "text": "ret__tmp_v0_46: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.submit(self.o_group_a2a_wait, tp_rank__ssa_v0, attention_signal__ssa_v0, deps=[publish_tid_inline1260__ssa_v0])"
+        }
+      ],
+      "before": {
+        "idx": 29,
+        "file": "29_after_LowerPipelineToSlots.py",
+        "name": "LowerPipelineToSlots",
+        "function": "csa_merge_pack_publish",
+        "functionLine": 280,
+        "loop": [
+          {
+            "line": 297,
+            "text": "for m_sb_inline1219__idx_v0, (m_li_inline1302__iter_v1, m_mi_inline1221__iter_v1, m_oi_inline1220__iter_v1) in pl.pipeline(1, 5, stage=2, init_values=(m_li_inline1302__tile, m_mi_inline1221__tile, m_oi_inline1220__tile)):"
+          }
+        ],
+        "values": {
+          "product0": {
+            "line": 333,
+            "text": "t__tile_5: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.row_expand_mul(m_cur_oi_inline1216__tile, m_beta_inline1213__tile)",
+            "name": "t__tile_5",
+            "buffer": null,
+            "offset": null,
+            "bytes": 32768
+          },
+          "result0": {
+            "line": 334,
+            "text": "m_oi_inline1220__tile_1: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.add(t__tile_4, t__tile_5)",
+            "name": "m_oi_inline1220__tile_1",
+            "buffer": null,
+            "offset": null,
+            "bytes": 32768
+          }
+        },
+        "allocs": [],
+        "allocCount": 0,
+        "allocBytes": 0,
+        "tasks": [
+          {
+            "line": 3599,
+            "text": "ret__tmp_v0_45: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.spmd_submit(self.csa_merge_pack_publish_spmd, attention_grouped_inline1276__ssa_v0, pack_work_count_inline1228__ssa_v0, sparse_blk_mi_inline1234__ssa_v0, sparse_blk_li_inline1283__ssa_v0, sparse_blk_oi_inline1233__ssa_v0, attn_sink__ssa_v0, rope_cos_il_inline1232__ssa_v0, rope_sin_signed_inline1231__ssa_v0, rope_swap_idx_inline1230__ssa_v0, tp_rank__ssa_v0, attention_window__ssa_v0, group_base__ssa_v0, attention_signal__ssa_v0, deps=[qk_tid_inline1229__ssa_v0, attn_rope_tid_inline1294__ssa_v0], core_num=48)"
+          },
+          {
+            "line": 3600,
+            "text": "publish_tid_inline1260__ssa_v0: pl.Scalar[pl.TASK_ID] = ret__tmp_v0_45[0]"
+          },
+          {
+            "line": 3601,
+            "text": "ret__tmp_v0_46: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.submit(self.o_group_a2a_wait, tp_rank__ssa_v0, attention_signal__ssa_v0, deps=[publish_tid_inline1260__ssa_v0])"
+          }
+        ],
+        "loads": [
+          {
+            "line": 301,
+            "text": "m_cur_oi_inline1216__tile: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec)"
+          }
+        ]
+      },
+      "loads": [
+        {
+          "line": 362,
+          "text": "m_cur_oi_inline1216__tile: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec, attrs={\"pipeline_membership\": \"0:0\"})"
+        },
+        {
+          "line": 400,
+          "text": "m_cur_oi_inline1216__tile_1: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0_1, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec, attrs={\"pipeline_membership\": \"0:1\"})"
+        }
+      ]
+    },
+    {
+      "idx": 31,
+      "file": "31_after_CanonicalizeIOOrder.py",
+      "name": "CanonicalizeIOOrder",
+      "function": "csa_merge_pack_publish",
+      "functionLine": 341,
+      "loop": [
+        {
+          "line": 358,
+          "text": "for m_sb_inline1219__idx_v0, (m_li_inline1302__iter_v1, m_mi_inline1221__iter_v1, m_oi_inline1220__iter_v1) in pl.range(1, 5, 2, init_values=(m_li_inline1302__tile, m_mi_inline1221__tile, m_oi_inline1220__tile)):"
+        }
+      ],
+      "values": {
+        "product0": {
+          "line": 399,
+          "text": "t__tile_5: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.row_expand_mul(m_cur_oi_inline1216__tile, m_beta_inline1213__tile, attrs={\"pipeline_membership\": \"0:0\"})",
+          "name": "t__tile_5",
+          "buffer": null,
+          "offset": null,
+          "bytes": 32768
+        },
+        "product1": {
+          "line": 432,
+          "text": "t__tile_10: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.row_expand_mul(m_oi_inline1220__tile_1, m_alpha_inline1214__tile_1, attrs={\"pipeline_membership\": \"0:1\"})",
+          "name": "t__tile_10",
+          "buffer": null,
+          "offset": null,
+          "bytes": 32768
+        },
+        "result0": {
+          "line": 400,
+          "text": "m_oi_inline1220__tile_1: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.add(t__tile_4, t__tile_5, attrs={\"pipeline_membership\": \"0:0\"})",
+          "name": "m_oi_inline1220__tile_1",
+          "buffer": null,
+          "offset": null,
+          "bytes": 32768
+        },
+        "result1": {
+          "line": 434,
+          "text": "m_oi_inline1220__tile_2: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.add(t__tile_10, t__tile_11, attrs={\"pipeline_membership\": \"0:1\"})",
+          "name": "m_oi_inline1220__tile_2",
+          "buffer": null,
+          "offset": null,
+          "bytes": 32768
+        }
+      },
+      "allocs": [],
+      "allocCount": 0,
+      "allocBytes": 0,
+      "tasks": [
+        {
+          "line": 4667,
+          "text": "ret__tmp_v0_45: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.spmd_submit(self.csa_merge_pack_publish_spmd, attention_grouped_inline1276__ssa_v0, pack_work_count_inline1228__ssa_v0, sparse_blk_mi_inline1234__ssa_v0, sparse_blk_li_inline1283__ssa_v0, sparse_blk_oi_inline1233__ssa_v0, attn_sink__ssa_v0, rope_cos_il_inline1232__ssa_v0, rope_sin_signed_inline1231__ssa_v0, rope_swap_idx_inline1230__ssa_v0, tp_rank__ssa_v0, attention_window__ssa_v0, group_base__ssa_v0, attention_signal__ssa_v0, deps=[qk_tid_inline1229__ssa_v0, attn_rope_tid_inline1294__ssa_v0], core_num=48)"
+        },
+        {
+          "line": 4668,
+          "text": "publish_tid_inline1260__ssa_v0: pl.Scalar[pl.TASK_ID] = ret__tmp_v0_45[0]"
+        },
+        {
+          "line": 4669,
+          "text": "ret__tmp_v0_46: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.submit(self.o_group_a2a_wait, tp_rank__ssa_v0, attention_signal__ssa_v0, deps=[publish_tid_inline1260__ssa_v0])"
+        }
+      ],
+      "before": {
+        "idx": 30,
+        "file": "30_after_LowerPipelineLoops.py",
+        "name": "LowerPipelineLoops",
+        "function": "csa_merge_pack_publish",
+        "functionLine": 341,
+        "loop": [
+          {
+            "line": 358,
+            "text": "for m_sb_inline1219__idx_v0, (m_li_inline1302__iter_v1, m_mi_inline1221__iter_v1, m_oi_inline1220__iter_v1) in pl.pipeline(1, 5, 2, stage=1, init_values=(m_li_inline1302__tile, m_mi_inline1221__tile, m_oi_inline1220__tile)):"
+          }
+        ],
+        "values": {
+          "product0": {
+            "line": 394,
+            "text": "t__tile_5: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.row_expand_mul(m_cur_oi_inline1216__tile, m_beta_inline1213__tile, attrs={\"pipeline_membership\": \"0:0\"})",
+            "name": "t__tile_5",
+            "buffer": null,
+            "offset": null,
+            "bytes": 32768
+          },
+          "product1": {
+            "line": 431,
+            "text": "t__tile_10: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.row_expand_mul(m_oi_inline1220__tile_1, m_alpha_inline1214__tile_1, attrs={\"pipeline_membership\": \"0:1\"})",
+            "name": "t__tile_10",
+            "buffer": null,
+            "offset": null,
+            "bytes": 32768
+          },
+          "result0": {
+            "line": 395,
+            "text": "m_oi_inline1220__tile_1: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.add(t__tile_4, t__tile_5, attrs={\"pipeline_membership\": \"0:0\"})",
+            "name": "m_oi_inline1220__tile_1",
+            "buffer": null,
+            "offset": null,
+            "bytes": 32768
+          },
+          "result1": {
+            "line": 433,
+            "text": "m_oi_inline1220__tile_2: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.add(t__tile_10, t__tile_11, attrs={\"pipeline_membership\": \"0:1\"})",
+            "name": "m_oi_inline1220__tile_2",
+            "buffer": null,
+            "offset": null,
+            "bytes": 32768
+          }
+        },
+        "allocs": [],
+        "allocCount": 0,
+        "allocBytes": 0,
+        "tasks": [
+          {
+            "line": 4667,
+            "text": "ret__tmp_v0_45: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.spmd_submit(self.csa_merge_pack_publish_spmd, attention_grouped_inline1276__ssa_v0, pack_work_count_inline1228__ssa_v0, sparse_blk_mi_inline1234__ssa_v0, sparse_blk_li_inline1283__ssa_v0, sparse_blk_oi_inline1233__ssa_v0, attn_sink__ssa_v0, rope_cos_il_inline1232__ssa_v0, rope_sin_signed_inline1231__ssa_v0, rope_swap_idx_inline1230__ssa_v0, tp_rank__ssa_v0, attention_window__ssa_v0, group_base__ssa_v0, attention_signal__ssa_v0, deps=[qk_tid_inline1229__ssa_v0, attn_rope_tid_inline1294__ssa_v0], core_num=48)"
+          },
+          {
+            "line": 4668,
+            "text": "publish_tid_inline1260__ssa_v0: pl.Scalar[pl.TASK_ID] = ret__tmp_v0_45[0]"
+          },
+          {
+            "line": 4669,
+            "text": "ret__tmp_v0_46: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.submit(self.o_group_a2a_wait, tp_rank__ssa_v0, attention_signal__ssa_v0, deps=[publish_tid_inline1260__ssa_v0])"
+          }
+        ],
+        "loads": [
+          {
+            "line": 362,
+            "text": "m_cur_oi_inline1216__tile: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec, attrs={\"pipeline_membership\": \"0:0\"})"
+          },
+          {
+            "line": 400,
+            "text": "m_cur_oi_inline1216__tile_1: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0_1, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec, attrs={\"pipeline_membership\": \"0:1\"})"
+          }
+        ]
+      },
+      "loads": [
+        {
+          "line": 363,
+          "text": "m_cur_oi_inline1216__tile: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec, attrs={\"pipeline_membership\": \"0:0\"})"
+        },
+        {
+          "line": 366,
+          "text": "m_cur_oi_inline1216__tile_1: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0_1, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec, attrs={\"pipeline_membership\": \"0:1\"})"
+        }
+      ]
+    },
+    {
+      "idx": 33,
+      "file": "33_after_InitMemRef.py",
+      "name": "InitMemRef",
+      "function": "csa_merge_pack_publish",
+      "functionLine": 486,
+      "loop": [
+        {
+          "line": 556,
+          "text": "for m_sb_inline1219__idx_v0, (m_li_inline1302__iter_v1, m_mi_inline1221__iter_v1, m_oi_inline1220__iter_v1) in pl.range(1, 5, 2, init_values=(m_li_inline1302__tile, m_mi_inline1221__tile, m_oi_inline1220__tile)):"
+        }
+      ],
+      "values": {
+        "product0": {
+          "line": 597,
+          "text": "t__tile_5: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_28, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.row_expand_mul(m_cur_oi_inline1216__tile, m_beta_inline1213__tile, attrs={\"pipeline_membership\": \"0:0\"})",
+          "name": "t__tile_5",
+          "buffer": "mem_vec_28",
+          "offset": 0,
+          "bytes": 32768
+        },
+        "product1": {
+          "line": 630,
+          "text": "t__tile_10: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_38, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.row_expand_mul(m_oi_inline1220__tile_1, m_alpha_inline1214__tile_1, attrs={\"pipeline_membership\": \"0:1\"})",
+          "name": "t__tile_10",
+          "buffer": "mem_vec_38",
+          "offset": 0,
+          "bytes": 32768
+        },
+        "result0": {
+          "line": 598,
+          "text": "m_oi_inline1220__tile_1: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_29, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.add(t__tile_4, t__tile_5, attrs={\"pipeline_membership\": \"0:0\"})",
+          "name": "m_oi_inline1220__tile_1",
+          "buffer": "mem_vec_29",
+          "offset": 0,
+          "bytes": 32768
+        },
+        "result1": {
+          "line": 632,
+          "text": "m_oi_inline1220__tile_2: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_40, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.add(t__tile_10, t__tile_11, attrs={\"pipeline_membership\": \"0:1\"})",
+          "name": "m_oi_inline1220__tile_2",
+          "buffer": "mem_vec_40",
+          "offset": 0,
+          "bytes": 32768
+        }
+      },
+      "allocs": [
+        {
+          "line": 487,
+          "text": "mem_vec_10: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 488,
+          "text": "mem_vec_11: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 489,
+          "text": "mem_vec_12: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+        },
+        {
+          "line": 490,
+          "text": "mem_vec_13: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 491,
+          "text": "mem_vec_14: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 492,
+          "text": "mem_vec_15: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+        },
+        {
+          "line": 493,
+          "text": "mem_vec_16: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 494,
+          "text": "mem_vec_17: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 495,
+          "text": "mem_vec_18: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+        },
+        {
+          "line": 496,
+          "text": "mem_vec_19: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 497,
+          "text": "mem_vec_20: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 498,
+          "text": "mem_vec_21: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 499,
+          "text": "mem_vec_22: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 500,
+          "text": "mem_vec_23: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 501,
+          "text": "mem_vec_24: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 502,
+          "text": "mem_vec_25: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 503,
+          "text": "mem_vec_26: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 504,
+          "text": "mem_vec_27: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+        },
+        {
+          "line": 505,
+          "text": "mem_vec_28: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+        },
+        {
+          "line": 506,
+          "text": "mem_vec_29: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+        },
+        {
+          "line": 507,
+          "text": "mem_vec_30: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 508,
+          "text": "mem_vec_31: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 509,
+          "text": "mem_vec_32: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 510,
+          "text": "mem_vec_33: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 511,
+          "text": "mem_vec_34: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 512,
+          "text": "mem_vec_35: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 513,
+          "text": "mem_vec_36: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 514,
+          "text": "mem_vec_37: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 515,
+          "text": "mem_vec_38: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+        },
+        {
+          "line": 516,
+          "text": "mem_vec_39: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+        },
+        {
+          "line": 517,
+          "text": "mem_vec_40: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+        },
+        {
+          "line": 518,
+          "text": "mem_vec_44: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 519,
+          "text": "mem_vec_45: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 520,
+          "text": "mem_vec_46: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 521,
+          "text": "mem_vec_47: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 522,
+          "text": "mem_vec_48: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 523,
+          "text": "mem_vec_49: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 524,
+          "text": "mem_vec_50: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+        },
+        {
+          "line": 525,
+          "text": "mem_vec_51: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 16384)"
+        },
+        {
+          "line": 526,
+          "text": "mem_vec_52: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+        },
+        {
+          "line": 527,
+          "text": "mem_vec_53: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+        },
+        {
+          "line": 528,
+          "text": "mem_vec_54: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 4096)"
+        },
+        {
+          "line": 529,
+          "text": "mem_vec_55: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 4096)"
+        },
+        {
+          "line": 530,
+          "text": "mem_vec_56: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+        },
+        {
+          "line": 531,
+          "text": "mem_vec_57: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+        },
+        {
+          "line": 532,
+          "text": "mem_vec_59: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 4096)"
+        },
+        {
+          "line": 533,
+          "text": "mem_vec_60: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 4096)"
+        },
+        {
+          "line": 534,
+          "text": "mem_vec_61: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 4096)"
+        },
+        {
+          "line": 535,
+          "text": "mem_vec_62: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 4096)"
+        },
+        {
+          "line": 536,
+          "text": "mem_vec_63: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 2048)"
+        },
+        {
+          "line": 537,
+          "text": "mem_vec_64: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 16384)"
+        },
+        {
+          "line": 538,
+          "text": "mem_vec_66: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 65536)"
+        },
+        {
+          "line": 539,
+          "text": "mem_vec_67: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 65536)"
+        }
+      ],
+      "allocCount": 53,
+      "allocBytes": 520960,
+      "tasks": [
+        {
+          "line": 6346,
+          "text": "ret__tmp_v0_45: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.spmd_submit(self.csa_merge_pack_publish_spmd, attention_grouped_inline1276__ssa_v0, pack_work_count_inline1228__ssa_v0, sparse_blk_mi_inline1234__ssa_v0, sparse_blk_li_inline1283__ssa_v0, sparse_blk_oi_inline1233__ssa_v0, attn_sink__ssa_v0, rope_cos_il_inline1232__ssa_v0, rope_sin_signed_inline1231__ssa_v0, rope_swap_idx_inline1230__ssa_v0, tp_rank__ssa_v0, attention_window__ssa_v0, group_base__ssa_v0, attention_signal__ssa_v0, deps=[qk_tid_inline1229__ssa_v0, attn_rope_tid_inline1294__ssa_v0], core_num=48)"
+        },
+        {
+          "line": 6347,
+          "text": "publish_tid_inline1260__ssa_v0: pl.Scalar[pl.TASK_ID] = ret__tmp_v0_45[0]"
+        },
+        {
+          "line": 6348,
+          "text": "ret__tmp_v0_46: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.submit(self.o_group_a2a_wait, tp_rank__ssa_v0, attention_signal__ssa_v0, deps=[publish_tid_inline1260__ssa_v0])"
+        }
+      ],
+      "before": {
+        "idx": 32,
+        "file": "32_after_MaterializeTensorStrides.py",
+        "name": "MaterializeTensorStrides",
+        "function": "csa_merge_pack_publish",
+        "functionLine": 341,
+        "loop": [
+          {
+            "line": 358,
+            "text": "for m_sb_inline1219__idx_v0, (m_li_inline1302__iter_v1, m_mi_inline1221__iter_v1, m_oi_inline1220__iter_v1) in pl.range(1, 5, 2, init_values=(m_li_inline1302__tile, m_mi_inline1221__tile, m_oi_inline1220__tile)):"
+          }
+        ],
+        "values": {
+          "product0": {
+            "line": 399,
+            "text": "t__tile_5: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.row_expand_mul(m_cur_oi_inline1216__tile, m_beta_inline1213__tile, attrs={\"pipeline_membership\": \"0:0\"})",
+            "name": "t__tile_5",
+            "buffer": null,
+            "offset": null,
+            "bytes": 32768
+          },
+          "product1": {
+            "line": 432,
+            "text": "t__tile_10: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.row_expand_mul(m_oi_inline1220__tile_1, m_alpha_inline1214__tile_1, attrs={\"pipeline_membership\": \"0:1\"})",
+            "name": "t__tile_10",
+            "buffer": null,
+            "offset": null,
+            "bytes": 32768
+          },
+          "result0": {
+            "line": 400,
+            "text": "m_oi_inline1220__tile_1: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.add(t__tile_4, t__tile_5, attrs={\"pipeline_membership\": \"0:0\"})",
+            "name": "m_oi_inline1220__tile_1",
+            "buffer": null,
+            "offset": null,
+            "bytes": 32768
+          },
+          "result1": {
+            "line": 434,
+            "text": "m_oi_inline1220__tile_2: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.add(t__tile_10, t__tile_11, attrs={\"pipeline_membership\": \"0:1\"})",
+            "name": "m_oi_inline1220__tile_2",
+            "buffer": null,
+            "offset": null,
+            "bytes": 32768
+          }
+        },
+        "allocs": [],
+        "allocCount": 0,
+        "allocBytes": 0,
+        "tasks": [
+          {
+            "line": 4667,
+            "text": "ret__tmp_v0_45: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.spmd_submit(self.csa_merge_pack_publish_spmd, attention_grouped_inline1276__ssa_v0, pack_work_count_inline1228__ssa_v0, sparse_blk_mi_inline1234__ssa_v0, sparse_blk_li_inline1283__ssa_v0, sparse_blk_oi_inline1233__ssa_v0, attn_sink__ssa_v0, rope_cos_il_inline1232__ssa_v0, rope_sin_signed_inline1231__ssa_v0, rope_swap_idx_inline1230__ssa_v0, tp_rank__ssa_v0, attention_window__ssa_v0, group_base__ssa_v0, attention_signal__ssa_v0, deps=[qk_tid_inline1229__ssa_v0, attn_rope_tid_inline1294__ssa_v0], core_num=48)"
+          },
+          {
+            "line": 4668,
+            "text": "publish_tid_inline1260__ssa_v0: pl.Scalar[pl.TASK_ID] = ret__tmp_v0_45[0]"
+          },
+          {
+            "line": 4669,
+            "text": "ret__tmp_v0_46: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.submit(self.o_group_a2a_wait, tp_rank__ssa_v0, attention_signal__ssa_v0, deps=[publish_tid_inline1260__ssa_v0])"
+          }
+        ],
+        "loads": [
+          {
+            "line": 363,
+            "text": "m_cur_oi_inline1216__tile: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec, attrs={\"pipeline_membership\": \"0:0\"})"
+          },
+          {
+            "line": 366,
+            "text": "m_cur_oi_inline1216__tile_1: pl.Tile[[16, 512], pl.FP32, pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0_1, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec, attrs={\"pipeline_membership\": \"0:1\"})"
+          }
+        ]
+      },
+      "loads": [
+        {
+          "line": 561,
+          "text": "m_cur_oi_inline1216__tile: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_15, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec, attrs={\"pipeline_membership\": \"0:0\"})"
+        },
+        {
+          "line": 564,
+          "text": "m_cur_oi_inline1216__tile_1: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_18, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0_1, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec, attrs={\"pipeline_membership\": \"0:1\"})"
+        }
+      ]
+    },
+    {
+      "idx": 35,
+      "file": "35_after_MemoryReuse.py",
+      "name": "MemoryReuse",
+      "function": "csa_merge_pack_publish",
+      "functionLine": 366,
+      "loop": [
+        {
+          "line": 395,
+          "text": "for m_sb_inline1219__idx_v0, (m_li_inline1302__iter_v1, m_mi_inline1221__iter_v1, m_oi_inline1220__iter_v1) in pl.range(1, 5, 2, init_values=(m_li_inline1302__tile, m_mi_inline1221__tile, m_oi_inline1220__tile)):"
+        }
+      ],
+      "values": {
+        "product0": {
+          "line": 436,
+          "text": "t__tile_5: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_15, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.row_expand_mul(m_cur_oi_inline1216__tile, m_beta_inline1213__tile)",
+          "name": "t__tile_5",
+          "buffer": "mem_vec_15",
+          "offset": 0,
+          "bytes": 32768
+        },
+        "product1": {
+          "line": 469,
+          "text": "t__tile_10: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_15, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.row_expand_mul(m_oi_inline1220__tile_1, m_alpha_inline1214__tile_1)",
+          "name": "t__tile_10",
+          "buffer": "mem_vec_15",
+          "offset": 0,
+          "bytes": 32768
+        },
+        "result0": {
+          "line": 437,
+          "text": "m_oi_inline1220__tile_1: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_15, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.add(t__tile_4, t__tile_5)",
+          "name": "m_oi_inline1220__tile_1",
+          "buffer": "mem_vec_15",
+          "offset": 0,
+          "bytes": 32768
+        },
+        "result1": {
+          "line": 471,
+          "text": "m_oi_inline1220__tile_2: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_66, 0, 32768), pl.Mem.Vec] = pl.tile.add(t__tile_10, t__tile_11)",
+          "name": "m_oi_inline1220__tile_2",
+          "buffer": "mem_vec_66",
+          "offset": 0,
+          "bytes": 32768
+        }
+      },
+      "allocs": [
+        {
+          "line": 367,
+          "text": "mem_vec_15: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+        },
+        {
+          "line": 368,
+          "text": "mem_vec_17: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 369,
+          "text": "mem_vec_18: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+        },
+        {
+          "line": 370,
+          "text": "mem_vec_19: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 371,
+          "text": "mem_vec_20: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 372,
+          "text": "mem_vec_23: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 373,
+          "text": "mem_vec_27: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+        },
+        {
+          "line": 374,
+          "text": "mem_vec_52: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+        },
+        {
+          "line": 375,
+          "text": "mem_vec_53: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+        },
+        {
+          "line": 376,
+          "text": "mem_vec_56: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+        },
+        {
+          "line": 377,
+          "text": "mem_vec_57: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+        },
+        {
+          "line": 378,
+          "text": "mem_vec_66: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 65536)"
+        }
+      ],
+      "allocCount": 12,
+      "allocBytes": 165120,
+      "tasks": [
+        {
+          "line": 5030,
+          "text": "ret__tmp_v0_45: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.spmd_submit(self.csa_merge_pack_publish_spmd, attention_grouped_inline1276__ssa_v0, pack_work_count_inline1228__ssa_v0, sparse_blk_mi_inline1234__ssa_v0, sparse_blk_li_inline1283__ssa_v0, sparse_blk_oi_inline1233__ssa_v0, attn_sink__ssa_v0, rope_cos_il_inline1232__ssa_v0, rope_sin_signed_inline1231__ssa_v0, rope_swap_idx_inline1230__ssa_v0, tp_rank__ssa_v0, attention_window__ssa_v0, group_base__ssa_v0, attention_signal__ssa_v0, deps=[qk_tid_inline1229__ssa_v0, attn_rope_tid_inline1294__ssa_v0], core_num=48)"
+        },
+        {
+          "line": 5031,
+          "text": "publish_tid_inline1260__ssa_v0: pl.Scalar[pl.TASK_ID] = ret__tmp_v0_45[0]"
+        },
+        {
+          "line": 5032,
+          "text": "ret__tmp_v0_46: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.submit(self.o_group_a2a_wait, tp_rank__ssa_v0, attention_signal__ssa_v0, deps=[publish_tid_inline1260__ssa_v0])"
+        }
+      ],
+      "before": {
+        "idx": 34,
+        "file": "34_after_MaterializeSemanticAliases.py",
+        "name": "MaterializeSemanticAliases",
+        "function": "csa_merge_pack_publish",
+        "functionLine": 486,
+        "loop": [
+          {
+            "line": 556,
+            "text": "for m_sb_inline1219__idx_v0, (m_li_inline1302__iter_v1, m_mi_inline1221__iter_v1, m_oi_inline1220__iter_v1) in pl.range(1, 5, 2, init_values=(m_li_inline1302__tile, m_mi_inline1221__tile, m_oi_inline1220__tile)):"
+          }
+        ],
+        "values": {
+          "product0": {
+            "line": 597,
+            "text": "t__tile_5: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_28, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.row_expand_mul(m_cur_oi_inline1216__tile, m_beta_inline1213__tile, attrs={\"pipeline_membership\": \"0:0\"})",
+            "name": "t__tile_5",
+            "buffer": "mem_vec_28",
+            "offset": 0,
+            "bytes": 32768
+          },
+          "product1": {
+            "line": 630,
+            "text": "t__tile_10: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_38, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.row_expand_mul(m_oi_inline1220__tile_1, m_alpha_inline1214__tile_1, attrs={\"pipeline_membership\": \"0:1\"})",
+            "name": "t__tile_10",
+            "buffer": "mem_vec_38",
+            "offset": 0,
+            "bytes": 32768
+          },
+          "result0": {
+            "line": 598,
+            "text": "m_oi_inline1220__tile_1: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_29, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.add(t__tile_4, t__tile_5, attrs={\"pipeline_membership\": \"0:0\"})",
+            "name": "m_oi_inline1220__tile_1",
+            "buffer": "mem_vec_29",
+            "offset": 0,
+            "bytes": 32768
+          },
+          "result1": {
+            "line": 632,
+            "text": "m_oi_inline1220__tile_2: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_12, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.add(t__tile_10, t__tile_11, attrs={\"pipeline_membership\": \"0:1\"})",
+            "name": "m_oi_inline1220__tile_2",
+            "buffer": "mem_vec_12",
+            "offset": 0,
+            "bytes": 32768
+          }
+        },
+        "allocs": [
+          {
+            "line": 487,
+            "text": "mem_vec_10: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 488,
+            "text": "mem_vec_11: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 489,
+            "text": "mem_vec_12: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+          },
+          {
+            "line": 490,
+            "text": "mem_vec_13: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 491,
+            "text": "mem_vec_14: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 492,
+            "text": "mem_vec_15: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+          },
+          {
+            "line": 493,
+            "text": "mem_vec_16: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 494,
+            "text": "mem_vec_17: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 495,
+            "text": "mem_vec_18: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+          },
+          {
+            "line": 496,
+            "text": "mem_vec_19: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 497,
+            "text": "mem_vec_20: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 498,
+            "text": "mem_vec_21: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 499,
+            "text": "mem_vec_22: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 500,
+            "text": "mem_vec_23: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 501,
+            "text": "mem_vec_24: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 502,
+            "text": "mem_vec_25: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 503,
+            "text": "mem_vec_26: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 504,
+            "text": "mem_vec_27: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+          },
+          {
+            "line": 505,
+            "text": "mem_vec_28: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+          },
+          {
+            "line": 506,
+            "text": "mem_vec_29: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+          },
+          {
+            "line": 507,
+            "text": "mem_vec_30: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 508,
+            "text": "mem_vec_31: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 509,
+            "text": "mem_vec_32: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 510,
+            "text": "mem_vec_33: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 511,
+            "text": "mem_vec_34: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 512,
+            "text": "mem_vec_35: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 513,
+            "text": "mem_vec_36: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 514,
+            "text": "mem_vec_37: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 515,
+            "text": "mem_vec_38: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+          },
+          {
+            "line": 516,
+            "text": "mem_vec_39: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+          },
+          {
+            "line": 517,
+            "text": "mem_vec_40: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+          },
+          {
+            "line": 518,
+            "text": "mem_vec_44: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 519,
+            "text": "mem_vec_45: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 520,
+            "text": "mem_vec_46: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 521,
+            "text": "mem_vec_47: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 522,
+            "text": "mem_vec_48: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 523,
+            "text": "mem_vec_49: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 524,
+            "text": "mem_vec_50: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+          },
+          {
+            "line": 525,
+            "text": "mem_vec_51: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 16384)"
+          },
+          {
+            "line": 526,
+            "text": "mem_vec_52: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+          },
+          {
+            "line": 527,
+            "text": "mem_vec_53: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+          },
+          {
+            "line": 528,
+            "text": "mem_vec_54: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 4096)"
+          },
+          {
+            "line": 529,
+            "text": "mem_vec_55: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 4096)"
+          },
+          {
+            "line": 530,
+            "text": "mem_vec_56: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+          },
+          {
+            "line": 531,
+            "text": "mem_vec_57: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+          },
+          {
+            "line": 532,
+            "text": "mem_vec_59: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 4096)"
+          },
+          {
+            "line": 533,
+            "text": "mem_vec_60: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 4096)"
+          },
+          {
+            "line": 534,
+            "text": "mem_vec_61: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 4096)"
+          },
+          {
+            "line": 535,
+            "text": "mem_vec_62: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 4096)"
+          },
+          {
+            "line": 536,
+            "text": "mem_vec_63: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 2048)"
+          },
+          {
+            "line": 537,
+            "text": "mem_vec_64: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 16384)"
+          },
+          {
+            "line": 538,
+            "text": "mem_vec_66: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 65536)"
+          },
+          {
+            "line": 539,
+            "text": "mem_vec_67: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 65536)"
+          }
+        ],
+        "allocCount": 53,
+        "allocBytes": 520960,
+        "tasks": [
+          {
+            "line": 6346,
+            "text": "ret__tmp_v0_45: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.spmd_submit(self.csa_merge_pack_publish_spmd, attention_grouped_inline1276__ssa_v0, pack_work_count_inline1228__ssa_v0, sparse_blk_mi_inline1234__ssa_v0, sparse_blk_li_inline1283__ssa_v0, sparse_blk_oi_inline1233__ssa_v0, attn_sink__ssa_v0, rope_cos_il_inline1232__ssa_v0, rope_sin_signed_inline1231__ssa_v0, rope_swap_idx_inline1230__ssa_v0, tp_rank__ssa_v0, attention_window__ssa_v0, group_base__ssa_v0, attention_signal__ssa_v0, deps=[qk_tid_inline1229__ssa_v0, attn_rope_tid_inline1294__ssa_v0], core_num=48)"
+          },
+          {
+            "line": 6347,
+            "text": "publish_tid_inline1260__ssa_v0: pl.Scalar[pl.TASK_ID] = ret__tmp_v0_45[0]"
+          },
+          {
+            "line": 6348,
+            "text": "ret__tmp_v0_46: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.submit(self.o_group_a2a_wait, tp_rank__ssa_v0, attention_signal__ssa_v0, deps=[publish_tid_inline1260__ssa_v0])"
+          }
+        ],
+        "loads": [
+          {
+            "line": 561,
+            "text": "m_cur_oi_inline1216__tile: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_15, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec, attrs={\"pipeline_membership\": \"0:0\"})"
+          },
+          {
+            "line": 564,
+            "text": "m_cur_oi_inline1216__tile_1: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_18, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0_1, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec, attrs={\"pipeline_membership\": \"0:1\"})"
+          }
+        ]
+      },
+      "loads": [
+        {
+          "line": 400,
+          "text": "m_cur_oi_inline1216__tile: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_15, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec)"
+        },
+        {
+          "line": 403,
+          "text": "m_cur_oi_inline1216__tile_1: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_18, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0_1, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec)"
+        }
+      ]
+    },
+    {
+      "idx": 36,
+      "file": "36_after_AllocateMemoryAddr.py",
+      "name": "AllocateMemoryAddr",
+      "function": "csa_merge_pack_publish",
+      "functionLine": 366,
+      "loop": [
+        {
+          "line": 395,
+          "text": "for m_sb_inline1219__idx_v0, (m_li_inline1302__iter_v1, m_mi_inline1221__iter_v1, m_oi_inline1220__iter_v1) in pl.range(1, 5, 2, init_values=(m_li_inline1302__tile, m_mi_inline1221__tile, m_oi_inline1220__tile)):"
+        }
+      ],
+      "values": {
+        "product0": {
+          "line": 436,
+          "text": "t__tile_5: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_15, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.row_expand_mul(m_cur_oi_inline1216__tile, m_beta_inline1213__tile)",
+          "name": "t__tile_5",
+          "buffer": "mem_vec_15",
+          "offset": 0,
+          "bytes": 32768
+        },
+        "product1": {
+          "line": 469,
+          "text": "t__tile_10: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_15, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.row_expand_mul(m_oi_inline1220__tile_1, m_alpha_inline1214__tile_1)",
+          "name": "t__tile_10",
+          "buffer": "mem_vec_15",
+          "offset": 0,
+          "bytes": 32768
+        },
+        "result0": {
+          "line": 437,
+          "text": "m_oi_inline1220__tile_1: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_15, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.add(t__tile_4, t__tile_5)",
+          "name": "m_oi_inline1220__tile_1",
+          "buffer": "mem_vec_15",
+          "offset": 0,
+          "bytes": 32768
+        },
+        "result1": {
+          "line": 471,
+          "text": "m_oi_inline1220__tile_2: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_66, pl.const(99584, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.add(t__tile_10, t__tile_11)",
+          "name": "m_oi_inline1220__tile_2",
+          "buffer": "mem_vec_66",
+          "offset": 99584,
+          "bytes": 32768
+        }
+      },
+      "allocs": [
+        {
+          "line": 367,
+          "text": "mem_vec_15: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+        },
+        {
+          "line": 368,
+          "text": "mem_vec_17: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 369,
+          "text": "mem_vec_18: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+        },
+        {
+          "line": 370,
+          "text": "mem_vec_19: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 371,
+          "text": "mem_vec_20: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 372,
+          "text": "mem_vec_23: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+        },
+        {
+          "line": 373,
+          "text": "mem_vec_27: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+        },
+        {
+          "line": 374,
+          "text": "mem_vec_52: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+        },
+        {
+          "line": 375,
+          "text": "mem_vec_53: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+        },
+        {
+          "line": 376,
+          "text": "mem_vec_56: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+        },
+        {
+          "line": 377,
+          "text": "mem_vec_57: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+        },
+        {
+          "line": 378,
+          "text": "mem_vec_66: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 65536)"
+        }
+      ],
+      "allocCount": 12,
+      "allocBytes": 165120,
+      "tasks": [
+        {
+          "line": 5030,
+          "text": "ret__tmp_v0_45: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.spmd_submit(self.csa_merge_pack_publish_spmd, attention_grouped_inline1276__ssa_v0, pack_work_count_inline1228__ssa_v0, sparse_blk_mi_inline1234__ssa_v0, sparse_blk_li_inline1283__ssa_v0, sparse_blk_oi_inline1233__ssa_v0, attn_sink__ssa_v0, rope_cos_il_inline1232__ssa_v0, rope_sin_signed_inline1231__ssa_v0, rope_swap_idx_inline1230__ssa_v0, tp_rank__ssa_v0, attention_window__ssa_v0, group_base__ssa_v0, attention_signal__ssa_v0, deps=[qk_tid_inline1229__ssa_v0, attn_rope_tid_inline1294__ssa_v0], core_num=48)"
+        },
+        {
+          "line": 5031,
+          "text": "publish_tid_inline1260__ssa_v0: pl.Scalar[pl.TASK_ID] = ret__tmp_v0_45[0]"
+        },
+        {
+          "line": 5032,
+          "text": "ret__tmp_v0_46: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.submit(self.o_group_a2a_wait, tp_rank__ssa_v0, attention_signal__ssa_v0, deps=[publish_tid_inline1260__ssa_v0])"
+        }
+      ],
+      "before": {
+        "idx": 35,
+        "file": "35_after_MemoryReuse.py",
+        "name": "MemoryReuse",
+        "function": "csa_merge_pack_publish",
+        "functionLine": 366,
+        "loop": [
+          {
+            "line": 395,
+            "text": "for m_sb_inline1219__idx_v0, (m_li_inline1302__iter_v1, m_mi_inline1221__iter_v1, m_oi_inline1220__iter_v1) in pl.range(1, 5, 2, init_values=(m_li_inline1302__tile, m_mi_inline1221__tile, m_oi_inline1220__tile)):"
+          }
+        ],
+        "values": {
+          "product0": {
+            "line": 436,
+            "text": "t__tile_5: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_15, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.row_expand_mul(m_cur_oi_inline1216__tile, m_beta_inline1213__tile)",
+            "name": "t__tile_5",
+            "buffer": "mem_vec_15",
+            "offset": 0,
+            "bytes": 32768
+          },
+          "product1": {
+            "line": 469,
+            "text": "t__tile_10: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_15, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.row_expand_mul(m_oi_inline1220__tile_1, m_alpha_inline1214__tile_1)",
+            "name": "t__tile_10",
+            "buffer": "mem_vec_15",
+            "offset": 0,
+            "bytes": 32768
+          },
+          "result0": {
+            "line": 437,
+            "text": "m_oi_inline1220__tile_1: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_15, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.add(t__tile_4, t__tile_5)",
+            "name": "m_oi_inline1220__tile_1",
+            "buffer": "mem_vec_15",
+            "offset": 0,
+            "bytes": 32768
+          },
+          "result1": {
+            "line": 471,
+            "text": "m_oi_inline1220__tile_2: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_66, 0, 32768), pl.Mem.Vec] = pl.tile.add(t__tile_10, t__tile_11)",
+            "name": "m_oi_inline1220__tile_2",
+            "buffer": "mem_vec_66",
+            "offset": 0,
+            "bytes": 32768
+          }
+        },
+        "allocs": [
+          {
+            "line": 367,
+            "text": "mem_vec_15: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+          },
+          {
+            "line": 368,
+            "text": "mem_vec_17: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 369,
+            "text": "mem_vec_18: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+          },
+          {
+            "line": 370,
+            "text": "mem_vec_19: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 371,
+            "text": "mem_vec_20: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 372,
+            "text": "mem_vec_23: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 64)"
+          },
+          {
+            "line": 373,
+            "text": "mem_vec_27: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 32768)"
+          },
+          {
+            "line": 374,
+            "text": "mem_vec_52: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+          },
+          {
+            "line": 375,
+            "text": "mem_vec_53: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+          },
+          {
+            "line": 376,
+            "text": "mem_vec_56: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+          },
+          {
+            "line": 377,
+            "text": "mem_vec_57: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 256)"
+          },
+          {
+            "line": 378,
+            "text": "mem_vec_66: pl.Ptr = pl.tile.alloc(pl.Mem.Vec, 65536)"
+          }
+        ],
+        "allocCount": 12,
+        "allocBytes": 165120,
+        "tasks": [
+          {
+            "line": 5030,
+            "text": "ret__tmp_v0_45: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.spmd_submit(self.csa_merge_pack_publish_spmd, attention_grouped_inline1276__ssa_v0, pack_work_count_inline1228__ssa_v0, sparse_blk_mi_inline1234__ssa_v0, sparse_blk_li_inline1283__ssa_v0, sparse_blk_oi_inline1233__ssa_v0, attn_sink__ssa_v0, rope_cos_il_inline1232__ssa_v0, rope_sin_signed_inline1231__ssa_v0, rope_swap_idx_inline1230__ssa_v0, tp_rank__ssa_v0, attention_window__ssa_v0, group_base__ssa_v0, attention_signal__ssa_v0, deps=[qk_tid_inline1229__ssa_v0, attn_rope_tid_inline1294__ssa_v0], core_num=48)"
+          },
+          {
+            "line": 5031,
+            "text": "publish_tid_inline1260__ssa_v0: pl.Scalar[pl.TASK_ID] = ret__tmp_v0_45[0]"
+          },
+          {
+            "line": 5032,
+            "text": "ret__tmp_v0_46: pl.Tuple[pl.Scalar[pl.TASK_ID]] = pl.submit(self.o_group_a2a_wait, tp_rank__ssa_v0, attention_signal__ssa_v0, deps=[publish_tid_inline1260__ssa_v0])"
+          }
+        ],
+        "loads": [
+          {
+            "line": 400,
+            "text": "m_cur_oi_inline1216__tile: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_15, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec)"
+          },
+          {
+            "line": 403,
+            "text": "m_cur_oi_inline1216__tile_1: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_18, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0_1, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec)"
+          }
+        ]
+      },
+      "loads": [
+        {
+          "line": 400,
+          "text": "m_cur_oi_inline1216__tile: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_15, pl.const(0, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec)"
+        },
+        {
+          "line": 403,
+          "text": "m_cur_oi_inline1216__tile_1: pl.Tile[[16, 512], pl.FP32, pl.MemRef(mem_vec_18, pl.const(32832, pl.INT64), 32768), pl.Mem.Vec] = pl.tile.load(sparse_blk_oi_inline1233__ssa_v0, [m_row_inline1218__ssa_v0_1, 0], [16, 512], [16, 512], target_memory=pl.Mem.Vec)"
+        }
+      ]
+    }
+  ],
+  "hint": {
+    "code": "PH-MR-001",
+    "at": "pypto/pypto-lib/models/deepseek_v4_flash_dspark/decode_csa.py:397",
+    "occurrences": 1,
+    "message": "software pipelining requested depth 2 for pipeline group 0 in Vec, but only 1 of 2 buffers fit (32768 B per stage, 188416 B free) — stages 1 apart share storage and serialize. The operand would fit depth 2 on its own, but co-resident buffers / other pipeline groups over-subscribe the space; relieve the co-residents (smaller or fewer co-live tiles) or reduce the pipeline depth to 1."
+  },
+  "codegen": {
+    "file": "Data/DeepseekV4/_jit_l3_decode_csa_20260903_010617/next_levels/decode_csa_test/kernels/aiv/csa_merge_pack_publish.cpp",
+    "lines": [
+      {
+        "line": 109,
+        "text": "const int64_t v67 = 0;"
+      },
+      {
+        "line": 110,
+        "text": "const int64_t v68 = 99072;"
+      },
+      {
+        "line": 111,
+        "text": "const int64_t v69 = 65792;"
+      },
+      {
+        "line": 112,
+        "text": "const int64_t v70 = 99584;"
+      },
+      {
+        "line": 113,
+        "text": "const int64_t v71 = 98816;"
+      },
+      {
+        "line": 114,
+        "text": "const int64_t v72 = 98560;"
+      },
+      {
+        "line": 115,
+        "text": "const int64_t v73 = 2048;"
+      },
+      {
+        "line": 116,
+        "text": "const int64_t v74 = 256;"
+      },
+      {
+        "line": 117,
+        "text": "using T = float;"
+      },
+      {
+        "line": 118,
+        "text": ""
+      },
+      {
+        "line": 119,
+        "text": "#if defined(__DAV_VEC__)"
+      },
+      {
+        "line": 120,
+        "text": "set_mask_norm();"
+      },
+      {
+        "line": 121,
+        "text": "set_vector_mask(-1, -1);"
+      },
+      {
+        "line": 122,
+        "text": "// pto: %sparse_blk_mi_inline1234__ssa_v0_view"
+      },
+      {
+        "line": 123,
+        "text": "int64_t v75 = v16 * v43;"
+      },
+      {
+        "line": 124,
+        "text": "// pto: %sparse_blk_mi_inline1234__ssa_v0_view"
+      },
+      {
+        "line": 125,
+        "text": "int64_t v76 = v43 * v75;"
+      },
+      {
+        "line": 126,
+        "text": "// pto: %sparse_blk_mi_inline1234__ssa_v0_view"
+      },
+      {
+        "line": 127,
+        "text": "pto::Shape<1, 1, 1, -1, -1> v77 = pto::Shape<1, 1, 1, -1, -1>(v43, v43, v43, v16, v43);"
+      },
+      {
+        "line": 128,
+        "text": "// pto: %sparse_blk_mi_inline1234__ssa_v0_view"
+      },
+      {
+        "line": 129,
+        "text": "pto::Stride<-1, -1, -1, -1, -1> v78 = pto::Stride<-1, -1, -1, -1, -1>(v43 * v76, v76, v75, v43, v16);"
+      },
+      {
+        "line": 130,
+        "text": "// pto: %sparse_blk_mi_inline1234__ssa_v0_view"
+      },
+      {
+        "line": 505,
+        "text": "// pto: %6"
+      },
+      {
+        "line": 506,
+        "text": "Tile<TileType::Vec, float, 16, 1, BLayout::ColMajor, -1, -1, SLayout::NoneBox, 512, PadValue::Null, CompactMode::Null> v225 = Tile<TileType::Vec, float, 16, 1, BLayout::ColMajor, -1, -1, SLayout::NoneBox, 512, PadValue::Null, CompactMode::Null>(v40, v43);"
+      },
+      {
+        "line": 507,
+        "text": "// pto: %6"
+      },
+      {
+        "line": 508,
+        "text": "uint64_t v226 = (uint64_t) v68;"
+      },
+      {
+        "line": 509,
+        "text": "TASSIGN(v225, v226);"
+      },
+      {
+        "line": 510,
+        "text": "// pto: %7"
+      },
+      {
+        "line": 511,
+        "text": "Tile<TileType::Vec, float, 16, 512, BLayout::RowMajor, -1, -1, SLayout::NoneBox, 512, PadValue::Null, CompactMode::Null> v227 = Tile<TileType::Vec, float, 16, 512, BLayout::RowMajor, -1, -1, SLayout::NoneBox, 512, PadValue::Null, CompactMode::Null>(v40, v42);"
+      },
+      {
+        "line": 512,
+        "text": "// pto: %7"
+      },
+      {
+        "line": 513,
+        "text": "uint64_t v228 = (uint64_t) v69;"
+      },
+      {
+        "line": 514,
+        "text": "TASSIGN(v227, v228);"
+      },
+      {
+        "line": 515,
+        "text": "pipe_barrier(PIPE_V);"
+      },
+      {
+        "line": 516,
+        "text": "TROWEXPANDMUL(v227, v112, v187);"
+      },
+      {
+        "line": 517,
+        "text": "// pto: %8"
+      },
+      {
+        "line": 518,
+        "text": "Tile<TileType::Vec, float, 16, 512, BLayout::RowMajor, -1, -1, SLayout::NoneBox, 512, PadValue::Null, CompactMode::Null> v229 = Tile<TileType::Vec, float, 16, 512, BLayout::RowMajor, -1, -1, SLayout::NoneBox, 512, PadValue::Null, CompactMode::Null>(v40, v42);"
+      },
+      {
+        "line": 519,
+        "text": "// pto: %8"
+      },
+      {
+        "line": 520,
+        "text": "uint64_t v230 = (uint64_t) v67;"
+      },
+      {
+        "line": 521,
+        "text": "TASSIGN(v229, v230);"
+      },
+      {
+        "line": 522,
+        "text": "wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID2);"
+      },
+      {
+        "line": 523,
+        "text": "TROWEXPANDMUL(v229, v138, v201);"
+      },
+      {
+        "line": 524,
+        "text": "// pto: %9"
+      },
+      {
+        "line": 525,
+        "text": "Tile<TileType::Vec, float, 16, 512, BLayout::RowMajor, -1, -1, SLayout::NoneBox, 512, PadValue::Null, CompactMode::Null> v231 = Tile<TileType::Vec, float, 16, 512, BLayout::RowMajor, -1, -1, SLayout::NoneBox, 512, PadValue::Null, CompactMode::Null>(v40, v42);"
+      },
+      {
+        "line": 526,
+        "text": "// pto: %9"
+      },
+      {
+        "line": 527,
+        "text": "uint64_t v232 = (uint64_t) v67;"
+      },
+      {
+        "line": 528,
+        "text": "TASSIGN(v231, v232);"
+      },
+      {
+        "line": 529,
+        "text": "pipe_barrier(PIPE_V);"
+      },
+      {
+        "line": 530,
+        "text": "TADD(v231, v227, v229);"
+      },
+      {
+        "line": 702,
+        "text": "// pto: %41"
+      },
+      {
+        "line": 703,
+        "text": "Tile<TileType::Vec, float, 16, 512, BLayout::RowMajor, -1, -1, SLayout::NoneBox, 512, PadValue::Null, CompactMode::Null> v295 = Tile<TileType::Vec, float, 16, 512, BLayout::RowMajor, -1, -1, SLayout::NoneBox, 512, PadValue::Null, CompactMode::Null>(v40, v42);"
+      },
+      {
+        "line": 704,
+        "text": "// pto: %41"
+      },
+      {
+        "line": 705,
+        "text": "uint64_t v296 = (uint64_t) v67;"
+      },
+      {
+        "line": 706,
+        "text": "TASSIGN(v295, v296);"
+      },
+      {
+        "line": 707,
+        "text": "TROWEXPANDMUL(v295, v231, v255);"
+      },
+      {
+        "line": 708,
+        "text": "// pto: %42"
+      },
+      {
+        "line": 709,
+        "text": "Tile<TileType::Vec, float, 16, 512, BLayout::RowMajor, -1, -1, SLayout::NoneBox, 512, PadValue::Null, CompactMode::Null> v297 = Tile<TileType::Vec, float, 16, 512, BLayout::RowMajor, -1, -1, SLayout::NoneBox, 512, PadValue::Null, CompactMode::Null>(v40, v42);"
+      },
+      {
+        "line": 710,
+        "text": "// pto: %42"
+      },
+      {
+        "line": 711,
+        "text": "uint64_t v298 = (uint64_t) v64;"
+      },
+      {
+        "line": 712,
+        "text": "TASSIGN(v297, v298);"
+      },
+      {
+        "line": 713,
+        "text": "wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID5);"
+      },
+      {
+        "line": 714,
+        "text": "TROWEXPANDMUL(v297, v160, v269);"
+      },
+      {
+        "line": 715,
+        "text": "// pto: %43"
+      },
+      {
+        "line": 716,
+        "text": "Tile<TileType::Vec, float, 16, 512, BLayout::RowMajor, -1, -1, SLayout::NoneBox, 512, PadValue::Null, CompactMode::Null> v299 = Tile<TileType::Vec, float, 16, 512, BLayout::RowMajor, -1, -1, SLayout::NoneBox, 512, PadValue::Null, CompactMode::Null>(v40, v42);"
+      },
+      {
+        "line": 717,
+        "text": "// pto: %43"
+      },
+      {
+        "line": 718,
+        "text": "uint64_t v300 = (uint64_t) v70;"
+      },
+      {
+        "line": 719,
+        "text": "TASSIGN(v299, v300);"
+      },
+      {
+        "line": 720,
+        "text": "pipe_barrier(PIPE_V);"
+      },
+      {
+        "line": 721,
+        "text": "TADD(v299, v295, v297);"
+      },
+      {
+        "line": 722,
+        "text": "// pto: %m_mi_inline1221__ssa_v3_mv"
+      }
+    ]
+  },
+  "scope": "Selected Tile values and their immediate consumer; all allocation counts are whole-function sums, not peak liveness."
+}

@@ -2,6 +2,56 @@
   "version": 1,
   "assets": [
     {
+      "id": "diagram-legend-library",
+      "title": "AI Infra · 图例与 Pattern 库",
+      "form": "交互 Pattern",
+      "type": "pattern",
+      "domains": [
+        "AI Infra",
+        "Compiler",
+        "Training",
+        "Visualization"
+      ],
+      "summary": "跨模型、编译、部署与运行时的图元及组合模式，支持检索、详情和 SVG 导出。",
+      "designValue": "统一数据、操作、任务、Rank、存储与关系的视觉语言，以表示变体和组合 Pattern 支持复用。",
+      "outline": [
+        "数据表示与角色",
+        "计算、调度与部署图元",
+        "关系、检查与观测",
+        "参数化计算、分布及层内计算 Pattern",
+        "来源追溯与 SVG 导出"
+      ],
+      "media": [
+        "web"
+      ],
+      "status": "reviewed",
+      "visibility": "internal",
+      "content": "reports/llm-compute/diagram-legend-library/index.html",
+      "sources": [
+        {
+          "repository": "ai-infra",
+          "path": "ai-infra-research/reports/llm-compute/diagram-legend-library/index.html",
+          "url": null,
+          "revision": null,
+          "sha256": "0609b8d0e11f3255d35162cbd1c0a03255e4c4c273c2485bdde276f873fc6196"
+        }
+      ],
+      "validation": [
+        "2026-10-12：用户指定收录；目录、来源链接、搜索、详情导航和 SVG 导出通过静态及模拟 DOM 检查；未执行浏览器视觉验收。"
+      ],
+      "related": [
+        "pypto-compilation-guide",
+        "pypto-guides"
+      ],
+      "reviewedAt": "2026-10-12",
+      "topics": [
+        "visual",
+        "operators",
+        "training"
+      ],
+      "author": "Yucheng"
+    },
+    {
       "id": "atlas-950-explorer",
       "title": "Atlas 950 · 3D Explorer",
       "form": "交互 Pattern",
@@ -78,19 +128,69 @@
         {
           "repository": "ai-infra",
           "url": null,
-          "path": "ai-infra-research/reports/llm-compute/pypto-compilation-guide.html",
+          "path": "ai-infra-research/reports/llm-compute/pypto-compilation-guide/index.html",
           "revision": null,
-          "sha256": "5dc2025ed6542a2224f6676441364a743a70eeabe8de53d9b6489b77c30e124f"
+          "sha256": "5e7b49f20da962aede72d8aa92c98363eaaace67139ed984261f3f89675da6e0"
         }
       ],
       "validation": [
-        "2026-10-10：用户确认收录；源报告已检查布局与交互。本次检查目录、脚本语法与生成入口，未重新执行浏览器验收或编译器实验。"
+        "2026-10-10：用户确认收录；源报告已检查布局与交互。本次检查目录、脚本语法与生成入口，未重新执行浏览器验收或编译器实验。",
+        "2026-10-12：按用户指定入口更新至独立定稿版本，核对文件指纹与目录链接；报告正文未改动。"
       ],
       "related": [
         "llm-compute-diagrams",
-        "transformer-layer-guide"
+        "transformer-layer-guide",
+        "pypto-guides"
       ],
-      "reviewedAt": "2026-10-10",
+      "reviewedAt": "2026-10-12",
+      "topics": [
+        "operators",
+        "visual"
+      ],
+      "author": "Yucheng"
+    },
+    {
+      "id": "pypto-guides",
+      "title": "PyPTO 函数变换、内存复用与问题定位",
+      "form": "交互图解",
+      "domains": [
+        "PyPTO",
+        "Compiler",
+        "AI Infra"
+      ],
+      "summary": "将原第 2–6 篇去重合并为一篇，沿函数变换、存储复用与流水约束，理解运行证据和编译检查。",
+      "designValue": "以 24 节、61 种图示状态呈现函数边界、张量生命期、地址分配与任务依赖，支持跨页及页内状态的连续键盘阅读。",
+      "outline": [
+        "函数内联、区域提取与混合核拆分",
+        "张量生命期、共享存储与地址分配",
+        "分块、流水缓冲与任务依赖",
+        "任务等待与性能问题的编译证据",
+        "Pass 的前置条件、产出性质与首次偏离定位"
+      ],
+      "type": "knowledge",
+      "media": [
+        "web"
+      ],
+      "status": "reviewed",
+      "visibility": "internal",
+      "content": "knowledge/pypto-guides.md",
+      "sources": [
+        {
+          "repository": "ai-infra",
+          "url": null,
+          "path": "ai-infra-research/reports/llm-compute/pypto-guides/index.html",
+          "revision": null,
+          "sha256": "25498cc6d10e1314ad543e3351b3f7afb6ea1e4a04ca4c19ab6266915408456e"
+        }
+      ],
+      "validation": [
+        "2026-10-12：用户确认收录第 2–6 篇合并报告；已通过 24 节、61 种图示状态的静态与模拟 DOM 检查。本次核对目录、文件指纹与入口，不新增浏览器视觉验收或编译器实验结论。"
+      ],
+      "related": [
+        "pypto-compilation-guide",
+        "llm-compute-diagrams"
+      ],
+      "reviewedAt": "2026-10-12",
       "topics": [
         "operators",
         "visual"

@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-10-10T09:56:10.817Z",
+  "checkedAt": "2026-10-12T01:56:41.429Z",
   "scope": "Static JS, all non-cover SVG states, glossary keys, bundled refs and chapter data. No browser layout or runtime/compiler validation.",
-  "svgDirectory": "/var/folders/wd/6h8swspn5_jd9vq1flwnf9sr0000gr/T/pypto-series-svg-EIVCDk",
+  "svgDirectory": "/var/folders/wd/6h8swspn5_jd9vq1flwnf9sr0000gr/T/pypto-series-svg-0pXc8d",
   "reports": [
     {
       "name": "pypto-compilation-guide",
@@ -22,7 +22,7 @@
         "AutoDeriveTaskDependencies",
         "Transform Explorer：范围与解析边界"
       ],
-      "sha256": "5e7b49f20da962aede72d8aa92c98363eaaace67139ed984261f3f89675da6e0",
+      "sha256": "be21b196c07f42402716c9bf42027c2a9c1454a1a6751a4b4b98a6b7029b37ee",
       "states": [
         {
           "page": "inherited",
@@ -184,7 +184,7 @@
         "Pass Transform Explorer",
         "Memory Inspector V2"
       ],
-      "sha256": "0b56a76d0e8758af9c9d0daec8b36e707a04cbc3188f4cd257e311ed35a9dad7",
+      "sha256": "6b8e7c6dea2174545660b80fd542ba23a2b7e9b74840852d097ead5585290790",
       "states": [
         {
           "page": "objects",
@@ -321,7 +321,7 @@
       "script": "pass",
       "glossary": "pass",
       "sourceReferencesUnbundled": [],
-      "sha256": "604e9c9c18c201fa368b6c6b096c0c99da84bf4c51e5c6f065746833e4fe1592",
+      "sha256": "07a6b0f0cc19958d244fc64ef3be1ed443a430a53b1b330c7ec74a44dd02f08c",
       "states": [
         {
           "page": "scope",
@@ -465,7 +465,7 @@
       "script": "pass",
       "glossary": "pass",
       "sourceReferencesUnbundled": [],
-      "sha256": "b4da55bda2cf0cf83af7000353d71539c10dc6cbbe9bd00e0a0b790b4a3009ff",
+      "sha256": "f53faf245c2398a9eb4e7f6668e70dc613fbc3e60d9b54c1e0aed5c4c6a8ae1c",
       "states": [
         {
           "page": "objects",
@@ -602,7 +602,7 @@
       "script": "pass",
       "glossary": "pass",
       "sourceReferencesUnbundled": [],
-      "sha256": "b30878de47a7594d596f0e402ab55581720c4e41722ef5b43a767e55364007a1",
+      "sha256": "ce0730b230f96d98b223cacf45767584fcecf2b7e914e48fe700bac07cf593f7",
       "states": [
         {
           "page": "contract",
@@ -742,11 +742,11 @@
     {
       "name": "pypto-pass-contracts-guide",
       "pages": 11,
-      "diagramStates": 17,
+      "diagramStates": 16,
       "script": "pass",
       "glossary": "pass",
       "sourceReferencesUnbundled": [],
-      "sha256": "c453ac2ddeb77f80dd4f349dcf397c1276417bb7dd99a2eab220e68661919552",
+      "sha256": "0ea3de83f00ad9f4872b2bbde07b0c49c2d6fb0d8a756041c71a172bd80e5a2f",
       "states": [
         {
           "page": "contract",
@@ -754,13 +754,6 @@
           "width": 800,
           "height": 540,
           "file": "pypto-pass-contracts-guide-contract-0.svg"
-        },
-        {
-          "page": "contract",
-          "mode": 1,
-          "width": 800,
-          "height": 540,
-          "file": "pypto-pass-contracts-guide-contract-1.svg"
         },
         {
           "page": "chain",
@@ -869,20 +862,5 @@
         }
       ]
     }
-  ],
-  "svgChecks": {
-    "states": 111,
-    "xml": "pass",
-    "markers": "pass",
-    "textAnchors": "pass",
-    "actualTextExtent": "not checked",
-    "browserLayout": "not checked"
-  },
-  "sourceChecks": {
-    "excerpts": 33,
-    "excerptAndHash": "pass",
-    "memoryMapFunctions": 2,
-    "memoryMap": "exact source match",
-    "insightInventory": 34
-  }
+  ]
 }

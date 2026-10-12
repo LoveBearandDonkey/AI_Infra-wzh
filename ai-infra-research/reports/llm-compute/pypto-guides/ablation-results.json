@@ -1,0 +1,520 @@
+{
+  "method": "Deterministic editorial ablation; no reader study or comprehension scores.",
+  "variants": [
+    {
+      "id": "A0",
+      "name": "原六篇",
+      "reports": 6,
+      "chapters": 61,
+      "states": 111,
+      "proseChars": 11841
+    },
+    {
+      "id": "A1",
+      "name": "只删重复背景与总结",
+      "reports": 6,
+      "chapters": 45,
+      "states": 87,
+      "proseChars": 8819
+    },
+    {
+      "id": "A2",
+      "name": "合并并重写主线",
+      "reports": 3,
+      "chapters": 31,
+      "states": 76,
+      "proseChars": 4202
+    }
+  ],
+  "mapping": [
+    {
+      "source": "1:inherited",
+      "title": "先保留数据与计算的视觉身份",
+      "a1": "移出主线",
+      "a2": "compilation.html#tensor",
+      "reason": "张量角色与 shape 定义并入第一节；图例移入 info"
+    },
+    {
+      "source": "1:objects",
+      "title": "新增图元：程序结构与运行任务",
+      "a1": "移出主线",
+      "a2": "compilation.html#overview",
+      "reason": "对象层级并入总览，保留 OP / Kernel / Task / 指令区别"
+    },
+    {
+      "source": "1:relations",
+      "title": "箭头先说明关系，再连接对象",
+      "a1": "移出主线",
+      "a2": "compilation.html#overview",
+      "reason": "关系图例移入常驻可访问的 info，删独立教学页"
+    },
+    {
+      "source": "1:tensor",
+      "title": "从 XW 开始，明确输入与输出",
+      "a1": "保留",
+      "a2": "compilation.html#tensor",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "1:outline",
+      "title": "把 InCore 计算区域提取为独立函数",
+      "a1": "保留",
+      "a2": "compilation.html#outline",
+      "reason": "区域提取与报告04合并，保留跨边界输入输出"
+    },
+    {
+      "source": "1:tile",
+      "title": "数据角色不变，读写与 Tile 操作显式化",
+      "a1": "保留",
+      "a2": "compilation.html#tile",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "1:loop",
+      "title": "沿 K 维切块，把一次乘法展开成累加",
+      "a1": "保留",
+      "a2": "compilation.html#loop；compilation.html#loop",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "1:kernel",
+      "title": "函数定义与一次任务提交分开看",
+      "a1": "保留",
+      "a2": "compilation.html#kernels",
+      "reason": "纯核与混合分支由报告04的图承担；Task 在总览定义"
+    },
+    {
+      "source": "1:memory",
+      "title": "值绑定到缓冲，缓冲再获得地址",
+      "a1": "保留",
+      "a2": "memory-pipeline.html#objects",
+      "reason": "存储入门归入第二篇，避免两处重复引入"
+    },
+    {
+      "source": "1:evidence",
+      "title": "对照真实 IR，核对 Tensor→Tile 变换",
+      "a1": "保留",
+      "a2": "compilation.html#evidence",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "1:overview",
+      "title": "回到完整图：计算、程序与存储同时展开",
+      "a1": "移出主线",
+      "a2": "compilation.html#overview",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "2:objects",
+      "title": "Tile 值、MemRef 与片上内存地址",
+      "a1": "保留",
+      "a2": "memory-pipeline.html#objects",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "2:lifetime",
+      "title": "通过定义与使用关系分析生命周期",
+      "a1": "保留",
+      "a2": "memory-pipeline.html#lifetime",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "2:conflicts",
+      "title": "生命周期干涉限制缓冲区复用",
+      "a1": "保留",
+      "a2": "memory-pipeline.html#lifetime",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "2:reuse",
+      "title": "通过 MemRef 共享减少底层分配",
+      "a1": "保留",
+      "a2": "memory-pipeline.html#reuse",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "2:constraints",
+      "title": "内存复用需要同时满足多项安全约束",
+      "a1": "保留",
+      "a2": "memory-pipeline.html#constraints",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "2:pipeline",
+      "title": "流水并发与别名关系影响复用判定",
+      "a1": "保留",
+      "a2": "memory-pipeline.html#aliases",
+      "reason": "按视图别名与流水缓冲拆分，分别放入对应机制"
+    },
+    {
+      "source": "2:address",
+      "title": "为复用后的分配确定片上内存地址",
+      "a1": "保留",
+      "a2": "memory-pipeline.html#address",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "2:planner",
+      "title": "内存规划器配置决定 Pass 的职责",
+      "a1": "保留",
+      "a2": "memory-pipeline.html#address",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "2:evidence",
+      "title": "从 cast 编译产物核对 MemRef 与地址",
+      "a1": "保留",
+      "a2": "memory-pipeline.html#evidence",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "2:overview",
+      "title": "内存复用分析：从生命周期到地址布局",
+      "a1": "移出主线",
+      "a2": "memory-pipeline.html#address",
+      "reason": "重复的检查流程去除，约束与地址在正文分别展开"
+    },
+    {
+      "source": "3:scope",
+      "title": "编译决策连接程序结构与执行约束",
+      "a1": "移出主线",
+      "a2": "memory-pipeline.html#tiling",
+      "reason": "用户参数与编译选择边界随具体分块解释"
+    },
+    {
+      "source": "3:tiling",
+      "title": "分块改变循环次数与各空间的数据量",
+      "a1": "保留",
+      "a2": "memory-pipeline.html#tiling",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "3:cost",
+      "title": "合法候选还需比较搬运、计算与写回成本",
+      "a1": "保留",
+      "a2": "memory-pipeline.html#tiling",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "3:pipeline",
+      "title": "流水展开为后续重叠提供独立值与存储约束",
+      "a1": "保留",
+      "a2": "memory-pipeline.html#pipeline",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "3:capacity",
+      "title": "请求深度与可保留缓冲份数可能不同",
+      "a1": "保留",
+      "a2": "memory-pipeline.html#pipeline",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "3:reuse",
+      "title": "共享地址可增加迭代间的读后写约束",
+      "a1": "保留",
+      "a2": "memory-pipeline.html#sync",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "3:deps",
+      "title": "任务依赖依据存储区域与读写冒险推导",
+      "a1": "保留",
+      "a2": "memory-pipeline.html#deps",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "3:evidence",
+      "title": "编译提示、地址变化与运行等待需要逐项对应",
+      "a1": "移出主线",
+      "a2": "diagnosis.html#link",
+      "reason": "提示、IR、地址、trace 的对应统一在调查篇解释"
+    },
+    {
+      "source": "3:experiment",
+      "title": "一次实验检验一个可证伪的性能假设",
+      "a1": "移出主线",
+      "a2": "diagnosis.html#experiment",
+      "reason": "保留分块实验的具体假设，合并重复实验步骤"
+    },
+    {
+      "source": "3:overview",
+      "title": "并行与流水需要结合结构、存储和执行证据分析",
+      "a1": "移出主线",
+      "a2": "memory-pipeline.html#sync",
+      "reason": "总览重复的机制由分块、流水、同步三节承载"
+    },
+    {
+      "source": "4:objects",
+      "title": "先区分函数定义、调用点和执行实例",
+      "a1": "移出主线",
+      "a2": "compilation.html#inline",
+      "reason": "Function/Call 在内联定义，Kernel/Task 在核函数和总览定义"
+    },
+    {
+      "source": "4:calls",
+      "title": "一个 Inline helper 被两处调用",
+      "a1": "移出主线",
+      "a2": "compilation.html#inline",
+      "reason": "两个调用点与内联前后合为一节"
+    },
+    {
+      "source": "4:inline",
+      "title": "调用点被替换为各自的函数体副本",
+      "a1": "保留",
+      "a2": "compilation.html#inline",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "4:outline",
+      "title": "计算区域变成函数，边界值形成接口",
+      "a1": "保留",
+      "a2": "compilation.html#outline",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "4:signature",
+      "title": "Tensor→Tile 变换可能同时改变调用接口",
+      "a1": "保留",
+      "a2": "compilation.html#tile",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "4:mixed",
+      "title": "混合 InCore 被分解为 AIC 与 AIV",
+      "a1": "保留",
+      "a2": "compilation.html#kernels",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "4:pure",
+      "title": "纯 Cube 或纯 Vector 不必拆成两个函数",
+      "a1": "保留",
+      "a2": "compilation.html#kernels",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "4:control",
+      "title": "相同操作名可以出现在不同控制范围",
+      "a1": "保留",
+      "a2": "compilation.html#control",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "4:identity",
+      "title": "函数名是定位线索，不能独立证明来源",
+      "a1": "保留",
+      "a2": "compilation.html#identity",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "4:overview",
+      "title": "沿计算范围追踪，同时保留每次边界变化",
+      "a1": "移出主线",
+      "a2": "compilation.html#identity",
+      "reason": "变换总结并入对应依据，删第二个流程总览"
+    },
+    {
+      "source": "5:contract",
+      "title": "先确认比较的是同一项工作",
+      "a1": "保留",
+      "a2": "diagnosis.html#instance",
+      "reason": "工作负载与计时条件并入调查对象"
+    },
+    {
+      "source": "5:instance",
+      "title": "从函数汇总定位到一次任务执行",
+      "a1": "保留",
+      "a2": "diagnosis.html#instance",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "5:wait",
+      "title": "dispatch 到 start 的间隔是观察结果",
+      "a1": "保留",
+      "a2": "diagnosis.html#wait",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "5:hypothesis",
+      "title": "同一段空闲可以有不同解释",
+      "a1": "保留",
+      "a2": "diagnosis.html#wait",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "5:critical",
+      "title": "依赖下界和实际完成时间回答不同问题",
+      "a1": "保留",
+      "a2": "diagnosis.html#critical",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "5:link",
+      "title": "建立 Task 到编译产物的可靠对应",
+      "a1": "保留",
+      "a2": "diagnosis.html#link",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "5:compile",
+      "title": "相邻 IR 证明结构变化，不能单独证明性能原因",
+      "a1": "保留",
+      "a2": "diagnosis.html#link",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "5:failure",
+      "title": "没有可运行产物时，转向编译诊断",
+      "a1": "移出主线",
+      "a2": "diagnosis.html#repro",
+      "reason": "编译失败分支并入最小复现，保留失败类别区别"
+    },
+    {
+      "source": "5:experiment",
+      "title": "把假设变成一个可以被否定的实验",
+      "a1": "保留",
+      "a2": "diagnosis.html#experiment",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "5:overview",
+      "title": "将观察、推断与验证结论分开交付",
+      "a1": "移出主线",
+      "a2": "diagnosis.html#experiment",
+      "reason": "观察/假设/验证不再独立复述；作为各节的具体边界"
+    },
+    {
+      "source": "6:contract",
+      "title": "Pass 的契约描述输入要求与输出保证",
+      "a1": "保留",
+      "a2": "diagnosis.html#conditions",
+      "reason": "定义与真实性质例子合为一节"
+    },
+    {
+      "source": "6:chain",
+      "title": "后续 Pass 需要的性质应有明确来源",
+      "a1": "保留",
+      "a2": "diagnosis.html#conditions",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "6:declaration",
+      "title": "声明产生性质，不等于已经运行检查",
+      "a1": "移出主线",
+      "a2": "diagnosis.html#coverage",
+      "reason": "声明与实际运行检查并入验证范围"
+    },
+    {
+      "source": "6:coverage",
+      "title": "自动验证与逐 Pass 验证覆盖范围不同",
+      "a1": "保留",
+      "a2": "diagnosis.html#coverage",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "6:window",
+      "title": "性质可以被建立、失效并重新建立",
+      "a1": "保留",
+      "a2": "diagnosis.html#coverage",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "6:first",
+      "title": "对同一谓词比较相邻快照",
+      "a1": "保留",
+      "a2": "diagnosis.html#first",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "6:nonmonotone",
+      "title": "失败可能在后续变换中暂时消失",
+      "a1": "保留",
+      "a2": "diagnosis.html#first",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "6:blindspots",
+      "title": "验证器通过只覆盖其实际检查的规则",
+      "a1": "保留",
+      "a2": "diagnosis.html#checks",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "6:repro",
+      "title": "保留触发条件，缩小无关程序范围",
+      "a1": "保留",
+      "a2": "diagnosis.html#repro",
+      "reason": "保留图示，合并为同一读者问题下的状态切换"
+    },
+    {
+      "source": "6:overview",
+      "title": "用明确性质连接诊断与变换边界",
+      "a1": "移出主线",
+      "a2": "diagnosis.html#first",
+      "reason": "不再用未知 P/Q/R 复述流程，保留具体检查区间"
+    }
+  ],
+  "reviewQuestions": [
+    [
+      "对象身份",
+      "Function、Call、Kernel、Task 分别是什么？",
+      "compilation.html#inline",
+      "compilation.html#overview"
+    ],
+    [
+      "图例语义",
+      "数据依赖、调用、跨阶段对应能否区分？",
+      "compilation.html#overview",
+      "compilation.html#outline"
+    ],
+    [
+      "函数变换",
+      "内联、提取与拆核的输出如何不同？",
+      "compilation.html#inline",
+      "compilation.html#kernels"
+    ],
+    [
+      "共享约束",
+      "生命周期不重叠为什么还不能直接判定可共享？",
+      "memory-pipeline.html#constraints",
+      "memory-pipeline.html#aliases"
+    ],
+    [
+      "证据边界",
+      "最终地址为什么不能定位首次复用 Pass？",
+      "memory-pipeline.html#evidence",
+      "diagnosis.html#link"
+    ],
+    [
+      "层级区别",
+      "流水深度、保留缓冲数、任务数能否互换？",
+      "memory-pipeline.html#pipeline",
+      "memory-pipeline.html#deps"
+    ],
+    [
+      "等待原因",
+      "没有 Ready 为什么不能判断资源等待？",
+      "diagnosis.html#wait",
+      "diagnosis.html#instance"
+    ],
+    [
+      "检查状态",
+      "失效、失败和没采集检查是同一件事吗？",
+      "diagnosis.html#coverage",
+      "diagnosis.html#first"
+    ],
+    [
+      "偏离范围",
+      "缺失快照或非单调检查怎样影响定位？",
+      "diagnosis.html#first",
+      "diagnosis.html#checks"
+    ],
+    [
+      "收益证明",
+      "局部变化怎样通过实验验证收益？",
+      "diagnosis.html#critical",
+      "diagnosis.html#experiment"
+    ]
+  ]
+}
